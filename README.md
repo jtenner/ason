@@ -13,15 +13,15 @@ Unfortunately, in order to assemble objects together in a meaningful way, there 
 
 So to solve each one of these problems, we solve them with the following solutions.
 
-1. We encode each value and reference with a header, a runtime type (if applicable) and annotate each field in the reference using a binary format (please see below)
+1. We encode each value and reference with a header using a binary format (please see below)
 2. Circular references are maintained by using a `Map<usize, i32>` linking references to an "object_id" that is kept throughout the serialization process.
-3. Runtime type information can be validated at compile time, and useful errors can be emitted before the user even generates a binary.
-4. A compile time AST transform will inspect each class, and add a `__asonSerialize` method that loops over each field property that will be evaluated and encoded during object object encoding
-5. All child references will be `__link()`ed at runtime, and RTTI information will be validated during both the serialize and deserialize process
+3. Runtime type information can be validated at compile time, and useful errors can be emitted before the user even generates a binary using this library
+4. A compile time AST transform inspects each class, and adds an `__asonSerialize` method that calls `deserializeContext.put()` on each field property, and then serializes each reference in the parent class by calling `super.__asonSerialize()`
+5. All child references will be `__link()`ed at deserialize time, and RTTI information can be validated during both the serialize and deserialize process
 
 # ASON format
 
-To encode anything, we need to specify *what* it is, at what *offset* it occurs in memory, and the value itself.
+To encode anything, we need to specify *what* it is, at what *offset* it occurs in memory, and then encode the value itself.
 
 For instance, given a 3d vector reference like the following:
 
@@ -47,16 +47,16 @@ export class ReferenceSegment {
 }
 ```
 
-So we need 16 (or 24 in 64 bit wasm) bytes just to store the `Vec3` object definition itself. This is better than JSON storage for objects because we only use more bytes to represent an object. For comparison, JSON uses `"{}"` to represent an object, but in that case, we cannot validate it's type or runtime size.
+So we need 16 (or 24 in 64 bit wasm) bytes just to store the `Vec3` object definition itself. This is better than JSON storage, because we can actually encode type information into the binary.
 
-This is the `Terminator` entry, for when an object definition is finished.
+Each `ReferenceSegment` is punctuated by a `TerminatorSegment` entry, to signify when an object definition is completed.
 
 ```ts
 @unmanaged
 class TerminatorSegment { type: ASONType; } // ASONType.Terminator
 ```
 
-However, there are lots of ways ASON stores data where values are tightly packed. In the case that an Array has number values, a simple memory.copy() will do.
+ASON can also store data where values are tightly packed. In the case that an Array has numeric values, a simple memory.copy() will do to serialize/deserialize an object.
 
 ```ts
 @unmanaged
@@ -68,9 +68,9 @@ class DataArraySegment {
 }
 ```
 
-After encountering this segment, we can simply copy the data into the encoded segment, and write a `Terminator` to signify the end of data.
+After encountering this segment, we can simply copy the data into the encoding array, and write a `Terminator` to signify the end of data.
 
-In the case that an array of references must be encoded, we must loop over each reference in the array and encode each one with the parent set to the Array itself.
+In the case that an array of references must be encoded, loop over each following reference in the array and encode each one in succession with the parent reference set to the Array itself.
 
 ```ts
 @unmanaged
@@ -82,7 +82,7 @@ class ReferenceArraySegment {
 }
 ```
 
-In the case the array is a `StaticArray`, the decoded result must have a different shape, and can be encoded the same way. Both the `StaticDataArray` and `StaticReferenceArray` segment have the same shape, just a slightly different type during the encoding process.
+In the case the array is a `StaticArray`, the decoded result must have a different shape, and can be encoded exactly the same way. Both the `StaticDataArray` and `StaticReferenceArray` segment have the same shape as their respective `Array` types.
 
 For fields, we need to store them at their respective offsets, and store their size. We cannot assume any kind of shape, and defer to the compiler, using `sizeof<T>()` and `offsetof<T>()` at compile time to be sure that we have the correct offset and size for each field.
 
