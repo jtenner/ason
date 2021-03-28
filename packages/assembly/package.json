@@ -1,0 +1,34 @@
+{
+  "name": "@ason/assembly",
+  "version": "0.0.1",
+  "description": "AssemblyScript glue code for assemblyscript encoding and decoding",
+  "ascMain": "index.ts",
+  "keywords": [
+    "assemblyscript",
+    "glue",
+    "encoding",
+    "decoding"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jtenner/ason.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jtenner/ason/issues"
+  },
+  "author": "Joshua Tenner <tenner.joshua@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@ason/transform": "0.0.1",
+    "@assemblyscript/loader": "^0.17.3"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.18.18"
+  },
+  "scripts": {
+    "asbuild:untouched": "asc assembly/index.ts --target debug",
+    "asbuild:optimized": "asc assembly/index.ts --target release",
+    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
+    "test": "node tests"
+  }
+}

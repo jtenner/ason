@@ -1,0 +1,33 @@
+{
+  "name": "ason",
+  "version": "0.0.1",
+  "description": "AssemblyScript Objects Encoded and Decoded in a standardized way",
+  "main": "index.js",
+  "scripts": {
+    "test": "ts-node test/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jtenner/ason.git"
+  },
+  "keywords": [
+    "assemblyscript",
+    "data",
+    "serialization",
+    "transform"
+  ],
+  "author": "Joshua Tenner <tenner.joshua@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jtenner/ason/issues"
+  },
+  "workspaces": [
+    "assembly",
+    "transform"
+  ],
+  "homepage": "https://github.com/jtenner/ason#readme",
+  "devDependencies": {
+    "assemblyscript": "^0.18.18",
+    "lerna": "^4.0.0"
+  }
+}

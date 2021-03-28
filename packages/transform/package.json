@@ -1,0 +1,14 @@
+{
+  "name": "transform",
+  "version": "0.0.1",
+  "description": "The transform for enabling AssemblyScript object encoding.",
+  "main": "lib/index.js",
+  "author": "Joshua Tenner <tenner.joshua@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^4.2.3"
+  }
+}
