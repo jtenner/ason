@@ -192,7 +192,7 @@ export namespace ASON {
       entry.index = index;
     }
 
-    private putField<U>(entryId: u32, offset: usize, size: i32, value: U): void {
+    public putField<U>(entryId: u32, offset: usize, size: i32, value: U): void {
       let entry = this.fieldTable.allocate();
       entry.entryId = entryId;
       entry.offset = offset;
