@@ -20,7 +20,7 @@ export class ReferenceEntry {
 export class FieldEntry {
   entryId: u32;
   offset: usize;
-  size: u32;
+  size: i32;
   value: u64;
 }
 
