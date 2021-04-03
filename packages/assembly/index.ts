@@ -1,9 +1,12 @@
 import {
   ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_LINK_SEGMENT_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_REFERENCE_SEGMENT_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH
 } from "./configuration";
+// @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
 import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry } from "./util";
 
@@ -24,9 +27,10 @@ export namespace ASON {
     // tables
     dataSegmentTable: Table<DataSegmentEntry> = new Table<DataSegmentEntry>(ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH);
     arrayDataSegmentTable: Table<ArrayDataSegmentEntry> = new Table<ArrayDataSegmentEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH);
-    linkSegmentTable: Table<LinkEntry> = new Table<LinkEntry>(ASON_EFFECTIVE_INITIAL_LINK_SEGMENT_TABLE_LENGTH);
-    referenceSegmentTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_SEGMENT_TABLE_LENGTH)
-
+    linkTable: Table<LinkEntry> = new Table<LinkEntry>(ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH);
+    referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
+    arrayTable: Table<ArrayEntry> = new Table<ArrayEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH);
+    arrayLinkTable: Table<ArrayLinkEntry> = new Table<ArrayLinkEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH);
     constructor() {}
 
     public serialize(value: T): StaticArray<u8> {
@@ -37,8 +41,10 @@ export namespace ASON {
       // dataSegments
       this.dataSegmentTable.reset();
       this.arrayDataSegmentTable.reset();
-      this.linkSegmentTable.reset();
-
+      this.linkTable.reset();
+      this.arrayTable.reset();
+      this.arrayLinkTable.reset();
+      this.referenceTable.reset();
 
       assert(this.put(value) === <u32>0);
 
@@ -77,6 +83,19 @@ export namespace ASON {
             let child = unchecked(value[i]);
             if (changetype<usize>(child) != 0) {
               this.putLinkSegment(this.put(child), parent, <usize>i << alignof<usize>());
+            }
+          }
+        }
+      } else if (value instanceof Array) {
+        let parent = this.putArray(value);
+        if (changetype<usize>(value) != 0) {
+          // link the children
+          let length = value.length;
+          for (let i = 0; i < length; i++) {
+            // link the child if it isn't null
+            let child = unchecked(value[i]);
+            if (changetype<usize>(child) != 0) {
+              this.putArrayLink(this.put(child), parent, <usize>i << alignof<usize>());
             }
           }
         }
@@ -126,7 +145,7 @@ export namespace ASON {
     }
 
     private putLinkSegment(childEntryId: u32, parentEntryId: u32, offset: usize): void {
-      let entry = this.linkSegmentTable.allocate();
+      let entry = this.linkTable.allocate();
       entry.childEntryId = childEntryId;
       entry.parentEntryId = parentEntryId;
       entry.offset = offset;
@@ -135,11 +154,28 @@ export namespace ASON {
     private putReference<U>(value: U): u32 {
       let entryId = this.entryId++;
       this.entries.set(changetype<usize>(value), entryId);
-      let entry = this.referenceSegmentTable.allocate();
+      let entry = this.referenceTable.allocate();
       entry.entryId = entryId;
       entry.offset = getObjectSize(value);
       entry.rttid = idof<U>();
       return entryId;
+    }
+
+    private putArray<U extends Array<valueof<U>>>(value: U): u32 {
+      let entryId = this.entryId++;
+      this.entries.set(changetype<usize>(value), entryId);
+      let entry = this.arrayTable.allocate();
+      entry.entryId = entryId;
+      entry.length = value.length;
+      entry.rttid = idof<U>();
+      return entryId;
+    }
+
+    private putArrayLink(childEntryId: u32, parentEntryId: u32, index: i32): void {
+      let entry = this.arrayLinkTable.allocate();
+      entry.childEntryId = childEntryId;
+      entry.parentEntryId = parentEntryId;
+      entry.index = index;
     }
   }
 
@@ -182,7 +218,6 @@ export namespace ASON {
   }
 
   export function serialize<T>(ref: T): StaticArray<u8> {
-    
     
   }
 
