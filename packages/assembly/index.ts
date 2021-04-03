@@ -5,7 +5,7 @@ import {
   ASON_EFFECTIVE_INITIAL_REFERENCE_SEGMENT_TABLE_LENGTH,
 } from "./configuration";
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
-import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry } from "./util";
+import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry } from "./util";
 
 @inline
 function getObjectSize<T>(value: T): usize {
@@ -140,6 +140,44 @@ export namespace ASON {
       entry.offset = getObjectSize(value);
       entry.rttid = idof<U>();
       return entryId;
+    }
+  }
+
+  export class Deserializer<T> {
+    public deserialize(data: StaticArray<u8>): T {
+      let startPointer = changetype<usize>(data);
+      let length = <usize>data.length;
+
+      assert(length > offsetof<ASONHeader>(), "Too Small");
+      let header = changetype<ASONHeader>(data);
+
+      assert(length == offsetof<ASONHeader>() +
+        header.referenceTableByteLength +
+        header.dataSegmentTableByteLength +
+        header.arrayTableByteLength +
+        header.arrayDataSegmentTableByteLength +
+        header.linkTableByteLength +
+        header.arrayLinkTableByteLength +
+        header.fieldTableByteLength, "Wrong Size");
+
+      let referenceTablePointer = startPointer + offsetof<ASONHeader>();
+      let dataSegmentTablePointer = referenceTablePointer + header.referenceTableByteLength;
+      let arrayTablePointer = dataSegmentTablePointer + header.dataSegmentTableByteLength;
+      let arrayDataSegmentTablePointer = arrayTablePointer + header.arrayTableByteLength;
+      let linkTablePointer = arrayDataSegmentTablePointer + header.arrayDataSegmentTableByteLength;
+      let arrayLinkTablePointer = linkTablePointer + header.linkTableByteLength;
+      let fieldTablePointer = arrayLinkTablePointer + header.arrayLinkTableByteLength;
+
+      let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, header.referenceTableByteLength);
+      let dataSegmentTable = Table.from<DataSegmentEntry>(dataSegmentTablePointer, header.dataSegmentTableByteLength);
+      let arrayTable = Table.from<ArrayEntry>(arrayTablePointer, header.arrayTableByteLength);
+      let arrayDataSegmentTable = Table.from<ArrayDataSegmentEntry>(arrayDataSegmentTablePointer, header.arrayDataSegmentTableByteLength);
+      let linkTable = Table.from<LinkEntry>(linkTablePointer, header.linkTableByteLength);
+      let arrayLinkTable = Table.from<ArrayLinkEntry>(arrayLinkTablePointer, header.arrayLinkTableByteLength);
+      let fieldTable = Table.from<FieldEntry>(fieldTablePointer, header.fieldTableByteLength);
+
+      // TODO: Implement the rest of it.
+      return changetype<T>(0);
     }
   }
 
