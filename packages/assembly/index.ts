@@ -4,11 +4,12 @@ import {
   ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH
+  ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
 } from "./configuration";
 // @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
-import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ArrayEntry, ArrayLinkEntry } from "./util";
+import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ArrayEntry, ArrayLinkEntry, FieldEntry } from "./util";
 
 @inline
 function getObjectSize<T>(value: T): usize {
@@ -31,9 +32,15 @@ export namespace ASON {
     referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
     arrayTable: Table<ArrayEntry> = new Table<ArrayEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH);
     arrayLinkTable: Table<ArrayLinkEntry> = new Table<ArrayLinkEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH);
-    constructor() {}
+    fieldTable: Table<FieldEntry> = new Table<FieldEntry>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+
+    constructor() {
+      if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
+    }
 
     public serialize(value: T): StaticArray<u8> {
+      if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
+
       // reset entry id indicies
       this.entryId = 0;
       this.entries.clear();
@@ -45,6 +52,7 @@ export namespace ASON {
       this.arrayTable.reset();
       this.arrayLinkTable.reset();
       this.referenceTable.reset();
+      this.fieldTable.reset();
 
       assert(this.put(value) === <u32>0);
 
@@ -99,6 +107,12 @@ export namespace ASON {
             }
           }
         }
+        return parent;
+      } else {
+        let result = this.putReference(value);
+        // @ts-ignore: defined by the transform
+        value.__asonPut(this);
+        return result;
       }
     }
 
@@ -176,6 +190,14 @@ export namespace ASON {
       entry.childEntryId = childEntryId;
       entry.parentEntryId = parentEntryId;
       entry.index = index;
+    }
+
+    private putField<U>(entryId: u32, offset: usize, size: i32, value: U): void {
+      let entry = this.fieldTable.allocate();
+      entry.entryId = entryId;
+      entry.offset = offset;
+      entry.size = size;
+      store<U>(changetype<usize>(entry), value, offsetof<FieldEntry>("value"));
     }
   }
 
