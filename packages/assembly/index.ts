@@ -42,7 +42,9 @@ export namespace ASON {
       this.dataSegmentTable.reset();
       this.arrayDataSegmentTable.reset();
       this.linkTable.reset();
-
+      this.arrayTable.reset();
+      this.arrayLinkTable.reset();
+      this.referenceTable.reset();
 
       assert(this.put(value) === <u32>0);
 
