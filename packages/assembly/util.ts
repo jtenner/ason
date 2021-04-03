@@ -55,7 +55,7 @@ export class ArrayDataSegmentEntry {
 @unmanaged
 export class ArrayLinkEntry {
   parentEntryId: u32;
-  index: usize;
+  index: i32;
   childEntryId: u32;
 }
 
