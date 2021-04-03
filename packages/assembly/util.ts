@@ -49,7 +49,8 @@ export class ArrayEntry {
 export class ArrayDataSegmentEntry {
   rttid: u32;
   entryId: u32;
-  byteLength: usize;
+  align: usize;
+  length: i32;
 }
 
 @unmanaged
@@ -99,5 +100,20 @@ export class Table<T> {
 
   reset(): void {
     this.index = 0;
+  }
+
+  public static from<T>(data: usize, length: usize): Table<T> {
+    let result = __new(offsetof<Table<T>>(), idof<Table<T>>());
+    // @ts-ignore: pin prevents garbage collection
+    __pin(result);
+
+    let dataArray = new StaticArray<u8>(<i32>length);
+    
+    memory.copy(changetype<usize>(dataArray), data, length);
+    let resultRef = changetype<Table<T>>(result);
+    resultRef.data = dataArray;
+    // @ts-ignore
+    __unpin(result);
+    return resultRef;
   }
 }

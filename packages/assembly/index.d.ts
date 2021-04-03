@@ -1,4 +1,5 @@
 /// <reference path="../../node_modules/assemblyscript/std/assembly/index.d.ts" />
+/// <reference path="../../node_modules/assemblyscript/std/assembly/rt/index.d.ts" />
 
 declare const ASON_INITIAL_DATA_SEGMENT_TABLE_LENGTH: i32;
 declare const ASON_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH: i32;
