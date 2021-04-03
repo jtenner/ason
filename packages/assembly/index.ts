@@ -130,7 +130,7 @@ export namespace ASON {
       let size = (<usize>arrayLength) << arrayValueAlign;
 
       let entry = this.arrayDataSegmentTable.allocate();
-      entry.byteLength = size;
+      entry.length = size;
       entry.entryId = entryId;
       entry.rttid = idof<U>();
 
@@ -187,33 +187,169 @@ export namespace ASON {
       assert(length > offsetof<ASONHeader>(), "Too Small");
       let header = changetype<ASONHeader>(data);
 
+      let referenceTableByteLength = header.referenceTableByteLength;
+      let dataSegmentTableByteLength = header.dataSegmentTableByteLength;
+      let arrayTableByteLength = header.arrayTableByteLength;
+      let arrayDataSegmentTableByteLength = header.arrayDataSegmentTableByteLength;
+      let linkTableByteLength = header.linkTableByteLength;
+      let arrayLinkTableByteLength = header.arrayLinkTableByteLength;
+      let fieldTableByteLength = header.fieldTableByteLength;
       assert(length == offsetof<ASONHeader>() +
-        header.referenceTableByteLength +
-        header.dataSegmentTableByteLength +
-        header.arrayTableByteLength +
-        header.arrayDataSegmentTableByteLength +
-        header.linkTableByteLength +
-        header.arrayLinkTableByteLength +
-        header.fieldTableByteLength, "Wrong Size");
+        referenceTableByteLength +
+        dataSegmentTableByteLength +
+        arrayTableByteLength +
+        arrayDataSegmentTableByteLength +
+        linkTableByteLength +
+        arrayLinkTableByteLength +
+        fieldTableByteLength, "Wrong Size");
 
       let referenceTablePointer = startPointer + offsetof<ASONHeader>();
-      let dataSegmentTablePointer = referenceTablePointer + header.referenceTableByteLength;
-      let arrayTablePointer = dataSegmentTablePointer + header.dataSegmentTableByteLength;
-      let arrayDataSegmentTablePointer = arrayTablePointer + header.arrayTableByteLength;
-      let linkTablePointer = arrayDataSegmentTablePointer + header.arrayDataSegmentTableByteLength;
-      let arrayLinkTablePointer = linkTablePointer + header.linkTableByteLength;
-      let fieldTablePointer = arrayLinkTablePointer + header.arrayLinkTableByteLength;
+      let dataSegmentTablePointer = referenceTablePointer + referenceTableByteLength;
+      let arrayTablePointer = dataSegmentTablePointer + dataSegmentTableByteLength;
+      let arrayDataSegmentTablePointer = arrayTablePointer + arrayTableByteLength;
+      let linkTablePointer = arrayDataSegmentTablePointer + arrayDataSegmentTableByteLength;
+      let arrayLinkTablePointer = linkTablePointer + linkTableByteLength;
+      let fieldTablePointer = arrayLinkTablePointer + arrayLinkTableByteLength;
 
-      let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, header.referenceTableByteLength);
-      let dataSegmentTable = Table.from<DataSegmentEntry>(dataSegmentTablePointer, header.dataSegmentTableByteLength);
-      let arrayTable = Table.from<ArrayEntry>(arrayTablePointer, header.arrayTableByteLength);
-      let arrayDataSegmentTable = Table.from<ArrayDataSegmentEntry>(arrayDataSegmentTablePointer, header.arrayDataSegmentTableByteLength);
-      let linkTable = Table.from<LinkEntry>(linkTablePointer, header.linkTableByteLength);
-      let arrayLinkTable = Table.from<ArrayLinkEntry>(arrayLinkTablePointer, header.arrayLinkTableByteLength);
-      let fieldTable = Table.from<FieldEntry>(fieldTablePointer, header.fieldTableByteLength);
+      let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
+      let dataSegmentTable = Table.from<DataSegmentEntry>(dataSegmentTablePointer, dataSegmentTableByteLength);
+      let arrayTable = Table.from<ArrayEntry>(arrayTablePointer, arrayTableByteLength);
+      let arrayDataSegmentTable = Table.from<ArrayDataSegmentEntry>(arrayDataSegmentTablePointer, arrayDataSegmentTableByteLength);
+      let linkTable = Table.from<LinkEntry>(linkTablePointer, linkTableByteLength);
+      let arrayLinkTable = Table.from<ArrayLinkEntry>(arrayLinkTablePointer, arrayLinkTableByteLength);
+      let fieldTable = Table.from<FieldEntry>(fieldTablePointer, fieldTableByteLength);
 
-      // TODO: Implement the rest of it.
-      return changetype<T>(0);
+      let entryMap = new Map<u32, usize>();
+
+      let i: usize = 0;
+
+      while (i < referenceTableByteLength) {
+        let entry = referenceTable.allocate();
+        let referencePointer = __pin(__new(entry.offset, entry.rttid));
+        entryMap.set(entry.entryId, referencePointer);
+        i += offsetof<ReferenceEntry>();
+      }
+
+      i = 0;
+
+      while (i < dataSegmentTableByteLength) {
+        let entry = dataSegmentTable.allocate();
+        let segmentLength = entry.byteLength;
+        let segment = dataSegmentTable.allocateSegment(segmentLength);
+        let referencePointer = __pin(__new(entry.byteLength, entry.rttid));
+        memory.copy(referencePointer, segment, segmentLength);
+        entryMap.set(entry.entryId, referencePointer);
+        i = dataSegmentTable.index;
+      }
+
+      i = 0;
+
+      while (i < arrayTableByteLength) {
+        let entry = arrayTable.allocate();
+        let length = entry.length;
+        let temp = new ArrayBuffer(length << <i32>alignof<usize>());
+        let referencePointer = __pin(__newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp)));
+        entryMap.set(entry.entryId, referencePointer);
+        i = offsetof<ArrayEntry>();
+      }
+
+      i = 0;
+
+      while (i < arrayDataSegmentTableByteLength) {
+        let entry = arrayDataSegmentTable.allocate();
+        let length = entry.length;
+        let segment = arrayDataSegmentTable.allocateSegment(length);
+        let referencePointer = __pin(__newArray(length, entry.align, entry.rttid, segment));
+        entryMap.set(entry.entryId, referencePointer);
+        i = arrayDataSegmentTable.index;
+      }
+
+      i = 0;
+
+      while (i < linkTableByteLength) {
+        let entry = linkTable.allocate();
+        
+        let parentEntryId = entry.parentEntryId;
+        assert(entryMap.has(parentEntryId));
+        let parentPointer = entryMap.get(parentEntryId);
+        
+        let childEntryId = entry.childEntryId;
+        assert(entryMap.has(childEntryId));
+        let childPointer = entryMap.get(childEntryId);
+
+        __link(parentPointer, childPointer, false);
+        store<usize>(parentPointer + entry.offset, childPointer);
+        i += offsetof<LinkEntry>();
+      }
+
+      i = 0;
+
+      while (i < arrayLinkTableByteLength) {
+        let entry = arrayLinkTable.allocate();
+
+        let parentEntryId = entry.parentEntryId;
+        assert(entryMap.has(parentEntryId));
+        let parentPointer = entryMap.get(parentEntryId);
+        
+        let childEntryId = entry.childEntryId;
+        assert(entryMap.has(childEntryId));
+        let childPointer = entryMap.get(childEntryId);
+
+        __link(parentPointer, childPointer, false);
+        let parentDataPointer = load<usize>(parentPointer, offsetof<Array<usize>>("dataStart"))
+        store<usize>(parentDataPointer + (<usize>entry.index << alignof<usize>()), childPointer);
+        i += offsetof<ArrayLinkEntry>();
+      }
+
+      i = 0;
+
+      while (i < fieldTableByteLength) {
+        let entry = fieldTable.allocate();
+        let offset = entry.offset;
+
+        let entryId = entry.entryId;
+        assert(entryMap.has(entryId));
+        let entryPointer = entryMap.get(entryId);
+        
+        switch (entry.size) {
+          case 1: {
+            let val = load<u8>(changetype<usize>(entry), offsetof<FieldEntry>("value"));
+            store<u8>(entryPointer + offset, val);
+            break;
+          }
+          case 2: {
+            let val = load<u16>(changetype<usize>(entry), offsetof<FieldEntry>("value"));
+            store<u16>(entryPointer + offset, val);
+            break;
+          }
+          case 4: {
+            let val = load<u32>(changetype<usize>(entry), offsetof<FieldEntry>("value"));
+            store<u32>(entryPointer + offset, val);
+            break;
+          }
+          case 8: {
+            let val = load<u64>(changetype<usize>(entry), offsetof<FieldEntry>("value"));
+            store<u64>(entryPointer + offset, val);
+            break;
+          }
+          default:
+            assert(false, "Non-binary Size")
+            break;
+        }
+
+        i += offsetof<FieldEntry>();
+      }
+
+      let keys = entryMap.keys();
+
+      let numKeys = keys.length;
+
+      for(let j = 0; j < numKeys; j++) {
+        let key = unchecked(keys[j]);
+        __unpin(entryMap.get(key));
+      }
+
+      return changetype<T>(entryMap.get(0));
     }
   }
 

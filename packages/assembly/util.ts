@@ -49,7 +49,8 @@ export class ArrayEntry {
 export class ArrayDataSegmentEntry {
   rttid: u32;
   entryId: u32;
-  byteLength: usize;
+  align: usize;
+  length: i32;
 }
 
 @unmanaged
