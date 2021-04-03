@@ -1,4 +1,13 @@
-
+@unmanaged
+export class ASONHeader {
+  referenceTableByteLength: usize;
+  dataSegmentTableByteLength: usize;
+  arrayTableByteLength: usize;
+  arrayDataSegmentTableByteLength: usize;
+  linkTableByteLength: usize;
+  arrayLinkTableByteLength: usize;
+  fieldTableByteLength: usize;
+}
 
 @unmanaged
 export class ReferenceEntry {
