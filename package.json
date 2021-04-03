@@ -4,6 +4,7 @@
   "description": "AssemblyScript Objects Encoded and Decoded in a standardized way",
   "main": "index.js",
   "scripts": {
+    "postinstall": "lerna bootstrap",
     "test": "ts-node test/index.ts"
   },
   "repository": {
