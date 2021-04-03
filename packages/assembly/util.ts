@@ -1,3 +1,5 @@
+
+
 @unmanaged
 export class ReferenceEntry {
   rttid: u32;
