@@ -109,10 +109,7 @@ export namespace ASON {
         }
         return parent;
       } else {
-        let result = this.putReference(value);
-        // @ts-ignore: defined by the transform
-        value.__asonPut(this);
-        return result;
+        return value.__asonPut(this);
       }
     }
 
