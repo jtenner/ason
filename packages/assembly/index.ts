@@ -32,7 +32,10 @@ export namespace ASON {
     referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
     arrayTable: Table<ArrayEntry> = new Table<ArrayEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH);
     arrayLinkTable: Table<ArrayLinkEntry> = new Table<ArrayLinkEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH);
-    fieldTable: Table<FieldEntry> = new Table<FieldEntry>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    fieldTable8: Table<FieldEntry8> = new Table<FieldEntry8>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
 
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
@@ -52,7 +55,10 @@ export namespace ASON {
       this.arrayTable.reset();
       this.arrayLinkTable.reset();
       this.referenceTable.reset();
-      this.fieldTable.reset();
+      this.fieldTable8.reset();
+      this.fieldTable16.reset();
+      this.fieldTable32.reset();
+      this.fieldTable64.reset();
 
       assert(this.put(value) === <u32>0);
 
@@ -193,7 +199,6 @@ export namespace ASON {
       let entry = this.fieldTable.allocate();
       entry.entryId = entryId;
       entry.offset = offset;
-      entry.size = size;
       store<U>(changetype<usize>(entry), value, offsetof<FieldEntry>("value"));
     }
   }
