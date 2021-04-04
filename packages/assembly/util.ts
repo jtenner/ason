@@ -17,10 +17,30 @@ export class ReferenceEntry {
 }
 
 @unmanaged
-export class FieldEntry {
+export class FieldEntry8 {
   entryId: u32;
   offset: usize;
-  size: i32;
+  value: u8;
+}
+
+@unmanaged
+export class FieldEntry16 {
+  entryId: u32;
+  offset: usize;
+  value: u16;
+}
+
+@unmanaged
+export class FieldEntry32 {
+  entryId: u32;
+  offset: usize;
+  value: u32;
+}
+
+@unmanaged
+export class FieldEntry64 {
+  entryId: u32;
+  offset: usize;
   value: u64;
 }
 
