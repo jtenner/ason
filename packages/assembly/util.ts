@@ -6,7 +6,10 @@ export class ASONHeader {
   arrayDataSegmentTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
-  fieldTableByteLength: usize;
+  fieldTable8ByteLength: usize;
+  fieldTable16ByteLength: usize;
+  fieldTable32ByteLength: usize;
+  fieldTable64ByteLength: usize;
 }
 
 @unmanaged

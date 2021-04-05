@@ -115,7 +115,10 @@ export namespace ASON {
         }
         return parent;
       } else {
-        return value.__asonPut(this);
+        let entryId = this.putReference(value);
+        // @ts-ignore: defined in each class
+        value.__asonPut(this, entryId);
+        return entryId;
       }
     }
 
@@ -195,7 +198,7 @@ export namespace ASON {
       entry.index = index;
     }
 
-    public putField<U>(entryId: u32, value: U, offset: usize,): void {
+    public putField<U>(entryId: u32, value: U, offset: usize): void {
       if (isReference(value)) {
         if (changetype<usize>(value) != 0) {
           this.putLink(this.putReference(value), entryId, offset);
