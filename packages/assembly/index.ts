@@ -96,7 +96,7 @@ export namespace ASON {
             // link the child if it isn't null
             let child = unchecked(value[i]);
             if (changetype<usize>(child) != 0) {
-              this.putLinkSegment(this.put(child), parent, <usize>i << alignof<usize>());
+              this.putLink(this.put(child), parent, <usize>i << alignof<usize>());
             }
           }
         }
@@ -161,7 +161,7 @@ export namespace ASON {
       return entryId;
     }
 
-    private putLinkSegment(childEntryId: u32, parentEntryId: u32, offset: usize): void {
+    private putLink(childEntryId: u32, parentEntryId: u32, offset: usize): void {
       let entry = this.linkTable.allocate();
       entry.childEntryId = childEntryId;
       entry.parentEntryId = parentEntryId;
@@ -195,11 +195,54 @@ export namespace ASON {
       entry.index = index;
     }
 
-    public putField<U>(entryId: u32, offset: usize, size: i32, value: U): void {
-      let entry = this.fieldTable.allocate();
-      entry.entryId = entryId;
-      entry.offset = offset;
-      store<U>(changetype<usize>(entry), value, offsetof<FieldEntry>("value"));
+    public putField<U>(entryId: u32, value: U, offset: usize,): void {
+      if (isReference(value)) {
+        if (changetype<usize>(value) != 0) {
+          this.putLink(this.putReference(value), entryId, offset);
+        }
+        return;
+      }
+
+      if (isFloat(value)) {
+        if (sizeof<U>() == 4) {
+          let entry = this.fieldTable32.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          entry.value = reinterpret<u32>(value);
+        } else {
+          // f64
+          let entry = this.fieldTable64.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          entry.value = reinterpret<u64>(value);
+        }
+      } else {
+        if (sizeof<U>() == 1) {
+          let entry = this.fieldTable8.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          // @ts-ignore: valid u8 cast
+          entry.value = <u8>value;
+        } else if (sizeof<U>() == 2) {
+          let entry = this.fieldTable16.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          // @ts-ignore: valid u16 cast
+          entry.value = <u16>value;
+        } else if (sizeof<U>() == 4) {
+          let entry = this.fieldTable32.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          // @ts-ignore: valid u16 cast
+          entry.value = <u32>value;
+        } else {
+          let entry = this.fieldTable64.allocate();
+          entry.entryId = entryId;
+          entry.offset = offset;
+          // @ts-ignore: valid u16 cast
+          entry.value = <u64>value;
+        }
+      }
     }
   }
 
