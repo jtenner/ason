@@ -131,12 +131,16 @@ export class Table<T> {
     __pin(result);
 
     let dataArray = new StaticArray<u8>(<i32>length);
-    
+
     memory.copy(changetype<usize>(dataArray), data, length);
     let resultRef = changetype<Table<T>>(result);
     resultRef.data = dataArray;
     // @ts-ignore
     __unpin(result);
     return resultRef;
+  }
+
+  copyTo(array: StaticArray<u8>, offset: usize): void {
+    memory.copy(changetype<usize>(array) + offset, changetype<usize>(this.data), <usize>this.index);
   }
 }

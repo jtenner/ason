@@ -16,11 +16,9 @@ function getObjectSize<T>(value: T): usize {
   return changetype<OBJECT>(changetype<usize>(value) - TOTAL_OVERHEAD).rtSize;
 }
 
+@global
 export namespace ASON {
-
   export class Serializer<T> {
-    buffer: StaticArray<u8> | null = null;
-
     // entries
     entryId: u32;
     entries: Map<usize, u32> = new Map<usize, u32>();
@@ -62,10 +60,8 @@ export namespace ASON {
 
       assert(this.put(value) === <u32>0);
 
-      // write everything to the buffer
-      this.commit();
-
-      return this.buffer!;
+      // write everything to a buffer
+      return this.commit();
     }
 
     @unsafe public put<U>(value: U): u32 {
@@ -100,6 +96,7 @@ export namespace ASON {
             }
           }
         }
+        return parent;
       } else if (value instanceof Array) {
         let parent = this.putArray(value);
         if (changetype<usize>(value) != 0) {
@@ -246,6 +243,88 @@ export namespace ASON {
           entry.value = <u64>value;
         }
       }
+    }
+
+    private commit(): StaticArray<u8> {
+      let referenceTable = this.referenceTable;
+      let dataSegmentTable = this.dataSegmentTable;
+      let arrayTable = this.arrayTable;
+      let arrayDataSegmentTable = this.arrayDataSegmentTable;
+      let linkTable = this.linkTable;
+      let arrayLinkTable = this.arrayLinkTable;
+      let fieldTable8 = this.fieldTable8;
+      let fieldTable16 = this.fieldTable16;
+      let fieldTable32 = this.fieldTable32;
+      let fieldTable64 = this.fieldTable64;
+
+        // referenceTableByteLength: usize;
+        // dataSegmentTableByteLength: usize;
+        // arrayTableByteLength: usize;
+        // arrayDataSegmentTableByteLength: usize;
+        // linkTableByteLength: usize;
+        // arrayLinkTableByteLength: usize;
+        // fieldTable8ByteLength: usize;
+        // fieldTable16ByteLength: usize;
+        // fieldTable32ByteLength: usize;
+        // fieldTable64ByteLength: usize;
+
+      let referenceTableIndex = <usize>referenceTable.index;
+      let dataSegmentTableIndex = <usize>dataSegmentTable.index;
+      let arrayTableIndex = <usize>arrayTable.index;
+      let arrayDataSegmentTableIndex = <usize>arrayDataSegmentTable.index;
+      let linkTableIndex = <usize>linkTable.index;
+      let arrayLinkTableIndex = <usize>arrayLinkTable.index;
+      let fieldTable8Index = <usize>fieldTable8.index;
+      let fieldTable16Index = <usize>fieldTable16.index;
+      let fieldTable32Index = <usize>fieldTable32.index;
+      let fieldTable64Index = <usize>fieldTable64.index;
+
+      let length = referenceTableIndex
+        + dataSegmentTableIndex
+        + arrayTableIndex
+        + arrayDataSegmentTableIndex
+        + linkTableIndex
+        + arrayLinkTableIndex
+        + fieldTable8Index
+        + fieldTable16Index
+        + fieldTable32Index
+        + fieldTable64Index;
+
+      let result = new StaticArray<u8>(<i32>(offsetof<ASONHeader>() + length));
+      let header = changetype<ASONHeader>(result);
+      header.referenceTableByteLength = referenceTableIndex;
+      header.dataSegmentTableByteLength = dataSegmentTableIndex;
+      header.arrayTableByteLength = arrayTableIndex;
+      header.arrayDataSegmentTableByteLength = arrayDataSegmentTableIndex;
+      header.linkTableByteLength = linkTableIndex;
+      header.arrayLinkTableByteLength = arrayLinkTableIndex;
+      header.fieldTable8ByteLength = fieldTable8Index;
+      header.fieldTable16ByteLength = fieldTable16Index;
+      header.fieldTable32ByteLength = fieldTable32Index;
+      header.fieldTable64ByteLength = fieldTable64Index;
+
+      let offset = offsetof<ASONHeader>();
+      referenceTable.copyTo(result, offset);
+      offset += referenceTableIndex;
+      dataSegmentTable.copyTo(result, offset);
+      offset += dataSegmentTableIndex;
+      arrayTable.copyTo(result, offset);
+      offset += arrayTableIndex;
+      arrayDataSegmentTable.copyTo(result, offset);
+      offset += arrayDataSegmentTableIndex;
+      linkTable.copyTo(result, offset);
+      offset += linkTableIndex;
+      arrayLinkTable.copyTo(result, offset);
+      offset += arrayLinkTableIndex;
+      fieldTable8.copyTo(result, offset);
+      offset += fieldTable8Index;
+      fieldTable16.copyTo(result, offset);
+      offset += fieldTable16Index;
+      fieldTable32.copyTo(result, offset);
+      offset += fieldTable32Index;
+      fieldTable64.copyTo(result, offset);
+      // set the result
+      return result;
     }
   }
 
