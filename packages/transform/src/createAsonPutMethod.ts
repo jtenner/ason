@@ -21,16 +21,29 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
     null,
     CommonFlags.PUBLIC |
       CommonFlags.INSTANCE |
+      CommonFlags.GENERIC |
       (classDeclaration.isGeneric ? CommonFlags.GENERIC_CONTEXT : 0),
-    null,
+    [TypeNode.createTypeParameter(
+      TypeNode.createIdentifierExpression("U", classDeclaration.range),
+      null,
+      null,
+      classDeclaration.range,
+    )],
     TypeNode.createFunctionType([
-      // ser: Serializer,
+      // ser: Serializer<U>,
       TypeNode.createParameter(
         ParameterKind.DEFAULT,
         TypeNode.createIdentifierExpression("ser", classDeclaration.range),
         TypeNode.createNamedType(
           TypeNode.createSimpleTypeName("Serializer", classDeclaration.range),
-          null,
+          [
+            TypeNode.createNamedType(
+              TypeNode.createSimpleTypeName("U", classDeclaration.range),
+              null,
+              false,
+              classDeclaration.range,
+            ),
+          ],
           false,
           classDeclaration.range,
         ),

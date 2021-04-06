@@ -11,11 +11,13 @@ import {
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
 import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry8, FieldEntry16, FieldEntry32, FieldEntry64 } from "./util";
 
+// @ts-ignore: valid inline
 @inline
 function getObjectSize<T>(value: T): usize {
   return changetype<OBJECT>(changetype<usize>(value) - TOTAL_OVERHEAD).rtSize;
 }
 
+// @ts-ignore: valid global
 @global
 export namespace ASON {
   export class Serializer<T> {
@@ -444,11 +446,11 @@ export namespace ASON {
       i = 0;
       while (i < linkTableByteLength) {
         let entry = linkTable.allocate();
-        
+
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
         let parentPointer = entryMap.get(parentEntryId);
-        
+
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
         let childPointer = entryMap.get(childEntryId);
@@ -466,7 +468,7 @@ export namespace ASON {
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
         let parentPointer = entryMap.get(parentEntryId);
-        
+
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
         let childPointer = entryMap.get(childEntryId);
@@ -556,10 +558,12 @@ export namespace ASON {
   }
 
   export function serialize<T>(ref: T): StaticArray<u8> {
-    
+    let a = new Serializer<T>();
+    return a.serialize(ref);
   }
 
   export function deserialize<T>(data: StaticArray<u8>): T {
-    
+    let a = new Deserializer<T>();
+    return a.deserialize(data);
   }
 }
