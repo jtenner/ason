@@ -4,9 +4,9 @@
  (type $i32_=>_i32 (func (param i32) (result i32)))
  (type $i32_=>_none (func (param i32)))
  (type $i32_i32_i32_=>_none (func (param i32 i32 i32)))
+ (type $i32_i32_i32_i32_=>_none (func (param i32 i32 i32 i32)))
  (type $i32_i32_i32_=>_i32 (func (param i32 i32 i32) (result i32)))
  (type $none_=>_none (func))
- (type $i32_i32_i32_i32_=>_none (func (param i32 i32 i32 i32)))
  (type $i32_f32_=>_none (func (param i32 f32)))
  (type $i32_i32_f32_i32_=>_none (func (param i32 i32 f32 i32)))
  (type $none_=>_i32 (func (result i32)))
@@ -35,7 +35,12 @@
  (data (i32.const 1036) "<\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00(\00\00\00O\00b\00j\00e\00c\00t\00 \00i\00s\00 \00n\00o\00t\00 \00p\00i\00n\00n\00e\00d\00\00\00\00\00")
  (data (i32.const 1100) ",\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\1a\00\00\00~\00l\00i\00b\00/\00a\00r\00r\00a\00y\00.\00t\00s\00\00\00")
  (data (i32.const 1148) ",\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\1a\00\00\00t\00e\00s\00t\00/\00i\00n\00d\00e\00x\00.\00t\00s\00\00\00")
- (data (i32.const 1200) "\16\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00\00\00\00\00\00\00\00\00 \00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\10\01\02\00\00\00\00\00\00\00\00\00\00\00\00\00d\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\02\01\00\00\00\00\00\00\02\t\00\00\00\00\00\00 \00\00\00\00\00\00\00\10\01\02\00\00\00\00\00\02\01\00\00\00\00\00\00")
+ (data (i32.const 1196) "\1c\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00")
+ (data (i32.const 1228) "\1c\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\n\00\00\00f\00i\00r\00s\00t\00\00\00")
+ (data (i32.const 1260) "\1c\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\0c\00\00\00s\00e\00c\00o\00n\00d\00")
+ (data (i32.const 1292) "\1c\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\n\00\00\00t\00h\00i\00r\00d\00\00\00")
+ (data (i32.const 1324) "\1c\00\00\00\00\00\00\00\00\00\00\00\01\00\00\00\0c\00\00\00f\00o\00u\00r\00t\00h\00")
+ (data (i32.const 1360) "\1a\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00\00\00\00\00\00\00\00\00 \00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\10\01\02\00\00\00\00\00\00\00\00\00\00\00\00\00d\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\02\01\00\00\00\00\00\00\02\t\00\00\00\00\00\00 \00\00\00\00\00\00\00\10\01\02\00\00\00\00\00\02\01\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00\00 \00\00\00\00\00\00\00")
  (table $0 1 funcref)
  (global $~lib/builtins/u16.MAX_VALUE i32 (i32.const 65535))
  (global $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH i32 (i32.const 65535))
@@ -58,10 +63,10 @@
  (global $~lib/ASC_LOW_MEMORY_LIMIT i32 (i32.const 0))
  (global $~lib/ASC_SHRINK_LEVEL i32 (i32.const 0))
  (global $~argumentsLength (mut i32) (i32.const 0))
- (global $~lib/rt/__rtti_base i32 (i32.const 1200))
- (global $~lib/memory/__data_end i32 (i32.const 1380))
- (global $~lib/memory/__stack_pointer (mut i32) (i32.const 17764))
- (global $~lib/memory/__heap_base i32 (i32.const 17764))
+ (global $~lib/rt/__rtti_base i32 (i32.const 1360))
+ (global $~lib/memory/__data_end i32 (i32.const 1572))
+ (global $~lib/memory/__stack_pointer (mut i32) (i32.const 17956))
+ (global $~lib/memory/__heap_base i32 (i32.const 17956))
  (export "_start" (func $test/index/_start))
  (export "memory" (memory $0))
  (start $~start)
@@ -6079,6 +6084,225 @@
   i32.add
   i32.load
  )
+ (func $test/index/A#set:a (param $0 i32) (param $1 f32)
+  local.get $0
+  local.get $1
+  f32.store
+ )
+ (func $test/index/B#set:a (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $test/index/A#set:b (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=4
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $test/index/A#set:x (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store8 offset=8
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:entryId (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:entries (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=4
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:dataSegmentTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=8
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayDataSegmentTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=12
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:linkTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=16
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:referenceTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=20
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=24
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayLinkTable (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=28
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable8 (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=32
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable16 (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=36
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable32 (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=40
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable64 (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=44
+  local.get $0
+  local.get $1
+  i32.const 0
+  call $~lib/rt/itcms/__link
+ )
+ (func $packages/assembly/util/LinkEntry#set:childEntryId (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=8
+ )
+ (func $packages/assembly/util/LinkEntry#set:parentEntryId (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store
+ )
+ (func $packages/assembly/util/LinkEntry#set:offset (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=4
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putField<test/index/B> (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+  i32.const 1
+  drop
+  local.get $2
+  i32.const 0
+  i32.ne
+  if
+   local.get $0
+   local.get $0
+   local.get $2
+   call $packages/assembly/index/ASON.Serializer<test/index/A>#putReference<test/index/B>
+   local.get $1
+   local.get $3
+   call $packages/assembly/index/ASON.Serializer<test/index/A>#putLink
+  end
+  return
+ )
+ (func $packages/assembly/util/FieldEntry8#set:entryId (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store
+ )
+ (func $packages/assembly/util/FieldEntry8#set:offset (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store offset=4
+ )
+ (func $packages/assembly/util/FieldEntry8#set:value (param $0 i32) (param $1 i32)
+  local.get $0
+  local.get $1
+  i32.store8 offset=8
+ )
+ (func $test/index/A#__asonPut<packages/assembly/index/ASON.Serializer<test/index/A>>@varargs (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  block $1of1
+   block $0of1
+    block $outOfRange
+     global.get $~argumentsLength
+     i32.const 2
+     i32.sub
+     br_table $0of1 $1of1 $outOfRange
+    end
+    unreachable
+   end
+   global.get $~lib/memory/__stack_pointer
+   i32.const 0
+   i32.const 2
+   i32.const 17
+   i32.const 1216
+   call $~lib/rt/__newArray
+   local.tee $3
+   i32.store
+  end
+  local.get $0
+  local.get $1
+  local.get $2
+  local.get $3
+  call $test/index/A#__asonPut<packages/assembly/index/ASON.Serializer<test/index/A>>
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+ )
  (func $test/index/_start
   (local $0 i32)
   (local $1 i32)
@@ -6097,7 +6321,7 @@
   (local $14 i32)
   (local $15 i32)
   global.get $~lib/memory/__stack_pointer
-  i32.const 20
+  i32.const 36
   i32.sub
   global.set $~lib/memory/__stack_pointer
   call $~stack_check
@@ -6108,8 +6332,14 @@
   i64.const 0
   i64.store offset=8
   global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=16
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=24
+  global.get $~lib/memory/__stack_pointer
   i32.const 0
-  i32.store offset=16
+  i32.store offset=32
   global.get $~lib/memory/__stack_pointer
   i32.const 0
   f32.const 1
@@ -6292,13 +6522,98 @@
   if
    i32.const 0
    i32.const 1168
-   i32.const 17
+   i32.const 27
    i32.const 3
    call $~lib/builtins/abort
    unreachable
   end
   global.get $~lib/memory/__stack_pointer
-  i32.const 20
+  i32.const 0
+  call $test/index/A#constructor
+  local.tee $7
+  i32.store offset=20
+  local.get $7
+  i32.load offset=4
+  local.get $7
+  call $test/index/B#set:a
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#constructor
+  local.tee $6
+  i32.store offset=24
+  global.get $~lib/memory/__stack_pointer
+  local.get $6
+  local.get $7
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#serialize
+  local.tee $2
+  i32.store offset=8
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  call $packages/assembly/index/ASON.Deserializer<test/index/A>#constructor
+  local.tee $5
+  i32.store offset=28
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  local.get $2
+  call $packages/assembly/index/ASON.Deserializer<test/index/A>#deserialize
+  local.tee $10
+  i32.store offset=32
+  local.get $7
+  local.get $10
+  i32.ne
+  i32.eqz
+  if
+   i32.const 1248
+   i32.const 1168
+   i32.const 38
+   i32.const 3
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $7
+  f32.load
+  local.get $10
+  f32.load
+  f32.eq
+  i32.eqz
+  if
+   i32.const 1280
+   i32.const 1168
+   i32.const 39
+   i32.const 3
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $7
+  i32.load8_u offset=8
+  local.get $10
+  i32.load8_u offset=8
+  i32.eq
+  i32.eqz
+  if
+   i32.const 1312
+   i32.const 1168
+   i32.const 40
+   i32.const 3
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $10
+  i32.load offset=4
+  i32.load
+  local.get $10
+  i32.eq
+  i32.eqz
+  if
+   i32.const 1344
+   i32.const 1168
+   i32.const 41
+   i32.const 3
+   call $~lib/builtins/abort
+   unreachable
+  end
+  global.get $~lib/memory/__stack_pointer
+  i32.const 36
   i32.add
   global.set $~lib/memory/__stack_pointer
  )
@@ -6624,129 +6939,263 @@
   local.get $1
   call $~lib/array/Array<usize>#__visit
  )
+ (func $test/index/A~visit (param $0 i32) (param $1 i32)
+  (local $2 i32)
+  local.get $0
+  i32.load offset=4
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+ )
+ (func $test/index/B~visit (param $0 i32) (param $1 i32)
+  (local $2 i32)
+  local.get $0
+  i32.load
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>~visit (param $0 i32) (param $1 i32)
+  (local $2 i32)
+  local.get $0
+  i32.load offset=4
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=8
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=12
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=16
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=20
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=24
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=28
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=32
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=36
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=40
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+  local.get $0
+  i32.load offset=44
+  local.tee $2
+  if
+   local.get $2
+   local.get $1
+   call $~lib/rt/itcms/__visit
+  end
+ )
  (func $~lib/rt/__visit_members (param $0 i32) (param $1 i32)
   block $invalid
-   block $~lib/array/Array<usize>
-    block $~lib/map/Map<u32,usize>
-     block $packages/assembly/index/ASON.Deserializer<test/index/Vec3>
-      block $~lib/array/Array<i32>
-       block $~lib/array/Array<u32>
-        block $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>
-         block $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>
-          block $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>
-           block $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>
-            block $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>
-             block $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>
-              block $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>
-               block $packages/assembly/util/Table<packages/assembly/util/LinkEntry>
-                block $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>
-                 block $~lib/staticarray/StaticArray<u8>
-                  block $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>
-                   block $~lib/map/Map<usize,u32>
-                    block $packages/assembly/index/ASON.Serializer<test/index/Vec3>
-                     block $test/index/Vec3
-                      block $~lib/arraybuffer/ArrayBufferView
-                       block $~lib/string/String
-                        block $~lib/arraybuffer/ArrayBuffer
-                         local.get $0
-                         i32.const 8
-                         i32.sub
-                         i32.load
-                         br_table $~lib/arraybuffer/ArrayBuffer $~lib/string/String $~lib/arraybuffer/ArrayBufferView $test/index/Vec3 $packages/assembly/index/ASON.Serializer<test/index/Vec3> $~lib/map/Map<usize,u32> $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry> $~lib/staticarray/StaticArray<u8> $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry> $packages/assembly/util/Table<packages/assembly/util/LinkEntry> $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry> $packages/assembly/util/Table<packages/assembly/util/ArrayEntry> $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry> $packages/assembly/util/Table<packages/assembly/util/FieldEntry8> $packages/assembly/util/Table<packages/assembly/util/FieldEntry16> $packages/assembly/util/Table<packages/assembly/util/FieldEntry32> $packages/assembly/util/Table<packages/assembly/util/FieldEntry64> $~lib/array/Array<u32> $~lib/array/Array<i32> $packages/assembly/index/ASON.Deserializer<test/index/Vec3> $~lib/map/Map<u32,usize> $~lib/array/Array<usize> $invalid
+   block $packages/assembly/index/ASON.Deserializer<test/index/A>
+    block $packages/assembly/index/ASON.Serializer<test/index/A>
+     block $test/index/B
+      block $test/index/A
+       block $~lib/array/Array<usize>
+        block $~lib/map/Map<u32,usize>
+         block $packages/assembly/index/ASON.Deserializer<test/index/Vec3>
+          block $~lib/array/Array<i32>
+           block $~lib/array/Array<u32>
+            block $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>
+             block $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>
+              block $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>
+               block $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>
+                block $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>
+                 block $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>
+                  block $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>
+                   block $packages/assembly/util/Table<packages/assembly/util/LinkEntry>
+                    block $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>
+                     block $~lib/staticarray/StaticArray<u8>
+                      block $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>
+                       block $~lib/map/Map<usize,u32>
+                        block $packages/assembly/index/ASON.Serializer<test/index/Vec3>
+                         block $test/index/Vec3
+                          block $~lib/arraybuffer/ArrayBufferView
+                           block $~lib/string/String
+                            block $~lib/arraybuffer/ArrayBuffer
+                             local.get $0
+                             i32.const 8
+                             i32.sub
+                             i32.load
+                             br_table $~lib/arraybuffer/ArrayBuffer $~lib/string/String $~lib/arraybuffer/ArrayBufferView $test/index/Vec3 $packages/assembly/index/ASON.Serializer<test/index/Vec3> $~lib/map/Map<usize,u32> $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry> $~lib/staticarray/StaticArray<u8> $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry> $packages/assembly/util/Table<packages/assembly/util/LinkEntry> $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry> $packages/assembly/util/Table<packages/assembly/util/ArrayEntry> $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry> $packages/assembly/util/Table<packages/assembly/util/FieldEntry8> $packages/assembly/util/Table<packages/assembly/util/FieldEntry16> $packages/assembly/util/Table<packages/assembly/util/FieldEntry32> $packages/assembly/util/Table<packages/assembly/util/FieldEntry64> $~lib/array/Array<u32> $~lib/array/Array<i32> $packages/assembly/index/ASON.Deserializer<test/index/Vec3> $~lib/map/Map<u32,usize> $~lib/array/Array<usize> $test/index/A $test/index/B $packages/assembly/index/ASON.Serializer<test/index/A> $packages/assembly/index/ASON.Deserializer<test/index/A> $invalid
+                            end
+                            return
+                           end
+                           return
+                          end
+                          local.get $0
+                          local.get $1
+                          call $~lib/arraybuffer/ArrayBufferView~visit
+                          return
+                         end
+                         return
                         end
+                        local.get $0
+                        local.get $1
+                        call $packages/assembly/index/ASON.Serializer<test/index/Vec3>~visit
                         return
                        end
+                       local.get $0
+                       local.get $1
+                       call $~lib/map/Map<usize,u32>~visit
                        return
                       end
                       local.get $0
                       local.get $1
-                      call $~lib/arraybuffer/ArrayBufferView~visit
+                      call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>~visit
                       return
                      end
                      return
                     end
                     local.get $0
                     local.get $1
-                    call $packages/assembly/index/ASON.Serializer<test/index/Vec3>~visit
+                    call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>~visit
                     return
                    end
                    local.get $0
                    local.get $1
-                   call $~lib/map/Map<usize,u32>~visit
+                   call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>~visit
                    return
                   end
                   local.get $0
                   local.get $1
-                  call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>~visit
+                  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>~visit
                   return
                  end
+                 local.get $0
+                 local.get $1
+                 call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>~visit
                  return
                 end
                 local.get $0
                 local.get $1
-                call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>~visit
+                call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>~visit
                 return
                end
                local.get $0
                local.get $1
-               call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>~visit
+               call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>~visit
                return
               end
               local.get $0
               local.get $1
-              call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>~visit
+              call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>~visit
               return
              end
              local.get $0
              local.get $1
-             call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>~visit
+             call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>~visit
              return
             end
             local.get $0
             local.get $1
-            call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>~visit
+            call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>~visit
             return
            end
            local.get $0
            local.get $1
-           call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>~visit
+           call $~lib/array/Array<u32>~visit
            return
           end
           local.get $0
           local.get $1
-          call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>~visit
+          call $~lib/array/Array<i32>~visit
           return
          end
-         local.get $0
-         local.get $1
-         call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>~visit
          return
         end
         local.get $0
         local.get $1
-        call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>~visit
+        call $~lib/map/Map<u32,usize>~visit
         return
        end
        local.get $0
        local.get $1
-       call $~lib/array/Array<u32>~visit
+       call $~lib/array/Array<usize>~visit
        return
       end
       local.get $0
       local.get $1
-      call $~lib/array/Array<i32>~visit
+      call $test/index/A~visit
       return
      end
+     local.get $0
+     local.get $1
+     call $test/index/B~visit
      return
     end
     local.get $0
     local.get $1
-    call $~lib/map/Map<u32,usize>~visit
+    call $packages/assembly/index/ASON.Serializer<test/index/A>~visit
     return
    end
-   local.get $0
-   local.get $1
-   call $~lib/array/Array<usize>~visit
    return
   end
   unreachable
@@ -6775,8 +7224,8 @@
   global.get $~lib/memory/__data_end
   i32.lt_s
   if
-   i32.const 17792
-   i32.const 17840
+   i32.const 17984
+   i32.const 18032
    i32.const 1
    i32.const 1
    call $~lib/builtins/abort
@@ -7093,6 +7542,527 @@
   end
   local.get $0
   call $packages/assembly/index/ASON.Serializer<test/index/Vec3>#commit
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $2
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putReference<test/index/A> (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  local.get $0
+  i32.load
+  local.tee $2
+  i32.const 1
+  i32.add
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:entryId
+  local.get $2
+  local.set $2
+  local.get $0
+  i32.load offset=4
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  local.get $1
+  local.get $2
+  call $~lib/map/Map<usize,u32>#set
+  drop
+  local.get $0
+  i32.load offset=20
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#allocate
+  local.set $3
+  local.get $3
+  local.get $2
+  call $packages/assembly/util/ReferenceEntry#set:entryId
+  local.get $3
+  local.get $1
+  local.set $4
+  local.get $4
+  i32.const 20
+  i32.sub
+  i32.load offset=16
+  call $packages/assembly/util/ReferenceEntry#set:offset
+  local.get $3
+  i32.const 22
+  call $packages/assembly/util/ReferenceEntry#set:rttid
+  local.get $2
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $5
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putField<f32> (param $0 i32) (param $1 i32) (param $2 f32) (param $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  i32.const 0
+  drop
+  i32.const 1
+  drop
+  i32.const 4
+  i32.const 4
+  i32.eq
+  drop
+  local.get $0
+  i32.load offset=40
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>#allocate
+  local.set $4
+  local.get $4
+  local.get $1
+  call $packages/assembly/util/FieldEntry32#set:entryId
+  local.get $4
+  local.get $3
+  call $packages/assembly/util/FieldEntry32#set:offset
+  local.get $4
+  local.get $2
+  i32.reinterpret_f32
+  call $packages/assembly/util/FieldEntry32#set:value
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putReference<test/index/B> (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  local.get $0
+  i32.load
+  local.tee $2
+  i32.const 1
+  i32.add
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:entryId
+  local.get $2
+  local.set $2
+  local.get $0
+  i32.load offset=4
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  local.get $1
+  local.get $2
+  call $~lib/map/Map<usize,u32>#set
+  drop
+  local.get $0
+  i32.load offset=20
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#allocate
+  local.set $3
+  local.get $3
+  local.get $2
+  call $packages/assembly/util/ReferenceEntry#set:entryId
+  local.get $3
+  local.get $1
+  local.set $4
+  local.get $4
+  i32.const 20
+  i32.sub
+  i32.load offset=16
+  call $packages/assembly/util/ReferenceEntry#set:offset
+  local.get $3
+  i32.const 23
+  call $packages/assembly/util/ReferenceEntry#set:rttid
+  local.get $2
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $5
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putLink (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  i32.load offset=16
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>#allocate
+  local.set $4
+  local.get $4
+  local.get $1
+  call $packages/assembly/util/LinkEntry#set:childEntryId
+  local.get $4
+  local.get $2
+  call $packages/assembly/util/LinkEntry#set:parentEntryId
+  local.get $4
+  local.get $3
+  call $packages/assembly/util/LinkEntry#set:offset
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#putField<u8> (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  i32.const 0
+  drop
+  i32.const 0
+  drop
+  i32.const 1
+  i32.const 1
+  i32.eq
+  drop
+  local.get $0
+  i32.load offset=32
+  local.set $5
+  global.get $~lib/memory/__stack_pointer
+  local.get $5
+  i32.store
+  local.get $5
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>#allocate
+  local.set $4
+  local.get $4
+  local.get $1
+  call $packages/assembly/util/FieldEntry8#set:entryId
+  local.get $4
+  local.get $3
+  call $packages/assembly/util/FieldEntry8#set:offset
+  local.get $4
+  local.get $2
+  call $packages/assembly/util/FieldEntry8#set:value
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+ )
+ (func $test/index/A#__asonPut<packages/assembly/index/ASON.Serializer<test/index/A>> (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32)
+  (local $4 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $3
+  i64.const 4685344707553787904
+  i32.wrap_i64
+  i32.const 0
+  call $~lib/array/Array<u32>#includes
+  i32.eqz
+  if
+   local.get $1
+   local.get $2
+   local.get $0
+   f32.load
+   i32.const 0
+   call $packages/assembly/index/ASON.Serializer<test/index/A>#putField<f32>
+  end
+  local.get $3
+  i64.const 4685344741913526272
+  i32.wrap_i64
+  i32.const 0
+  call $~lib/array/Array<u32>#includes
+  i32.eqz
+  if
+   local.get $1
+   local.get $2
+   local.get $0
+   i32.load offset=4
+   local.set $4
+   global.get $~lib/memory/__stack_pointer
+   local.get $4
+   i32.store
+   local.get $4
+   i32.const 4
+   call $packages/assembly/index/ASON.Serializer<test/index/A>#putField<test/index/B>
+  end
+  local.get $3
+  i64.const 4685345497827770368
+  i32.wrap_i64
+  i32.const 0
+  call $~lib/array/Array<u32>#includes
+  i32.eqz
+  if
+   local.get $1
+   local.get $2
+   local.get $0
+   i32.load8_u offset=8
+   i32.const 8
+   call $packages/assembly/index/ASON.Serializer<test/index/A>#putField<u8>
+  end
+  i32.const 0
+  drop
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#put<test/index/A> (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  i32.const 1
+  if (result i32)
+   local.get $0
+   i32.load offset=4
+   local.set $3
+   global.get $~lib/memory/__stack_pointer
+   local.get $3
+   i32.store
+   local.get $3
+   local.get $1
+   call $~lib/map/Map<usize,u32>#has
+  else
+   i32.const 0
+  end
+  if
+   local.get $0
+   i32.load offset=4
+   local.set $3
+   global.get $~lib/memory/__stack_pointer
+   local.get $3
+   i32.store
+   local.get $3
+   local.get $1
+   call $~lib/map/Map<usize,u32>#get
+   local.set $3
+   global.get $~lib/memory/__stack_pointer
+   i32.const 4
+   i32.add
+   global.set $~lib/memory/__stack_pointer
+   local.get $3
+   return
+  end
+  i32.const 0
+  drop
+  i32.const 0
+  drop
+  i32.const 0
+  drop
+  i32.const 0
+  drop
+  local.get $0
+  local.get $1
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#putReference<test/index/A>
+  local.set $2
+  local.get $1
+  local.get $0
+  local.get $2
+  i32.const 2
+  global.set $~argumentsLength
+  i32.const 0
+  call $test/index/A#__asonPut<packages/assembly/index/ASON.Serializer<test/index/A>>@varargs
+  local.get $2
+  local.set $3
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $3
+  return
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#serialize (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $1
+  i32.const 0
+  i32.eq
+  if
+   i32.const 0
+   i32.const 0
+   call $~lib/staticarray/StaticArray<u8>#constructor
+   local.set $2
+   global.get $~lib/memory/__stack_pointer
+   i32.const 4
+   i32.add
+   global.set $~lib/memory/__stack_pointer
+   local.get $2
+   return
+  end
+  local.get $0
+  i32.const 0
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:entryId
+  local.get $0
+  i32.load offset=4
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $~lib/map/Map<usize,u32>#clear
+  local.get $0
+  i32.load offset=8
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>#reset
+  local.get $0
+  i32.load offset=12
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>#reset
+  local.get $0
+  i32.load offset=16
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>#reset
+  local.get $0
+  i32.load offset=24
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>#reset
+  local.get $0
+  i32.load offset=28
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>#reset
+  local.get $0
+  i32.load offset=20
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#reset
+  local.get $0
+  i32.load offset=32
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>#reset
+  local.get $0
+  i32.load offset=36
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>#reset
+  local.get $0
+  i32.load offset=40
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>#reset
+  local.get $0
+  i32.load offset=44
+  local.set $2
+  global.get $~lib/memory/__stack_pointer
+  local.get $2
+  i32.store
+  local.get $2
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>#reset
+  local.get $0
+  local.get $1
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#put<test/index/A>
+  i32.const 0
+  i32.eq
+  i32.eqz
+  if
+   i32.const 0
+   i32.const 752
+   i32.const 63
+   i32.const 7
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $0
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#commit
   local.set $2
   global.get $~lib/memory/__stack_pointer
   i32.const 4
@@ -9043,6 +10013,1300 @@
   local.get $9
  )
  (func $packages/assembly/index/ASON.Deserializer<test/index/Vec3>#deserialize (param $0 i32) (param $1 i32) (result i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local $6 i32)
+  (local $7 i32)
+  (local $8 i32)
+  (local $9 i32)
+  (local $10 i32)
+  (local $11 i32)
+  (local $12 i32)
+  (local $13 i32)
+  (local $14 i32)
+  (local $15 i32)
+  (local $16 i32)
+  (local $17 i32)
+  (local $18 i32)
+  (local $19 i32)
+  (local $20 i32)
+  (local $21 i32)
+  (local $22 i32)
+  (local $23 i32)
+  (local $24 i32)
+  (local $25 i32)
+  (local $26 i32)
+  (local $27 i32)
+  (local $28 i32)
+  (local $29 i32)
+  (local $30 i32)
+  (local $31 i32)
+  (local $32 i32)
+  (local $33 i32)
+  (local $34 i32)
+  (local $35 i32)
+  (local $36 i32)
+  (local $37 i32)
+  (local $38 i32)
+  (local $39 i32)
+  (local $40 i32)
+  (local $41 i32)
+  (local $42 i32)
+  (local $43 i32)
+  (local $44 i32)
+  (local $45 i32)
+  (local $46 i32)
+  (local $47 i32)
+  (local $48 i32)
+  (local $49 i32)
+  (local $50 i32)
+  (local $51 i32)
+  (local $52 i32)
+  (local $53 i32)
+  (local $54 i32)
+  (local $55 i32)
+  (local $56 i32)
+  (local $57 i32)
+  (local $58 i32)
+  (local $59 i32)
+  (local $60 i32)
+  (local $61 i32)
+  (local $62 i32)
+  (local $63 i32)
+  (local $64 i32)
+  (local $65 i32)
+  (local $66 i32)
+  (local $67 i32)
+  (local $68 i32)
+  (local $69 i32)
+  (local $70 i32)
+  (local $71 i32)
+  (local $72 i32)
+  (local $73 i32)
+  (local $74 i32)
+  (local $75 i32)
+  (local $76 i32)
+  (local $77 i32)
+  (local $78 i32)
+  (local $79 i32)
+  (local $80 i32)
+  (local $81 i32)
+  (local $82 i64)
+  (local $83 i32)
+  (local $84 i32)
+  (local $85 i32)
+  (local $86 i32)
+  (local $87 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 52
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=8
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=16
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=24
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=32
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=40
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store offset=48
+  local.get $1
+  local.set $2
+  local.get $1
+  call $~lib/staticarray/StaticArray<u8>#get:length
+  local.set $3
+  local.get $3
+  i32.const 40
+  i32.gt_u
+  i32.eqz
+  if
+   i32.const 832
+   i32.const 752
+   i32.const 349
+   i32.const 7
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $1
+  local.set $4
+  local.get $4
+  i32.load
+  local.set $5
+  local.get $4
+  i32.load offset=4
+  local.set $6
+  local.get $4
+  i32.load offset=8
+  local.set $7
+  local.get $4
+  i32.load offset=12
+  local.set $8
+  local.get $4
+  i32.load offset=16
+  local.set $9
+  local.get $4
+  i32.load offset=20
+  local.set $10
+  local.get $4
+  i32.load offset=24
+  local.set $11
+  local.get $4
+  i32.load offset=28
+  local.set $12
+  local.get $4
+  i32.load offset=32
+  local.set $13
+  local.get $4
+  i32.load offset=36
+  local.set $14
+  local.get $3
+  i32.const 40
+  local.get $5
+  i32.add
+  local.get $6
+  i32.add
+  local.get $7
+  i32.add
+  local.get $8
+  i32.add
+  local.get $9
+  i32.add
+  local.get $10
+  i32.add
+  local.get $11
+  i32.add
+  local.get $12
+  i32.add
+  local.get $13
+  i32.add
+  local.get $14
+  i32.add
+  i32.eq
+  i32.eqz
+  if
+   i32.const 912
+   i32.const 752
+   i32.const 367
+   i32.const 7
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $2
+  i32.const 40
+  i32.add
+  local.set $15
+  local.get $15
+  local.get $5
+  i32.add
+  local.set $16
+  local.get $16
+  local.get $6
+  i32.add
+  local.set $17
+  local.get $17
+  local.get $7
+  i32.add
+  local.set $18
+  local.get $18
+  local.get $8
+  i32.add
+  local.set $19
+  local.get $19
+  local.get $9
+  i32.add
+  local.set $20
+  local.get $20
+  local.get $10
+  i32.add
+  local.set $21
+  local.get $21
+  local.get $11
+  i32.add
+  local.set $22
+  local.get $22
+  local.get $12
+  i32.add
+  local.set $23
+  local.get $23
+  local.get $13
+  i32.add
+  local.set $24
+  global.get $~lib/memory/__stack_pointer
+  local.get $15
+  local.get $5
+  call $packages/assembly/util/Table.from<packages/assembly/util/ReferenceEntry>
+  local.tee $25
+  i32.store
+  global.get $~lib/memory/__stack_pointer
+  local.get $16
+  local.get $6
+  call $packages/assembly/util/Table.from<packages/assembly/util/DataSegmentEntry>
+  local.tee $26
+  i32.store offset=4
+  global.get $~lib/memory/__stack_pointer
+  local.get $17
+  local.get $7
+  call $packages/assembly/util/Table.from<packages/assembly/util/ArrayEntry>
+  local.tee $27
+  i32.store offset=8
+  global.get $~lib/memory/__stack_pointer
+  local.get $18
+  local.get $8
+  call $packages/assembly/util/Table.from<packages/assembly/util/ArrayDataSegmentEntry>
+  local.tee $28
+  i32.store offset=12
+  global.get $~lib/memory/__stack_pointer
+  local.get $19
+  local.get $9
+  call $packages/assembly/util/Table.from<packages/assembly/util/LinkEntry>
+  local.tee $29
+  i32.store offset=16
+  global.get $~lib/memory/__stack_pointer
+  local.get $20
+  local.get $10
+  call $packages/assembly/util/Table.from<packages/assembly/util/ArrayLinkEntry>
+  local.tee $30
+  i32.store offset=20
+  global.get $~lib/memory/__stack_pointer
+  local.get $21
+  local.get $11
+  call $packages/assembly/util/Table.from<packages/assembly/util/FieldEntry8>
+  local.tee $31
+  i32.store offset=24
+  global.get $~lib/memory/__stack_pointer
+  local.get $22
+  local.get $12
+  call $packages/assembly/util/Table.from<packages/assembly/util/FieldEntry16>
+  local.tee $32
+  i32.store offset=28
+  global.get $~lib/memory/__stack_pointer
+  local.get $23
+  local.get $13
+  call $packages/assembly/util/Table.from<packages/assembly/util/FieldEntry32>
+  local.tee $33
+  i32.store offset=32
+  global.get $~lib/memory/__stack_pointer
+  local.get $24
+  local.get $14
+  call $packages/assembly/util/Table.from<packages/assembly/util/FieldEntry64>
+  local.tee $34
+  i32.store offset=36
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  call $~lib/map/Map<u32,usize>#constructor
+  local.tee $35
+  i32.store offset=40
+  i32.const 0
+  local.set $36
+  loop $while-continue|0
+   local.get $36
+   local.get $5
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $25
+    call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#allocate
+    local.set $38
+    local.get $38
+    i32.load offset=8
+    local.get $38
+    i32.load
+    call $~lib/rt/itcms/__new
+    call $~lib/rt/itcms/__pin
+    local.set $39
+    local.get $35
+    local.get $38
+    i32.load offset=4
+    local.get $39
+    call $~lib/map/Map<u32,usize>#set
+    drop
+    local.get $36
+    i32.const 12
+    i32.add
+    local.set $36
+    br $while-continue|0
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|1
+   local.get $36
+   local.get $6
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $26
+    call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>#allocate
+    local.set $40
+    local.get $40
+    i32.load offset=8
+    local.set $41
+    local.get $26
+    local.get $41
+    call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>#allocateSegment
+    local.set $42
+    local.get $40
+    i32.load offset=8
+    local.get $40
+    i32.load
+    call $~lib/rt/itcms/__new
+    call $~lib/rt/itcms/__pin
+    local.set $43
+    local.get $43
+    local.get $42
+    local.get $41
+    call $~lib/memory/memory.copy
+    local.get $35
+    local.get $40
+    i32.load offset=4
+    local.get $43
+    call $~lib/map/Map<u32,usize>#set
+    drop
+    local.get $26
+    i32.load offset=4
+    local.set $36
+    br $while-continue|1
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|2
+   local.get $36
+   local.get $7
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $27
+    call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>#allocate
+    local.set $44
+    local.get $44
+    i32.load offset=8
+    local.set $45
+    global.get $~lib/memory/__stack_pointer
+    i32.const 0
+    local.get $45
+    i32.const 2
+    i32.shl
+    call $~lib/arraybuffer/ArrayBuffer#constructor
+    local.tee $46
+    i32.store offset=44
+    local.get $45
+    i32.const 2
+    local.get $44
+    i32.load
+    local.get $46
+    call $~lib/rt/__newArray
+    call $~lib/rt/itcms/__pin
+    local.set $47
+    local.get $35
+    local.get $44
+    i32.load offset=4
+    local.get $47
+    call $~lib/map/Map<u32,usize>#set
+    drop
+    i32.const 12
+    local.set $36
+    br $while-continue|2
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|3
+   local.get $36
+   local.get $8
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $28
+    call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>#allocate
+    local.set $48
+    local.get $48
+    i32.load offset=12
+    local.set $49
+    local.get $28
+    local.get $49
+    call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>#allocateSegment
+    local.set $50
+    local.get $49
+    local.get $48
+    i32.load offset=8
+    local.get $48
+    i32.load
+    local.get $50
+    call $~lib/rt/__newArray
+    call $~lib/rt/itcms/__pin
+    local.set $51
+    local.get $35
+    local.get $48
+    i32.load offset=4
+    local.get $51
+    call $~lib/map/Map<u32,usize>#set
+    drop
+    local.get $28
+    i32.load offset=4
+    local.set $36
+    br $while-continue|3
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|4
+   local.get $36
+   local.get $9
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $29
+    call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>#allocate
+    local.set $52
+    local.get $52
+    i32.load
+    local.set $53
+    local.get $35
+    local.get $53
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 455
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $53
+    call $~lib/map/Map<u32,usize>#get
+    local.set $54
+    local.get $52
+    i32.load offset=8
+    local.set $55
+    local.get $35
+    local.get $55
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 459
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $55
+    call $~lib/map/Map<u32,usize>#get
+    local.set $56
+    local.get $54
+    local.get $56
+    i32.const 0
+    call $~lib/rt/itcms/__link
+    local.get $54
+    local.get $52
+    i32.load offset=4
+    i32.add
+    local.get $56
+    i32.store
+    local.get $36
+    i32.const 12
+    i32.add
+    local.set $36
+    br $while-continue|4
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|5
+   local.get $36
+   local.get $10
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $30
+    call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>#allocate
+    local.set $57
+    local.get $57
+    i32.load
+    local.set $58
+    local.get $35
+    local.get $58
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 473
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $58
+    call $~lib/map/Map<u32,usize>#get
+    local.set $59
+    local.get $57
+    i32.load offset=8
+    local.set $60
+    local.get $35
+    local.get $60
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 477
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $60
+    call $~lib/map/Map<u32,usize>#get
+    local.set $61
+    local.get $59
+    local.get $61
+    i32.const 0
+    call $~lib/rt/itcms/__link
+    local.get $59
+    i32.load offset=4
+    local.set $62
+    local.get $62
+    local.get $57
+    i32.load offset=4
+    i32.const 2
+    i32.shl
+    i32.add
+    local.get $61
+    i32.store
+    local.get $36
+    i32.const 12
+    i32.add
+    local.set $36
+    br $while-continue|5
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|6
+   local.get $36
+   local.get $11
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $31
+    call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>#allocate
+    local.set $63
+    local.get $63
+    i32.load offset=4
+    local.set $64
+    local.get $63
+    i32.load
+    local.set $65
+    local.get $35
+    local.get $65
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 493
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $65
+    call $~lib/map/Map<u32,usize>#get
+    local.set $66
+    local.get $63
+    i32.load8_u offset=8
+    local.set $67
+    local.get $66
+    local.get $64
+    i32.add
+    local.get $67
+    i32.store8
+    local.get $36
+    i32.const 9
+    i32.add
+    local.set $36
+    br $while-continue|6
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|7
+   local.get $36
+   local.get $12
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $32
+    call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>#allocate
+    local.set $68
+    local.get $68
+    i32.load offset=4
+    local.set $69
+    local.get $68
+    i32.load
+    local.set $70
+    local.get $35
+    local.get $70
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 509
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $70
+    call $~lib/map/Map<u32,usize>#get
+    local.set $71
+    local.get $68
+    i32.load16_u offset=8
+    local.set $72
+    local.get $71
+    local.get $69
+    i32.add
+    local.get $72
+    i32.store16
+    local.get $36
+    i32.const 10
+    i32.add
+    local.set $36
+    br $while-continue|7
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|8
+   local.get $36
+   local.get $13
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $33
+    call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>#allocate
+    local.set $73
+    local.get $73
+    i32.load offset=4
+    local.set $74
+    local.get $73
+    i32.load
+    local.set $75
+    local.get $35
+    local.get $75
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 525
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $75
+    call $~lib/map/Map<u32,usize>#get
+    local.set $76
+    local.get $73
+    i32.load offset=8
+    local.set $77
+    local.get $76
+    local.get $74
+    i32.add
+    local.get $77
+    i32.store
+    local.get $36
+    i32.const 12
+    i32.add
+    local.set $36
+    br $while-continue|8
+   end
+  end
+  i32.const 0
+  local.set $36
+  loop $while-continue|9
+   local.get $36
+   local.get $14
+   i32.lt_u
+   local.set $37
+   local.get $37
+   if
+    local.get $34
+    call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>#allocate
+    local.set $78
+    local.get $78
+    i32.load offset=4
+    local.set $79
+    local.get $78
+    i32.load
+    local.set $80
+    local.get $35
+    local.get $80
+    call $~lib/map/Map<u32,usize>#has
+    i32.eqz
+    if
+     i32.const 0
+     i32.const 752
+     i32.const 541
+     i32.const 9
+     call $~lib/builtins/abort
+     unreachable
+    end
+    local.get $35
+    local.get $80
+    call $~lib/map/Map<u32,usize>#get
+    local.set $81
+    local.get $78
+    i64.load offset=8
+    local.set $82
+    local.get $81
+    local.get $79
+    i32.add
+    local.get $82
+    i64.store
+    local.get $36
+    i32.const 16
+    i32.add
+    local.set $36
+    br $while-continue|9
+   end
+  end
+  global.get $~lib/memory/__stack_pointer
+  local.get $35
+  call $~lib/map/Map<u32,usize>#keys
+  local.tee $37
+  i32.store offset=48
+  local.get $37
+  call $~lib/array/Array<u32>#get:length
+  local.set $83
+  i32.const 0
+  local.set $84
+  loop $for-loop|10
+   local.get $84
+   local.get $83
+   i32.lt_s
+   local.set $85
+   local.get $85
+   if
+    local.get $37
+    local.get $84
+    call $~lib/array/Array<u32>#__uget
+    local.set $86
+    local.get $35
+    local.get $86
+    call $~lib/map/Map<u32,usize>#get
+    call $~lib/rt/itcms/__unpin
+    local.get $84
+    i32.const 1
+    i32.add
+    local.set $84
+    br $for-loop|10
+   end
+  end
+  local.get $35
+  i32.const 0
+  call $~lib/map/Map<u32,usize>#get
+  local.set $87
+  global.get $~lib/memory/__stack_pointer
+  i32.const 52
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $87
+ )
+ (func $test/index/B#constructor (param $0 i32) (result i32)
+  (local $1 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  i32.eqz
+  if
+   global.get $~lib/memory/__stack_pointer
+   i32.const 4
+   i32.const 23
+   call $~lib/rt/itcms/__new
+   local.tee $0
+   i32.store
+  end
+  local.get $0
+  i32.const 0
+  call $test/index/B#set:a
+  local.get $0
+  local.set $1
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $1
+ )
+ (func $test/index/A#constructor (param $0 i32) (result i32)
+  (local $1 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  i32.eqz
+  if
+   global.get $~lib/memory/__stack_pointer
+   i32.const 9
+   i32.const 22
+   call $~lib/rt/itcms/__new
+   local.tee $0
+   i32.store
+  end
+  local.get $0
+  f32.const 1
+  call $test/index/A#set:a
+  local.get $0
+  i32.const 0
+  call $test/index/B#constructor
+  call $test/index/A#set:b
+  local.get $0
+  i32.const 32
+  call $test/index/A#set:x
+  local.get $0
+  local.set $1
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $1
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#constructor (param $0 i32) (result i32)
+  (local $1 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  i32.eqz
+  if
+   global.get $~lib/memory/__stack_pointer
+   i32.const 48
+   i32.const 24
+   call $~lib/rt/itcms/__new
+   local.tee $0
+   i32.store
+  end
+  local.get $0
+  i32.const 0
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:entryId
+  local.get $0
+  i32.const 0
+  call $~lib/map/Map<usize,u32>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:entries
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:dataSegmentTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayDataSegmentTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:linkTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:referenceTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:arrayLinkTable
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable8
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable16
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable32
+  local.get $0
+  i32.const 0
+  global.get $packages/assembly/configuration/ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>#constructor
+  call $packages/assembly/index/ASON.Serializer<test/index/A>#set:fieldTable64
+  i32.const 1
+  i32.eqz
+  drop
+  local.get $0
+  local.set $1
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $1
+ )
+ (func $packages/assembly/index/ASON.Serializer<test/index/A>#commit (param $0 i32) (result i32)
+  (local $1 i32)
+  (local $2 i32)
+  (local $3 i32)
+  (local $4 i32)
+  (local $5 i32)
+  (local $6 i32)
+  (local $7 i32)
+  (local $8 i32)
+  (local $9 i32)
+  (local $10 i32)
+  (local $11 i32)
+  (local $12 i32)
+  (local $13 i32)
+  (local $14 i32)
+  (local $15 i32)
+  (local $16 i32)
+  (local $17 i32)
+  (local $18 i32)
+  (local $19 i32)
+  (local $20 i32)
+  (local $21 i32)
+  (local $22 i32)
+  (local $23 i32)
+  (local $24 i32)
+  (local $25 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 44
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=8
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=16
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=24
+  global.get $~lib/memory/__stack_pointer
+  i64.const 0
+  i64.store offset=32
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store offset=40
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=20
+  local.tee $1
+  i32.store
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=8
+  local.tee $2
+  i32.store offset=4
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=24
+  local.tee $3
+  i32.store offset=8
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=12
+  local.tee $4
+  i32.store offset=12
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=16
+  local.tee $5
+  i32.store offset=16
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=28
+  local.tee $6
+  i32.store offset=20
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=32
+  local.tee $7
+  i32.store offset=24
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=36
+  local.tee $8
+  i32.store offset=28
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=40
+  local.tee $9
+  i32.store offset=32
+  global.get $~lib/memory/__stack_pointer
+  local.get $0
+  i32.load offset=44
+  local.tee $10
+  i32.store offset=36
+  local.get $1
+  i32.load offset=4
+  local.set $11
+  local.get $2
+  i32.load offset=4
+  local.set $12
+  local.get $3
+  i32.load offset=4
+  local.set $13
+  local.get $4
+  i32.load offset=4
+  local.set $14
+  local.get $5
+  i32.load offset=4
+  local.set $15
+  local.get $6
+  i32.load offset=4
+  local.set $16
+  local.get $7
+  i32.load offset=4
+  local.set $17
+  local.get $8
+  i32.load offset=4
+  local.set $18
+  local.get $9
+  i32.load offset=4
+  local.set $19
+  local.get $10
+  i32.load offset=4
+  local.set $20
+  local.get $11
+  local.get $12
+  i32.add
+  local.get $13
+  i32.add
+  local.get $14
+  i32.add
+  local.get $15
+  i32.add
+  local.get $16
+  i32.add
+  local.get $17
+  i32.add
+  local.get $18
+  i32.add
+  local.get $19
+  i32.add
+  local.get $20
+  i32.add
+  local.set $21
+  local.get $21
+  i32.const 40
+  i32.add
+  local.set $21
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  local.get $21
+  call $~lib/staticarray/StaticArray<u8>#constructor
+  local.tee $22
+  i32.store offset=40
+  local.get $22
+  local.set $23
+  local.get $23
+  local.get $11
+  call $packages/assembly/util/ASONHeader#set:referenceTableByteLength
+  local.get $23
+  local.get $12
+  call $packages/assembly/util/ASONHeader#set:dataSegmentTableByteLength
+  local.get $23
+  local.get $13
+  call $packages/assembly/util/ASONHeader#set:arrayTableByteLength
+  local.get $23
+  local.get $14
+  call $packages/assembly/util/ASONHeader#set:arrayDataSegmentTableByteLength
+  local.get $23
+  local.get $15
+  call $packages/assembly/util/ASONHeader#set:linkTableByteLength
+  local.get $23
+  local.get $16
+  call $packages/assembly/util/ASONHeader#set:arrayLinkTableByteLength
+  local.get $23
+  local.get $17
+  call $packages/assembly/util/ASONHeader#set:fieldTable8ByteLength
+  local.get $23
+  local.get $18
+  call $packages/assembly/util/ASONHeader#set:fieldTable16ByteLength
+  local.get $23
+  local.get $19
+  call $packages/assembly/util/ASONHeader#set:fieldTable32ByteLength
+  local.get $23
+  local.get $20
+  call $packages/assembly/util/ASONHeader#set:fieldTable64ByteLength
+  i32.const 40
+  local.set $24
+  local.get $1
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/ReferenceEntry>#copyTo
+  local.get $24
+  local.get $11
+  i32.add
+  local.set $24
+  local.get $2
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/DataSegmentEntry>#copyTo
+  local.get $24
+  local.get $12
+  i32.add
+  local.set $24
+  local.get $3
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayEntry>#copyTo
+  local.get $24
+  local.get $13
+  i32.add
+  local.set $24
+  local.get $4
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayDataSegmentEntry>#copyTo
+  local.get $24
+  local.get $14
+  i32.add
+  local.set $24
+  local.get $5
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/LinkEntry>#copyTo
+  local.get $24
+  local.get $15
+  i32.add
+  local.set $24
+  local.get $6
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/ArrayLinkEntry>#copyTo
+  local.get $24
+  local.get $16
+  i32.add
+  local.set $24
+  local.get $7
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry8>#copyTo
+  local.get $24
+  local.get $17
+  i32.add
+  local.set $24
+  local.get $8
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry16>#copyTo
+  local.get $24
+  local.get $18
+  i32.add
+  local.set $24
+  local.get $9
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry32>#copyTo
+  local.get $24
+  local.get $19
+  i32.add
+  local.set $24
+  local.get $10
+  local.get $22
+  local.get $24
+  call $packages/assembly/util/Table<packages/assembly/util/FieldEntry64>#copyTo
+  local.get $22
+  local.set $25
+  global.get $~lib/memory/__stack_pointer
+  i32.const 44
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $25
+ )
+ (func $packages/assembly/index/ASON.Deserializer<test/index/A>#constructor (param $0 i32) (result i32)
+  (local $1 i32)
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.sub
+  global.set $~lib/memory/__stack_pointer
+  call $~stack_check
+  global.get $~lib/memory/__stack_pointer
+  i32.const 0
+  i32.store
+  local.get $0
+  i32.eqz
+  if
+   global.get $~lib/memory/__stack_pointer
+   i32.const 0
+   i32.const 25
+   call $~lib/rt/itcms/__new
+   local.tee $0
+   i32.store
+  end
+  local.get $0
+  local.set $1
+  global.get $~lib/memory/__stack_pointer
+  i32.const 4
+  i32.add
+  global.set $~lib/memory/__stack_pointer
+  local.get $1
+ )
+ (func $packages/assembly/index/ASON.Deserializer<test/index/A>#deserialize (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   (local $4 i32)

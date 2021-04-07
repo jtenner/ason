@@ -8,13 +8,35 @@ class Vec3 {
   ) {}
 }
 
+class A {
+  a: f32 = 1;
+  b: B = new B();
+  x: u8 = 32;
+}
+
+class B {
+  a: A | null;
+}
+
 export function _start(): void {
   let a = new Vec3(1, 2, 3);
   let ser = new ASON.Serializer<Vec3>();
   let buffer = ser.serialize(a);
   let des = new ASON.Deserializer<Vec3>();
   let b = des.deserialize(buffer);
-  trace("a", 3, <f64>a.x, <f64>a.y, <f64>a.z);
-  trace("b", 3, <f64>b.x, <f64>b.y, <f64>b.z);
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<Vec3>()) == 0);
+
+
+  let myA = new A();
+  myA.b.a = myA;
+  let serA = new ASON.Serializer<A>();
+  buffer = serA.serialize(myA);
+
+  let desA = new ASON.Deserializer<A>();
+  let myA2 = desA.deserialize(buffer);
+
+  assert(myA != myA2, "first");
+  assert(myA.a == myA2.a, "second");
+  assert(myA.x == myA2.x, "third");
+  assert(myA2.b.a == myA2, "fourth");
 }
