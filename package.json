@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "lerna bootstrap",
-    "test": "ts-node test/index.ts"
+    "test": "run-s build test:run",
+    "test:run": "node test/index.js",
+    "build": "run-s build:transform build:test",
+    "build:transform": "cd packages/transform && tsc",
+    "build:test": "asc test/index.ts --transform ./packages/transform/lib/index.js"
   },
   "repository": {
     "type": "git",
@@ -28,7 +32,9 @@
   ],
   "homepage": "https://github.com/jtenner/ason#readme",
   "devDependencies": {
-    "assemblyscript": "^0.18.18",
-    "lerna": "^4.0.0"
-  }
+    "assemblyscript": "^0.18.22",
+    "lerna": "^4.0.0",
+    "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {}
 }

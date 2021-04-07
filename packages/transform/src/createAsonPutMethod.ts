@@ -1,4 +1,4 @@
-import { ClassDeclaration, CommonFlags, NodeKind, Statement, FieldDeclaration, TypeNode, Token, AssertionKind, ParameterKind } from "assemblyscript";
+import { ClassDeclaration, CommonFlags, NodeKind, Statement, FieldDeclaration, TypeNode, Token, AssertionKind, ParameterKind, TypeName } from "assemblyscript";
 import { djb2Hash } from "./util";
 
 export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
@@ -35,15 +35,8 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
         ParameterKind.DEFAULT,
         TypeNode.createIdentifierExpression("ser", classDeclaration.range),
         TypeNode.createNamedType(
-          TypeNode.createSimpleTypeName("Serializer", classDeclaration.range),
-          [
-            TypeNode.createNamedType(
-              TypeNode.createSimpleTypeName("U", classDeclaration.range),
-              null,
-              false,
-              classDeclaration.range,
-            ),
-          ],
+          TypeNode.createSimpleTypeName("U", classDeclaration.range),
+          null,
           false,
           classDeclaration.range,
         ),

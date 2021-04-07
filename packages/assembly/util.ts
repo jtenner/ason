@@ -89,7 +89,7 @@ export class Table<T> {
 
   constructor(defaultSize: usize) {
     if (isManaged<T>()) ERROR("Internal class error. T must not be managed.");
-    this.data = new StaticArray<u8>(defaultSize);
+    this.data = new StaticArray<u8>(<i32>defaultSize);
   }
 
   ensureSize(newLength: i32): void {

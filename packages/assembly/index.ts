@@ -77,42 +77,45 @@ export namespace ASON {
       } else if (value instanceof String) {
         // strings
         return this.putDataSegment(value);
-      } else if (value instanceof StaticArray && !isReference(unchecked(value[0]))) {
+      } else if (value instanceof StaticArray) {
+        if (isReference(unchecked(value[0]))) {
+          // reference array
+          let parent = this.putReference(value);
+
+          // check for null regardless if the type is nullable to prevent runtime errors
+          if (changetype<usize>(value) != 0) {
+            // link the children
+            let length = value.length;
+            for (let i = 0; i < length; i++) {
+              // link the child if it isn't null
+              let child = unchecked(value[i]);
+              if (changetype<usize>(child) != 0) {
+                this.putLink(this.put(child), parent, <usize>i << alignof<usize>());
+              }
+            }
+          }
+          return parent;
+        }
         // static arrays with data
         return this.putDataSegment(value);
-      } else if (value instanceof Array && !isReference(unchecked(value[0]))) {
-        return this.putArrayDataSegment(value);
-      } else if (value instanceof StaticArray) {
-        // reference array
-        let parent = this.putReference(value);
-
-        // check for null regardless if the type is nullable to prevent runtime errors
-        if (changetype<usize>(value) != 0) {
-          // link the children
-          let length = value.length;
-          for (let i = 0; i < length; i++) {
-            // link the child if it isn't null
-            let child = unchecked(value[i]);
-            if (changetype<usize>(child) != 0) {
-              this.putLink(this.put(child), parent, <usize>i << alignof<usize>());
-            }
-          }
-        }
-        return parent;
       } else if (value instanceof Array) {
-        let parent = this.putArray(value);
-        if (changetype<usize>(value) != 0) {
-          // link the children
-          let length = value.length;
-          for (let i = 0; i < length; i++) {
-            // link the child if it isn't null
-            let child = unchecked(value[i]);
-            if (changetype<usize>(child) != 0) {
-              this.putArrayLink(this.put(child), parent, <usize>i << alignof<usize>());
+        if (isReference(unchecked(value[0]))) {
+          let parent = this.putArray(value);
+          if (changetype<usize>(value) != 0) {
+            // link the children
+            let length = value.length;
+            for (let i = 0; i < length; i++) {
+              // link the child if it isn't null
+              let child = unchecked(value[i]);
+              if (changetype<usize>(child) != 0) {
+                this.putArrayLink(this.put(child), parent, <usize>i << alignof<usize>());
+              }
             }
           }
+          return parent;
         }
-        return parent;
+        // it's not a reference, we are a data segment
+        return this.putArrayDataSegment(value);
       } else {
         let entryId = this.putReference(value);
         // @ts-ignore: defined in each class
@@ -292,7 +295,8 @@ export namespace ASON {
         + fieldTable32Index
         + fieldTable64Index;
 
-      let result = new StaticArray<u8>(<i32>(offsetof<ASONHeader>() + length));
+      length += offsetof<ASONHeader>();
+      let result = new StaticArray<u8>(<i32>length);
       let header = changetype<ASONHeader>(result);
       header.referenceTableByteLength = referenceTableIndex;
       header.dataSegmentTableByteLength = dataSegmentTableIndex;
@@ -413,7 +417,7 @@ export namespace ASON {
       while (i < dataSegmentTableByteLength) {
         let entry = dataSegmentTable.allocate();
         let segmentLength = entry.byteLength;
-        let segment = dataSegmentTable.allocateSegment(segmentLength);
+        let segment = dataSegmentTable.allocateSegment(<i32>segmentLength);
         let referencePointer = __pin(__new(entry.byteLength, entry.rttid));
         memory.copy(referencePointer, segment, segmentLength);
         entryMap.set(entry.entryId, referencePointer);

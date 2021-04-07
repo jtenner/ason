@@ -19,11 +19,10 @@
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@ason/transform": "0.0.1",
-    "@assemblyscript/loader": "^0.17.3"
+    "@ason/transform": "0.0.1"
   },
   "devDependencies": {
-    "assemblyscript": "^0.18.18"
+    "assemblyscript": "^0.18.22"
   },
   "scripts": {
     "asbuild:untouched": "asc assembly/index.ts --target debug",
