@@ -14,5 +14,7 @@ export function _start(): void {
   let buffer = ser.serialize(a);
   let des = new ASON.Deserializer<Vec3>();
   let b = des.deserialize(buffer);
+  trace("a", 3, <f64>a.x, <f64>a.y, <f64>a.z);
+  trace("b", 3, <f64>b.x, <f64>b.y, <f64>b.z);
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<Vec3>()) == 0);
 }
