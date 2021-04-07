@@ -20,15 +20,6 @@ class B {
   c: i32 = 42;
 }
 
-
-// 1. arrays of data
-// 2. arrays of references
-// 3. circular arrays
-// 4. StaticArrays of data
-// 5. StaticArrays of references
-// 6. strings
-// 7. null
-
 export function _start(): void {
   testBasicVectors();
   testComplexObjects();
@@ -91,7 +82,10 @@ function testDataArrays(): void {
 
   assert(array != array2, "New int array has been created.");
   assert(array.length == array2.length, "New int array is same size as original array");
-  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<u8>()*array.length) == 0, "Raw array values are equal.");
+  let i: i32 = 0;
+  for (i = 0; i < array.length; i++) {
+    assert(array[i] == array2[i], "Int value at " + i.toString() + " matches");
+  }
 
   let array3: Array<f32> = [8, 6, 7, 5, 3, 0, 9];
 
@@ -99,9 +93,11 @@ function testDataArrays(): void {
 
   let array4 = ASON.deserialize<Array<f32>>(buffer);
 
-  assert(array != array2, "New float array has been created.");
-  assert(array.length == array2.length, "New float array is same size as original array");
-  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<f32>()*array.length) == 0, "Raw float array values are equal.");
+  assert(array3 != array4, "New float array has been created.");
+  assert(array3.length == array4.length, "New float array is same size as original array");
+  for (i = 0; i < array.length; i++) {
+    assert(array3[i] == array4[i], "Float value at " + i.toString() + " matches");
+  }
 }
 
 function testReferenceArrays(): void {
@@ -125,7 +121,6 @@ function testReferenceArrays(): void {
   assert(array2[0].a != array2[1].a, "Object value changes are preserved.");
   assert(array2[3].b.a == array2[0], "Circular reference objects are same.");
 }
-
 
 function checkSerializeNull(): void {
   let a: Vec3 | null = null;
