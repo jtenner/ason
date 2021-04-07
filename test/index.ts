@@ -36,6 +36,7 @@ export function _start(): void {
 
   checkSerializeNull();
   staticArrayOfReferences();
+  staticArrayData();
 }
 
 function testBasicVectors(): void {
@@ -103,4 +104,11 @@ function staticArrayOfReferences(): void {
   for (let i = 0; i < 10; i++) {
     assert(result[i].value == i);
   }
+}
+
+function staticArrayData(): void {
+  let a = [9, 12, 6, 2, 4, -5] as StaticArray<f64>;
+  let buff = ASON.serialize(a);
+  let b = ASON.deserialize<StaticArray<f64>>(buff);
+  assert(memory.compare(changetype<usize>(a), changetype<usize>(b), <usize>(a.length << alignof<f64>())) == 0);
 }
