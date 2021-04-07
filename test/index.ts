@@ -35,6 +35,7 @@ export function _start(): void {
   testComplexCircularObject();
 
   checkSerializeNull();
+  staticArrayOfReferences();
 }
 
 function testBasicVectors(): void {
