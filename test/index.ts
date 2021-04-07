@@ -34,6 +34,7 @@ export function _start(): void {
   testComplexObjects();
   testComplexCircularObject();
   testDataArrays();
+  testReferenceArrays();
 
   checkSerializeNull();
   staticArrayOfReferences();
@@ -88,10 +89,42 @@ function testDataArrays(): void {
 
   let array2 = ASON.deserialize<Array<u8>>(buffer);
 
-  assert(array != array2, "New array has been created.");
-  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<u8>()*7) == 0, "Raw array values are equal.");
+  assert(array != array2, "New int array has been created.");
+  assert(array.length == array2.length, "New int array is same size as original array");
+  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<u8>()*array.length) == 0, "Raw array values are equal.");
+
+  let array3: Array<f32> = [8, 6, 7, 5, 3, 0, 9];
+
+  buffer = ASON.serialize(array);
+
+  let array4 = ASON.deserialize<Array<f32>>(buffer);
+
+  assert(array != array2, "New float array has been created.");
+  assert(array.length == array2.length, "New float array is same size as original array");
+  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<f32>()*array.length) == 0, "Raw float array values are equal.");
 }
 
+function testReferenceArrays(): void {
+  let array: Array<A> = new Array();
+  array.push(new A());
+  array.push(new A());
+  array.push(new A());
+  array.push(new A());
+
+  array[0].a = 2.1;
+  array[3].b.a = array[0];
+
+  let buffer = ASON.serialize(array);
+
+  let array2 = ASON.deserialize<Array<A>>(buffer);
+
+  assert(array != array2, "New object array has been created.");
+  assert(array.length == array2.length, "New object array is same size as original.");
+  assert(array[0] != array2[0], "New objects are not the same as the originals.");
+  assert(array[0].a == array2[0].a, "Object values have been preserved.");
+  assert(array2[0].a != array2[1].a, "Object value changes are preserved.");
+  assert(array2[3].b.a == array2[0], "Circular reference objects are same.");
+}
 
 
 function checkSerializeNull(): void {
