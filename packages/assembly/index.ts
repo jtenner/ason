@@ -152,7 +152,13 @@ export namespace ASON {
       let entryId = this.entryId++;
       this.entries.set(changetype<usize>(value), entryId);
 
-      let arrayLength = value.length;
+      let arrayLength: i32;
+
+      if (isNullable<U>()) {
+        arrayLength = value!.length;
+      } else {
+        arrayLength = value.length;
+      }
 
       let entry = this.arrayDataSegmentTable.allocate();
       entry.length = arrayLength;
@@ -167,7 +173,7 @@ export namespace ASON {
 
       let segment = this.arrayDataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, dataStart, size);
-
+      trace("copied memory", 2, <f64>entryId, <f64>size);
       // return the entry written
       return entryId;
     }
