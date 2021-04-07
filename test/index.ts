@@ -99,7 +99,7 @@ function checkSerializeNull(): void {
   assert(buff.length == 0, "Buffer's length should be 0.");
   let des = new ASON.Deserializer<Vec3 | null>();
   let b = des.deserialize(buff);
-  assert(b == null "Empty buffer returns null");
+  assert(b == null, "Empty buffer returns null");
 }
 
 class Box<T> {
