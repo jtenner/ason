@@ -5,6 +5,7 @@
     "sourceMap": true,
     "debug": true,
     "use": ["ASC_RTRACE=1"],
-    "importMemory": true
+    "importMemory": true,
+    "transform": ["@ason/transform"]
   }
 }

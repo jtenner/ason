@@ -1,4 +1,4 @@
-import { ClassDeclaration, CommonFlags, NodeKind, Statement, FieldDeclaration, TypeNode, Token, AssertionKind, ParameterKind, TypeName } from "assemblyscript";
+import { ClassDeclaration, CommonFlags, NodeKind, Statement, FieldDeclaration, TypeNode, Token, AssertionKind, ParameterKind, TypeName } from "visitor-as/as";
 import { djb2Hash } from "./util";
 
 export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
