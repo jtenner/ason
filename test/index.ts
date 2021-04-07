@@ -16,6 +16,7 @@ class A {
 
 class B {
   a: A | null;
+  c: i32 = 42;
 }
 
 export function _start(): void {
@@ -38,5 +39,6 @@ export function _start(): void {
   assert(myA != myA2, "first");
   assert(myA.a == myA2.a, "second");
   assert(myA.x == myA2.x, "third");
+  assert(myA2.b.c == 42, "property");
   assert(myA2.b.a == myA2, "fourth");
 }

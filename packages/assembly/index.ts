@@ -67,8 +67,8 @@ export namespace ASON {
     }
 
     @unsafe public put<U>(value: U): u32 {
-      if (isReference(value) && this.entries.has(changetype<usize>(value))) {
-        return this.entries.get(changetype<usize>(value));
+      if (isReference(value)) {
+        if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
       }
 
       if (value instanceof ArrayBuffer) {
@@ -117,10 +117,20 @@ export namespace ASON {
         // it's not a reference, we are a data segment
         return this.putArrayDataSegment(value);
       } else {
-        let entryId = this.putReference(value);
-        // @ts-ignore: defined in each class
-        value.__asonPut(this, entryId);
-        return entryId;
+        if (changetype<usize>(value) != 0) {
+          let entryId = this.putReference(value);
+          if (isNullable(value)) {
+            // @ts-ignore: defined in each class
+            value!.__asonPut(this, entryId);
+            return entryId;
+          } else {
+            // @ts-ignore: defined in each class
+            value.__asonPut(this, entryId);
+            return entryId;
+          }
+        } else {
+          return u32.MAX_VALUE;
+        }
       }
     }
 
@@ -203,7 +213,11 @@ export namespace ASON {
     public putField<U>(entryId: u32, value: U, offset: usize): void {
       if (isReference(value)) {
         if (changetype<usize>(value) != 0) {
-          this.putLink(this.putReference(value), entryId, offset);
+          if (isNullable(value)) {
+            this.putLink(this.put(value!), entryId, offset);
+          } else {
+            this.putLink(this.put(value), entryId, offset);
+          }
         }
         return;
       }
@@ -463,6 +477,7 @@ export namespace ASON {
         assert(entryMap.has(childEntryId));
         let childPointer = entryMap.get(childEntryId);
 
+        trace("link", 3, <f64>parentPointer, <f64>childPointer, <f64>entry.offset);
         __link(parentPointer, childPointer, false);
         store<usize>(parentPointer + entry.offset, childPointer);
         i += offsetof<LinkEntry>();
