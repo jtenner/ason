@@ -33,6 +33,7 @@ export function _start(): void {
   testBasicVectors();
   testComplexObjects();
   testComplexCircularObject();
+  testDataArrays();
 
   checkSerializeNull();
   staticArrayOfReferences();
@@ -79,15 +80,27 @@ function testComplexCircularObject(): void {
   assert(myA2.b.a != myA, "Nested object is not the same as the original object");
 }
 
+function testDataArrays(): void {
+  let array: Array<u8> = [8, 6, 7, 5, 3, 0, 9];
+
+  let buffer = ASON.serialize(array);
+
+  let array2 = ASON.deserialize<Array<u8>>(buffer);
+
+  assert(array != array2, "New array has been created.");
+  assert(memory.compare(changetype<usize>(array), changetype<usize>(array2), offsetof<u8>()*7) == 0, "Raw array values are equal.");
+}
+
+
 
 function checkSerializeNull(): void {
   let a: Vec3 | null = null;
   let ser = new ASON.Serializer<Vec3 | null>();
   let buff = ser.serialize(a);
-  assert(buff.length == 0);
+  assert(buff.length == 0, "Buffer's length should be 0.");
   let des = new ASON.Deserializer<Vec3 | null>();
   let b = des.deserialize(buff);
-  assert(b == null);
+  assert(b == null, "Empty buffer returns null");
 }
 
 class Box<T> {
