@@ -358,6 +358,8 @@ export namespace ASON {
     }
   }
 
+  class Dummy {}
+
   export class Deserializer<T> {
     /**
      * deserialize
@@ -437,15 +439,14 @@ export namespace ASON {
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
 
       // Make the object that will eventually become the object T.
-      let entryMap = new Map<u32, usize>();
+      let entryMap = new Map<u32, Dummy>();
 
       // Set up references of the object in the entryMap.
       let i: usize = 0;
       while (i < referenceTableByteLength) {
         let entry = referenceTable.allocate();
-        // @ts-ignore: pin prevents garbage collection
-        let referencePointer = __pin(__new(entry.offset, entry.rttid));
-        entryMap.set(entry.entryId, referencePointer);
+        let referencePointer = __new(entry.offset, entry.rttid);
+        entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i += offsetof<ReferenceEntry>();
       }
 
@@ -455,10 +456,9 @@ export namespace ASON {
         let entry = dataSegmentTable.allocate();
         let segmentLength = entry.byteLength;
         let segment = dataSegmentTable.allocateSegment(<i32>segmentLength);
-      // @ts-ignore: pin prevents garbage collection
-        let referencePointer = __pin(__new(entry.byteLength, entry.rttid));
+        let referencePointer = __new(entry.byteLength, entry.rttid);
         memory.copy(referencePointer, segment, segmentLength);
-        entryMap.set(entry.entryId, referencePointer);
+        entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = dataSegmentTable.index;
       }
 
@@ -468,9 +468,8 @@ export namespace ASON {
         let entry = arrayTable.allocate();
         let length = entry.length;
         let temp = new ArrayBuffer(length << <i32>alignof<usize>());
-        // @ts-ignore: pin prevents garbage collection
-        let referencePointer = __pin(__newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp)));
-        entryMap.set(entry.entryId, referencePointer);
+        let referencePointer = __newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp));
+        entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = offsetof<ArrayEntry>();
       }
 
@@ -480,14 +479,13 @@ export namespace ASON {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
         let segment = arrayDataSegmentTable.allocateSegment(length);
-        // @ts-ignore: pin prevents garbage collection
-        let referencePointer = __pin(__newArray(length, entry.align, entry.rttid, segment));
-        entryMap.set(entry.entryId, referencePointer);
+        let referencePointer = __newArray(length, entry.align, entry.rttid, segment);
+        entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
       }
 
       // all the references have been allocated, let's get entry 0 and validate type info
-      let entry0 = entryMap.get(0);
+      let entry0 = changetype<usize>(entryMap.get(0));
       assert(getObjectType(entry0) == idof<T>());
 
       // Link every part in the entryMap.
@@ -497,11 +495,11 @@ export namespace ASON {
 
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
-        let parentPointer = entryMap.get(parentEntryId);
+        let parentPointer = changetype<usize>(entryMap.get(parentEntryId));
 
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
-        let childPointer = entryMap.get(childEntryId);
+        let childPointer = changetype<usize>(entryMap.get(childEntryId));
 
         __link(parentPointer, childPointer, false);
         store<usize>(parentPointer + entry.offset, childPointer);
@@ -515,11 +513,11 @@ export namespace ASON {
 
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
-        let parentPointer = entryMap.get(parentEntryId);
+        let parentPointer = changetype<usize>(entryMap.get(parentEntryId));
 
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
-        let childPointer = entryMap.get(childEntryId);
+        let childPointer = changetype<usize>(entryMap.get(childEntryId));
 
         __link(parentPointer, childPointer, false);
         let parentDataPointer = load<usize>(parentPointer, offsetof<Array<usize>>("dataStart"))
@@ -535,8 +533,8 @@ export namespace ASON {
 
         let entryId = entry.entryId;
         assert(entryMap.has(entryId));
-        let entryPointer = entryMap.get(entryId);
-        
+        let entryPointer = changetype<usize>(entryMap.get(entryId));
+
         let val = load<u8>(changetype<usize>(entry), offsetof<FieldEntry8>("value"));
         store<u8>(entryPointer + offset, val);
 
@@ -551,8 +549,8 @@ export namespace ASON {
 
         let entryId = entry.entryId;
         assert(entryMap.has(entryId));
-        let entryPointer = entryMap.get(entryId);
-        
+        let entryPointer = changetype<usize>(entryMap.get(entryId));
+
         let val = load<u16>(changetype<usize>(entry), offsetof<FieldEntry16>("value"));
         store<u16>(entryPointer + offset, val);
 
@@ -567,8 +565,8 @@ export namespace ASON {
 
         let entryId = entry.entryId;
         assert(entryMap.has(entryId));
-        let entryPointer = entryMap.get(entryId);
-        
+        let entryPointer = changetype<usize>(entryMap.get(entryId));
+
         let val = load<u32>(changetype<usize>(entry), offsetof<FieldEntry32>("value"));
         store<u32>(entryPointer + offset, val);
 
@@ -583,22 +581,12 @@ export namespace ASON {
 
         let entryId = entry.entryId;
         assert(entryMap.has(entryId));
-        let entryPointer = entryMap.get(entryId);
-        
+        let entryPointer = changetype<usize>(entryMap.get(entryId));
+
         let val = load<u64>(changetype<usize>(entry), offsetof<FieldEntry64>("value"));
         store<u64>(entryPointer + offset, val);
 
         i += offsetof<FieldEntry64>();
-      }
-
-      // Unpin everything we pinned while creating this object.
-      let keys = entryMap.keys();
-      let numKeys = keys.length;
-
-      for(let j = 0; j < numKeys; j++) {
-        let key = unchecked(keys[j]);
-        // @ts-ignore: it is now safe to unpin
-        __unpin(entryMap.get(key));
       }
 
       // Return the original object, stored in the 0th element of the entryMap.
