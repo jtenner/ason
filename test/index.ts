@@ -30,6 +30,7 @@ export function _start(): void {
   staticArrayOfReferences();
   staticArrayData();
   arrayOfSameReferenceWithCircular();
+  serializeNumericValues();
 }
 
 function testBasicVectors(): void {
@@ -176,4 +177,11 @@ function arrayOfSameReferenceWithCircular(): void {
     assert(b[i] == first);
   }
   trace("[Pass] Complex Circular with Array");
+}
+
+function serializeNumericValues(): void {
+  assert(ASON.deserialize<f64>(ASON.serialize(<f64>3.14)) == 3.14);
+  assert(ASON.deserialize<i32>(ASON.serialize(64)) == 64);
+  assert(ASON.deserialize<u8>(ASON.serialize(<u8>255)) == 255);
+  trace("[Pass] numeric values");
 }

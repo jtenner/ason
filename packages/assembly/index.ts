@@ -594,12 +594,16 @@ export namespace ASON {
     }
   }
 
+  class Box<T> { constructor(public value: T) {} }
+
   export function serialize<T>(ref: T): StaticArray<u8> {
+    if (!isReference(ref)) return ASON.serialize(new Box<T>(ref));
     let a = new Serializer<T>();
     return a.serialize(ref);
   }
 
   export function deserialize<T>(data: StaticArray<u8>): T {
+    if (!isReference<T>()) return ASON.deserialize<Box<T>>(data).value;
     let a = new Deserializer<T>();
     return a.deserialize(data);
   }
