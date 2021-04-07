@@ -6,7 +6,10 @@ export class ASONHeader {
   arrayDataSegmentTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
-  fieldTableByteLength: usize;
+  fieldTable8ByteLength: usize;
+  fieldTable16ByteLength: usize;
+  fieldTable32ByteLength: usize;
+  fieldTable64ByteLength: usize;
 }
 
 @unmanaged
@@ -86,7 +89,7 @@ export class Table<T> {
 
   constructor(defaultSize: usize) {
     if (isManaged<T>()) ERROR("Internal class error. T must not be managed.");
-    this.data = new StaticArray<u8>(defaultSize);
+    this.data = new StaticArray<u8>(<i32>defaultSize);
   }
 
   ensureSize(newLength: i32): void {
@@ -128,12 +131,16 @@ export class Table<T> {
     __pin(result);
 
     let dataArray = new StaticArray<u8>(<i32>length);
-    
+
     memory.copy(changetype<usize>(dataArray), data, length);
     let resultRef = changetype<Table<T>>(result);
     resultRef.data = dataArray;
     // @ts-ignore
     __unpin(result);
     return resultRef;
+  }
+
+  copyTo(array: StaticArray<u8>, offset: usize): void {
+    memory.copy(changetype<usize>(array) + offset, changetype<usize>(this.data), <usize>this.index);
   }
 }
