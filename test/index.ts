@@ -38,6 +38,7 @@ export function _start(): void {
   checkSerializeNull();
   staticArrayOfReferences();
   staticArrayData();
+  arrayOfSameReferenceWithCircular();
 }
 
 function testBasicVectors(): void {
@@ -124,4 +125,21 @@ function staticArrayData(): void {
   let buff = ASON.serialize(a);
   let b = ASON.deserialize<StaticArray<f64>>(buff);
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), <usize>(a.length << alignof<f64>())) == 0);
+}
+
+class ArrayChild {
+  circular: Array<ArrayChild> | null;
+}
+
+function arrayOfSameReferenceWithCircular(): void {
+  let child = new ArrayChild();
+  let a = [child, child, child, child, child, child];
+  let buff = ASON.serialize(a);
+  let b = ASON.deserialize<Array<ArrayChild>>(buff);
+
+  assert(a.length == b.length);
+  let first = b[0];
+  for (let i = 0; i < a.length; i++) {
+    assert(b[i] == first);
+  }
 }

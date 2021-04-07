@@ -47,6 +47,7 @@ export namespace ASON {
       // reset entry id indicies
       this.entryId = 0;
       this.entries.clear();
+      this.entries.set(0, u32.MAX_VALUE);
 
       // dataSegments
       this.dataSegmentTable.reset();
@@ -101,15 +102,13 @@ export namespace ASON {
       } else if (value instanceof Array) {
         if (isReference(unchecked(value[0]))) {
           let parent = this.putArray(value);
-          if (changetype<usize>(value) != 0) {
-            // link the children
-            let length = value.length;
-            for (let i = 0; i < length; i++) {
-              // link the child if it isn't null
-              let child = unchecked(value[i]);
-              if (changetype<usize>(child) != 0) {
-                this.putArrayLink(this.put(child), parent, <usize>i << alignof<usize>());
-              }
+          // link the children
+          let length = value.length;
+          for (let i = 0; i < length; i++) {
+            // link the child if it isn't null
+            let child = unchecked(value[i]);
+            if (changetype<usize>(child) != 0) {
+              this.putArrayLink(this.put(child), parent, i);
             }
           }
           return parent;
@@ -117,19 +116,15 @@ export namespace ASON {
         // it's not a reference, we are a data segment
         return this.putArrayDataSegment(value);
       } else {
-        if (changetype<usize>(value) != 0) {
-          let entryId = this.putReference(value);
-          if (isNullable(value)) {
-            // @ts-ignore: defined in each class
-            value!.__asonPut(this, entryId);
-            return entryId;
-          } else {
-            // @ts-ignore: defined in each class
-            value.__asonPut(this, entryId);
-            return entryId;
-          }
+        let entryId = this.putReference(value);
+        if (isNullable(value)) {
+          // @ts-ignore: defined in each class
+          value!.__asonPut(this, entryId);
+          return entryId;
         } else {
-          return u32.MAX_VALUE;
+          // @ts-ignore: defined in each class
+          value.__asonPut(this, entryId);
+          return entryId;
         }
       }
     }
@@ -199,7 +194,11 @@ export namespace ASON {
       this.entries.set(changetype<usize>(value), entryId);
       let entry = this.arrayTable.allocate();
       entry.entryId = entryId;
-      entry.length = value.length;
+      if (isNullable(value)) {
+        entry.length = value!.length;
+      } else {
+        entry.length = value.length;
+      }
       entry.rttid = idof<U>();
       return entryId;
     }
