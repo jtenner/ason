@@ -43,6 +43,14 @@ export function _start(): void {
   assert(myA2.b.a == myA2, "fourth");
 
   checkSerializeNull();
+  strings();
+  staticArrayOfReferences();
+}
+
+function strings(): void {
+  let a = ASON.serialize("the rain in spain is mainly on the plane");
+  let b = ASON.deserialize<string>(a);
+  assert(b == "the rain in spain is mainly on the plane");
 }
 
 
@@ -54,4 +62,20 @@ function checkSerializeNull(): void {
   let des = new ASON.Deserializer<Vec3 | null>();
   let b = des.deserialize(buff);
   assert(b == null);
+}
+
+class Box<T> {
+  constructor(public value: T) {}
+}
+
+function staticArrayOfReferences(): void {
+  let refs = new StaticArray<Box<i32>>(10);
+  for (let i = 0; i < 10; i++) {
+    refs[i] = new Box<i32>(i);
+  }
+  let buff = ASON.serialize(refs);
+  let result = ASON.deserialize<StaticArray<Box<i32>>>(buff);
+  for (let i = 0; i < 10; i++) {
+    assert(result[i].value == i);
+  }
 }
