@@ -165,6 +165,8 @@ export namespace ASON {
       entry.entryId = entryId;
       entry.rttid = idof<U>();
 
+      let size = <usize>arrayLength << (alignof<valueof<U>>());
+
       // copy the data
       let dataStart = load<usize>(changetype<usize>(value), offsetof<U>("dataStart"));
 
