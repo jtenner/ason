@@ -28,7 +28,7 @@
   },
   "scripts": {
     "pretest": "npm run asbuild",
-    "asbuild": "asc assembly/index.ts --target debug",
+    "asbuild": "asb --debug",
     "test": "node index.js"
   }
 }

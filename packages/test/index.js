@@ -10,7 +10,7 @@ let rtrace = new Rtrace({
 });
 const fs = require("fs");
 
-const mod = loader.instantiateSync(fs.readFileSync("./test/index.wasm"), rtrace.install({
+const mod = loader.instantiateSync(fs.readFileSync("./build/debug/index.wasm"), rtrace.install({
   "env": { memory },
 }));
 mod.exports._start();
