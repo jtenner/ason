@@ -21,15 +21,15 @@ class B {
 }
 
 export function _start(): void {
-  // testBasicVectors();
-  // testComplexObjects();
-  // testComplexCircularObject();
+  testBasicVectors();
+  testComplexObjects();
+  testComplexCircularObject();
   testDataArrays();
-  // testReferenceArrays();
-  // checkSerializeNull();
-  // staticArrayOfReferences();
-  // staticArrayData();
-  // arrayOfSameReferenceWithCircular();
+  testReferenceArrays();
+  checkSerializeNull();
+  staticArrayOfReferences();
+  staticArrayData();
+  arrayOfSameReferenceWithCircular();
 }
 
 function testBasicVectors(): void {
