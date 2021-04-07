@@ -158,11 +158,10 @@ export namespace ASON {
       this.entries.set(changetype<usize>(value), entryId);
 
       let arrayLength = value.length;
-      let arrayValueAlign = alignof<valueof<U>>();
-      let size = (<usize>arrayLength) << arrayValueAlign;
 
       let entry = this.arrayDataSegmentTable.allocate();
-      entry.length = size;
+      entry.length = arrayLength;
+      entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
       entry.rttid = idof<U>();
 
