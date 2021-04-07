@@ -40,6 +40,7 @@ function testBasicVectors(): void {
   let b = des.deserialize(buffer);
 
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<Vec3>()) == 0, "Raw values are equal.");
+  trace("[Pass] Basic Vectors");
 }
 
 function testComplexObjects(): void {
@@ -56,6 +57,7 @@ function testComplexObjects(): void {
   assert(myA.x == myA2.x, "Unsigned int8 value in object is correct.");
   assert(myA.c == myA2.c, "Signed int64 value in object is correct, and not default.")
   assert(myA2.b.c == 42, "Nested int32 value in object is correct.");
+  trace("[Pass] Complex Object");
 }
 
 function testComplexCircularObject(): void {
@@ -70,6 +72,7 @@ function testComplexCircularObject(): void {
   assert(myA != myA2, "New object has been created.");
   assert(myA2.b.a == myA2, "Nested object circular reference is preserved.")
   assert(myA2.b.a != myA, "Nested object is not the same as the original object");
+  trace("[Pass] Complex Circular Object");
 }
 
 function testDataArrays(): void {
@@ -97,6 +100,7 @@ function testDataArrays(): void {
   for (i = 0; i < array.length; i++) {
     assert(array3[i] == array4[i], "Float value at " + i.toString() + " matches");
   }
+  trace("[Pass] Data Arrays");
 }
 
 function testReferenceArrays(): void {
@@ -119,6 +123,7 @@ function testReferenceArrays(): void {
   assert(array[0].a == array2[0].a, "Object values have been preserved.");
   assert(array2[0].a != array2[1].a, "Object value changes are preserved.");
   assert(array2[3].b.a == array2[0], "Circular reference objects are same.");
+  trace("[Pass] Reference Arrays");
 }
 
 function checkSerializeNull(): void {
@@ -129,6 +134,7 @@ function checkSerializeNull(): void {
   let des = new ASON.Deserializer<Vec3 | null>();
   let b = des.deserialize(buff);
   assert(b == null, "Empty buffer returns null");
+  trace("[Pass] null Serialization");
 }
 
 class Box<T> {
@@ -145,6 +151,7 @@ function staticArrayOfReferences(): void {
   for (let i = 0; i < 10; i++) {
     assert(result[i].value == i);
   }
+  trace("[Pass] StaticArray<Reference>");
 }
 
 function staticArrayData(): void {
@@ -152,6 +159,7 @@ function staticArrayData(): void {
   let buff = ASON.serialize(a);
   let b = ASON.deserialize<StaticArray<f64>>(buff);
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), <usize>(a.length << alignof<f64>())) == 0);
+  trace("[Pass] StaticArray<Data>");
 }
 
 class ArrayChild {
@@ -169,4 +177,5 @@ function arrayOfSameReferenceWithCircular(): void {
   for (let i = 0; i < a.length; i++) {
     assert(b[i] == first);
   }
+  trace("[Pass] Complex Circular with Array");
 }
