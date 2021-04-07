@@ -173,7 +173,6 @@ export namespace ASON {
 
       let segment = this.arrayDataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, dataStart, size);
-      trace("copied memory", 2, <f64>entryId, <f64>size);
       // return the entry written
       return entryId;
     }
@@ -495,7 +494,6 @@ export namespace ASON {
         assert(entryMap.has(childEntryId));
         let childPointer = entryMap.get(childEntryId);
 
-        trace("link", 3, <f64>parentPointer, <f64>childPointer, <f64>entry.offset);
         __link(parentPointer, childPointer, false);
         store<usize>(parentPointer + entry.offset, childPointer);
         i += offsetof<LinkEntry>();
