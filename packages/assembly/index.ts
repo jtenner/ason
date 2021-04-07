@@ -407,6 +407,7 @@ export namespace ASON {
       let i: usize = 0;
       while (i < referenceTableByteLength) {
         let entry = referenceTable.allocate();
+        // @ts-ignore: pin prevents garbage collection
         let referencePointer = __pin(__new(entry.offset, entry.rttid));
         entryMap.set(entry.entryId, referencePointer);
         i += offsetof<ReferenceEntry>();
@@ -418,6 +419,7 @@ export namespace ASON {
         let entry = dataSegmentTable.allocate();
         let segmentLength = entry.byteLength;
         let segment = dataSegmentTable.allocateSegment(<i32>segmentLength);
+      // @ts-ignore: pin prevents garbage collection
         let referencePointer = __pin(__new(entry.byteLength, entry.rttid));
         memory.copy(referencePointer, segment, segmentLength);
         entryMap.set(entry.entryId, referencePointer);
@@ -430,6 +432,7 @@ export namespace ASON {
         let entry = arrayTable.allocate();
         let length = entry.length;
         let temp = new ArrayBuffer(length << <i32>alignof<usize>());
+        // @ts-ignore: pin prevents garbage collection
         let referencePointer = __pin(__newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp)));
         entryMap.set(entry.entryId, referencePointer);
         i = offsetof<ArrayEntry>();
@@ -441,6 +444,7 @@ export namespace ASON {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
         let segment = arrayDataSegmentTable.allocateSegment(length);
+        // @ts-ignore: pin prevents garbage collection
         let referencePointer = __pin(__newArray(length, entry.align, entry.rttid, segment));
         entryMap.set(entry.entryId, referencePointer);
         i = arrayDataSegmentTable.index;
@@ -553,6 +557,7 @@ export namespace ASON {
 
       for(let j = 0; j < numKeys; j++) {
         let key = unchecked(keys[j]);
+        // @ts-ignore: it is now safe to unpin
         __unpin(entryMap.get(key));
       }
 
