@@ -104,3 +104,6 @@ dist
 .tern-port
 
 lib
+test/*.wasm
+test/*.map
+test/*.wat
