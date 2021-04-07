@@ -148,7 +148,14 @@ function createFieldPutStatement(classDeclaration: ClassDeclaration, fieldDeclar
             TypeNode.createIdentifierExpression("offsetof", fieldDeclaration.range),
             [TypeNode.createNamedType(
               TypeNode.createSimpleTypeName(classDeclaration.name.text, fieldDeclaration.range),
-              null,
+              classDeclaration.typeParameters
+                ? classDeclaration.typeParameters.map(e => TypeNode.createNamedType(
+                  TypeNode.createSimpleTypeName(e.name.text, fieldDeclaration.range),
+                  null,
+                  false,
+                  fieldDeclaration.range,
+                ))
+                : null,
               false,
               fieldDeclaration.range,
             )],
