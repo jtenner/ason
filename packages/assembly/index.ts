@@ -356,6 +356,18 @@ export namespace ASON {
      * @returns: The deserialized object T
      */
     public deserialize(data: StaticArray<u8>): T {
+      if (isReference<T>()) {
+        if (data.length == 0) {
+          if (isNullable<T>()) {
+            // @ts-ignore: T is nullable
+            return null;
+          } else {
+            throw new Error("Cannot return null with null buffer when type T is not nullable.");
+          }
+        }
+        if (data.length == 0 && !isNullable<T>()) assert(false, "")
+      }
+
       let startPointer = changetype<usize>(data);
 
       // Assert data is larger than the ASONHeader object.

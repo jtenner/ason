@@ -41,4 +41,17 @@ export function _start(): void {
   assert(myA.x == myA2.x, "third");
   assert(myA2.b.c == 42, "property");
   assert(myA2.b.a == myA2, "fourth");
+
+  checkSerializeNull();
+}
+
+
+function checkSerializeNull(): void {
+  let a: Vec3 | null = null;
+  let ser = new ASON.Serializer<Vec3 | null>();
+  let buff = ser.serialize(a);
+  assert(buff.length == 0);
+  let des = new ASON.Deserializer<Vec3 | null>();
+  let b = des.deserialize(buff);
+  assert(b == null);
 }
