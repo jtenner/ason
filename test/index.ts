@@ -128,11 +128,9 @@ function testReferenceArrays(): void {
 
 function checkSerializeNull(): void {
   let a: Vec3 | null = null;
-  let ser = new ASON.Serializer<Vec3 | null>();
-  let buff = ser.serialize(a);
+  let buff = ASON.serialize(a);
   assert(buff.length == 0, "Buffer's length should be 0.");
-  let des = new ASON.Deserializer<Vec3 | null>();
-  let b = des.deserialize(buff);
+  let b = ASON.deserialize<Vec3 | null>(buff);
   assert(b == null, "Empty buffer returns null");
   trace("[Pass] null Serialization");
 }

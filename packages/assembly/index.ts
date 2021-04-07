@@ -16,6 +16,11 @@ import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEnt
 function getObjectSize<T>(value: T): usize {
   return changetype<OBJECT>(changetype<usize>(value) - TOTAL_OVERHEAD).rtSize;
 }
+// @ts-ignore: valid inline
+@inline
+function getObjectType(value: usize): u32 {
+  return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
+}
 
 // @ts-ignore: valid global
 @global
@@ -480,6 +485,10 @@ export namespace ASON {
         entryMap.set(entry.entryId, referencePointer);
         i = arrayDataSegmentTable.index;
       }
+
+      // all the references have been allocated, let's get entry 0 and validate type info
+      let entry0 = entryMap.get(0);
+      assert(getObjectType(entry0) == idof<T>());
 
       // Link every part in the entryMap.
       i = 0;
