@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "visitor-as": "^0.5.0"
   }
 }

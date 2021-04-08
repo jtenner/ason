@@ -1,4 +1,4 @@
-import { ASON } from "../packages/assembly";
+import { ASON } from "@ason/assembly";
 
 class Vec3 {
   constructor(

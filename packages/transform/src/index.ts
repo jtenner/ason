@@ -1,12 +1,12 @@
-import { Transform } from "assemblyscript/cli/transform";
 import {
+  Transform,
   ClassDeclaration,
   NamespaceDeclaration,
   NodeKind,
   Parser,
   Statement,
   Source,
-} from "assemblyscript";
+} from "visitor-as/as";
 
 import { createAsonPutMethod } from "./createAsonPutMethod";
 
