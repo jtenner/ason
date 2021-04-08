@@ -1,5 +1,7 @@
 {
   "options": {
+    "binaryFile": "build/index.wasm",
+    "textFile": "build/index.wat",
     "sourceMap": true,
     "debug": true,
     "use": ["ASC_RTRACE=1"],

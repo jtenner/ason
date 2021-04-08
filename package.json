@@ -30,7 +30,6 @@
   ],
   "homepage": "https://github.com/jtenner/ason#readme",
   "devDependencies": {
-    "asbuild": "0.0.11",
     "assemblyscript": "^0.18.22",
     "lerna": "^4.0.0",
     "npm-run-all": "^4.1.5",
