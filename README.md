@@ -72,9 +72,19 @@ for (let i = 0; i < 10; i++) {
 }
 ```
 
+# Uses
+
+This library is perfect for transferring references from one module of the same type to another module of the exact same type. However, if the modules using this library are different, then it's possible that the runtime type information might not match. This will result in runtime errors.
+
+These serialization methods are also great for helping store references like configuration files on disk.
+
+If JSON is too verbose or requires too much space in memory, ASON is a better alternative.
+
 # Implementation
 
-In order to assemble an AssemblyScript object, we need a few key pieces of data about our reference.
+The ASON serialization and deserialization methods use a collection of tables to describe the shape of a given reference by recording entries for every field, every reference, every array, and every data segment (string, array of data, and static arrays.) It also uses a few tables to describe how objects are linked to each other to contend with the garbage collection algorithm and assert that objects will not be freed or mishandled at deserialization time.
+
+With all this in mind, it becomes necessary to keep track of a few key pieces of data about our reference shape. In fact, each reference on the object tree gets it's own record.
 
 ```ts
 @unmanaged
@@ -85,7 +95,7 @@ export class ReferenceEntry {
 }
 ```
 
-We now have enough information to make a list of references. Think of a c-like `ReferenceEntry*` pointer. For every reference in an object tree, we can allocate some space in a buffer to describe it's shape. The first step is to visit each reference on the object tree, and then allocate a `ReferenceEntry` for it. Then, we allocate a `LinkEntry` that describes the relationship between the parent and the child references.
+Think of a c-like `ReferenceEntry*` pointer. For every reference in an object tree, we can allocate some space in a buffer to describe it's shape. The next step is to describe how they are linked using a `LinkEntry` class.
 
 ```ts
 @unmanaged
@@ -96,7 +106,36 @@ export class LinkEntry {
 }
 ```
 
-Finally, we need to store the fields that are numeric. We can allocate a `FieldEntry` on another table to describe each field on each reference.
+This particular entry makes it easy to describe circular references too. For instance, given a class like a `TreeNode` where each `TreeNode` can have a parent, and a collection of children, ASON will generate a `LinkEntry` that describes each relationship at `Serialization` time.
+
+
+```ts
+let a = new TreeNode();
+let b = new TreeNode();
+a.parent = b;
+b.children = [a];
+
+ASON.serialize(b);
+```
+
+This particular example happens to use another kind of `LinkEntry` called an `ArrayLinkEntry` because `children` is an array, and linking objects to Arrays must be handled differently.
+
+However, the link entry table might conceptually look something like this in a JSON representation:
+
+```ts
+{
+  "linkEntryTable": [
+    // the TreeNode
+    { parentEntryId: 0, childEntryId: 1, offset: offsetof<TreeNode>("parent") },
+    // the array
+    { parentEntryId: 1, childEntryId: 2, offset: offsetof<TreeNode>("children") },
+  ]
+}
+```
+
+Figuring out the shape of `ArrayLinkEntry` objects is left as an exercise to the reader.
+
+Finally we need to describe all the fields on a given reference by storing their values and offsets on each entry. We can use the following shapes:
 
 ```ts
 @unmanaged
@@ -147,7 +186,7 @@ class Box<T> { constructor(public value: T) {} }
 
 let ser = new ASON.Serializer<Box<f32>>();
 let des = new ASON.Deserializer<Box<f32>>();
-let assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);
+assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);
 ```
 
 This is because `ASON` only serializes references. The reason why is because ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
