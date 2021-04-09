@@ -51,11 +51,7 @@ It's also possible to save heap allocations and re-use a `Serializer` and `Deser
 ```ts
 import { Serializer, Deserializer } from "@ason/assembly";
 class Vec3 {
-  constructor(
-    public x: f32,
-    public y: f32,
-    public z: f32,
-  ) {}
+  constructor(public x: f32, public y: f32, public z: f32) {}
 }
 
 let result = new Array<StaticArray<u8>>(); // an array of buffers
@@ -81,7 +77,8 @@ for (let i = 0; i < 10; i++) {
 In order to assemble an AssemblyScript object, we need a few key pieces of data about our reference.
 
 ```ts
-@unmanaged export class ReferenceEntry {
+@unmanaged
+export class ReferenceEntry {
   rttid: u32; // The type Id
   entryId: u32; // some kind of unique entry identifier
   offset: usize; // and how big it is
@@ -102,7 +99,6 @@ export class LinkEntry {
 Finally, we need to store the fields that are numeric. We can allocate a `FieldEntry` on another table to describe each field on each reference.
 
 ```ts
-
 @unmanaged
 export class FieldEntry8 {
   entryId: u32;

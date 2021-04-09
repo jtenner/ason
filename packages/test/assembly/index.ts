@@ -1,11 +1,7 @@
 import { ASON } from "@ason/assembly";
 
 class Vec3 {
-  constructor(
-    public x: f32 = 0,
-    public y: f32 = 0,
-    public z: f32 = 0,
-  ) {}
+  constructor(public x: f32 = 0, public y: f32 = 0, public z: f32 = 0) {}
 }
 
 class A {
@@ -40,7 +36,14 @@ function testBasicVectors(): void {
   let des = new ASON.Deserializer<Vec3>();
   let b = des.deserialize(buffer);
 
-  assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<Vec3>()) == 0, "Raw values are equal.");
+  assert(
+    memory.compare(
+      changetype<usize>(a),
+      changetype<usize>(b),
+      offsetof<Vec3>()
+    ) == 0,
+    "Raw values are equal."
+  );
   trace("[Pass] Basic Vectors");
 }
 
@@ -56,7 +59,10 @@ function testComplexObjects(): void {
   assert(myA != myA2, "New object has been created.");
   assert(myA.a == myA2.a, "Float value in object is correct.");
   assert(myA.x == myA2.x, "Unsigned int8 value in object is correct.");
-  assert(myA.c == myA2.c, "Signed int64 value in object is correct, and not default.")
+  assert(
+    myA.c == myA2.c,
+    "Signed int64 value in object is correct, and not default."
+  );
   assert(myA2.b.c == 42, "Nested int32 value in object is correct.");
   trace("[Pass] Complex Object");
 }
@@ -71,8 +77,11 @@ function testComplexCircularObject(): void {
   let myA2 = ASON.deserialize<A>(buffer);
 
   assert(myA != myA2, "New object has been created.");
-  assert(myA2.b.a == myA2, "Nested object circular reference is preserved.")
-  assert(myA2.b.a != myA, "Nested object is not the same as the original object");
+  assert(myA2.b.a == myA2, "Nested object circular reference is preserved.");
+  assert(
+    myA2.b.a != myA,
+    "Nested object is not the same as the original object"
+  );
   trace("[Pass] Complex Circular Object");
 }
 
@@ -84,7 +93,10 @@ function testDataArrays(): void {
   let array2 = ASON.deserialize<Array<u8>>(buffer);
 
   assert(array != array2, "New int array has been created.");
-  assert(array.length == array2.length, "New int array is same size as original array");
+  assert(
+    array.length == array2.length,
+    "New int array is same size as original array"
+  );
   let i: i32 = 0;
   for (i = 0; i < array.length; i++) {
     assert(array[i] == array2[i], "Int value at " + i.toString() + " matches");
@@ -97,9 +109,15 @@ function testDataArrays(): void {
   let array4 = ASON.deserialize<Array<f32>>(buffer);
 
   assert(array3 != array4, "New float array has been created.");
-  assert(array3.length == array4.length, "New float array is same size as original array");
+  assert(
+    array3.length == array4.length,
+    "New float array is same size as original array"
+  );
   for (i = 0; i < array.length; i++) {
-    assert(array3[i] == array4[i], "Float value at " + i.toString() + " matches");
+    assert(
+      array3[i] == array4[i],
+      "Float value at " + i.toString() + " matches"
+    );
   }
   trace("[Pass] Data Arrays");
 }
@@ -119,8 +137,14 @@ function testReferenceArrays(): void {
   let array2 = ASON.deserialize<Array<A>>(buffer);
 
   assert(array != array2, "New object array has been created.");
-  assert(array.length == array2.length, "New object array is same size as original.");
-  assert(array[0] != array2[0], "New objects are not the same as the originals.");
+  assert(
+    array.length == array2.length,
+    "New object array is same size as original."
+  );
+  assert(
+    array[0] != array2[0],
+    "New objects are not the same as the originals."
+  );
   assert(array[0].a == array2[0].a, "Object values have been preserved.");
   assert(array2[0].a != array2[1].a, "Object value changes are preserved.");
   assert(array2[3].b.a == array2[0], "Circular reference objects are same.");
@@ -157,7 +181,13 @@ function staticArrayData(): void {
   let a = [9, 12, 6, 2, 4, -5] as StaticArray<f64>;
   let buff = ASON.serialize(a);
   let b = ASON.deserialize<StaticArray<f64>>(buff);
-  assert(memory.compare(changetype<usize>(a), changetype<usize>(b), <usize>(a.length << alignof<f64>())) == 0);
+  assert(
+    memory.compare(
+      changetype<usize>(a),
+      changetype<usize>(b),
+      <usize>(a.length << alignof<f64>())
+    ) == 0
+  );
   trace("[Pass] StaticArray<Data>");
 }
 
