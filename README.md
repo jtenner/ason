@@ -22,8 +22,10 @@ Modify your asconfig to include the transform:
 
 ```ts
 {
-  ...
-  "transform": ["@ason/transform"]
+  "options": {
+    ... // other options here
+    "transform": ["@ason/transform"]
+  }
 }
 ```
 
@@ -40,8 +42,8 @@ let result = ASON.deserialize<StaticArray<u8>>(buffer);
 
 assert(result.length == 3);
 assert(result[0] == <u8>29);
-assert(result[0] == <u8>6);
-assert(result[0] == <u8>4);
+assert(result[1] == <u8>6);
+assert(result[2] == <u8>4);
 ```
 
 It's also possible to save heap allocations and re-use a `Serializer` and `Deserializer` object when serializing multiple objects of the same type.
