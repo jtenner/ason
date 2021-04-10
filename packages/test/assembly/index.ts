@@ -31,6 +31,9 @@ export function _start(): void {
   staticArrayData();
   arrayOfSameReferenceWithCircular();
   serializeNumericValues();
+  setOfNumbers();
+  setOfReferences();
+  setOfStrings();
 }
 
 function testBasicVectors(): void {
@@ -184,4 +187,62 @@ function serializeNumericValues(): void {
   assert(ASON.deserialize<i32>(ASON.serialize(64)) == 64);
   assert(ASON.deserialize<u8>(ASON.serialize(<u8>255)) == 255);
   trace("[Pass] numeric values");
+}
+
+function setOfNumbers(): void {
+  let a = new Set<i32>();
+  a.add(1);
+  a.add(2);
+  a.add(42);
+
+  let value = ASON.deserialize<Set<i32>>(ASON.serialize(a));
+
+  let bucketsA = load<usize>(changetype<usize>(a), offsetof<Set<i32>>("buckets"));
+  let bucketsValue = load<usize>(changetype<usize>(value), offsetof<Set<i32>>("buckets"));
+  assert(value);
+  assert(bucketsA);
+  assert(bucketsValue);
+  assert(changetype<ArrayBuffer>(bucketsA).byteLength == changetype<ArrayBuffer>(bucketsValue).byteLength);
+
+  let values = value.values();
+  for (let i = 0; i < values.length; i++) {
+    trace("values", 2, i, values[i]);
+  }
+  assert(value.has(1));
+  assert(value.has(2));
+  assert(value.has(42));
+  trace("[Pass] Set of numbers");
+}
+
+function setOfReferences(): void {
+  let a = new Vec3(29, 6, 4);
+  let b = new Vec3(1, 2, 3);
+  let value = new Set<Vec3>();
+  value.add(a);
+  value.add(b);
+
+  let result = ASON.deserialize<Set<Vec3>>(ASON.serialize(value));
+  assert(result);
+  let values = result.values();
+  assert(values);
+  assert(values.length == 2);
+
+  trace("[pass] Set of references")
+}
+
+function setOfStrings(): void {
+  let a = "Test1";
+  let b = "Test2";
+  let c = "Test3";
+
+  let value = new Set<string>();
+  value.add(a);
+  value.add(b);
+  value.add(c);
+
+  let result = ASON.deserialize<Set<string>>(ASON.serialize(value));
+  assert(result);
+  assert(result.has("Test1"));
+  assert(result.has("Test2"));
+  assert(result.has("Test3"));
 }

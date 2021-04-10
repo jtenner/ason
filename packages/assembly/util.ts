@@ -10,6 +10,8 @@ export class ASONHeader {
   fieldTable16ByteLength: usize;
   fieldTable32ByteLength: usize;
   fieldTable64ByteLength: usize;
+  setEntryTableByteLength: usize;
+  setStringEntryTableByteLength: usize;
 }
 
 @unmanaged
@@ -80,6 +82,18 @@ export class ArrayDataSegmentEntry {
 export class ArrayLinkEntry {
   parentEntryId: u32;
   index: i32;
+  childEntryId: u32;
+}
+
+@unmanaged
+export class SetEntry {
+  parentEntryId: u32;
+  childEntryId: u32;
+}
+
+@unmanaged
+export class SetStringEntry {
+  parentEntryId: u32;
   childEntryId: u32;
 }
 

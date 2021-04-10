@@ -5,11 +5,13 @@ import {
   ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH
 } from "./configuration";
 // @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
-import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry8, FieldEntry16, FieldEntry32, FieldEntry64 } from "./util";
+import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry8, FieldEntry16, FieldEntry32, FieldEntry64, SetEntry, SetStringEntry } from "./util";
+
 
 // @ts-ignore: valid inline
 @inline
@@ -20,6 +22,33 @@ function getObjectSize<T>(value: T): usize {
 @inline
 function getObjectType(value: usize): u32 {
   return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
+}
+
+/** Structure of a set entry. */
+@unmanaged class AssemblyScriptSetEntry<K> {
+  key: K;
+  taggedNext: usize; // LSB=1 indicates EMPTY
+}
+
+// SET values
+@inline const INITIAL_CAPACITY = 4;
+@inline const BUCKET_SIZE = sizeof<usize>();
+/** Computes the aligned size of an entry. */
+// @ts-ignore: decorator
+@inline
+function ENTRY_SIZE<T>(): usize {
+  const align = ENTRY_ALIGN<T>();
+  const size = (offsetof<AssemblyScriptSetEntry<T>>() + align) & ~align;
+  return size;
+}
+
+/** Computes the alignment of an entry. */
+// @ts-ignore: decorator
+@inline
+function ENTRY_ALIGN<T>(): usize {
+  // can align to 4 instead of 8 if 32-bit and K is <= 32-bits
+  const align = (sizeof<T>() > sizeof<usize>() ? sizeof<T>() : sizeof<usize>()) - 1;
+  return align;
 }
 
 // @ts-ignore: valid global
@@ -41,7 +70,8 @@ export namespace ASON {
     private fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
-
+    private setEntryTable: Table<SetEntry> = new Table<SetEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
+    private setStringEntryTable: Table<SetStringEntry> = new Table<SetStringEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
     }
@@ -65,6 +95,8 @@ export namespace ASON {
       this.fieldTable16.reset();
       this.fieldTable32.reset();
       this.fieldTable64.reset();
+      this.setEntryTable.reset();
+      this.setStringEntryTable.reset();
 
       assert(this.put(value) == <u32>0);
 
@@ -77,7 +109,9 @@ export namespace ASON {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
       }
 
-      if (value instanceof ArrayBuffer) {
+      if (value instanceof Set) {
+        return this.putSet(value);
+      } else if (value instanceof ArrayBuffer) {
         // arraybuffer
         return this.putDataSegment(value);
       } else if (value instanceof String) {
@@ -121,16 +155,20 @@ export namespace ASON {
         // it's not a reference, we are a data segment
         return this.putArrayDataSegment(value);
       } else {
-        let entryId = this.putReference(value);
-        if (isNullable(value)) {
-          // @ts-ignore: defined in each class
-          value!.__asonPut(this, entryId);
-          return entryId;
-        } else {
-          // @ts-ignore: defined in each class
-          value.__asonPut(this, entryId);
-          return entryId;
-        }
+        return this.putReferenceWithChildren(value);
+      }
+    }
+
+    private putReferenceWithChildren<U>(value: U): u32 {
+      let entryId = this.putReference(value);
+      if (isNullable(value)) {
+        // @ts-ignore: defined in each class
+        value!.__asonPut(this, entryId);
+        return entryId;
+      } else {
+        // @ts-ignore: defined in each class
+        value.__asonPut(this, entryId);
+        return entryId;
       }
     }
 
@@ -285,6 +323,8 @@ export namespace ASON {
       let fieldTable16 = this.fieldTable16;
       let fieldTable32 = this.fieldTable32;
       let fieldTable64 = this.fieldTable64;
+      let setEntryTable = this.setEntryTable;
+      let setStringEntryTable = this.setStringEntryTable;
 
         // referenceTableByteLength: usize;
         // dataSegmentTableByteLength: usize;
@@ -307,6 +347,8 @@ export namespace ASON {
       let fieldTable16Index = <usize>fieldTable16.index;
       let fieldTable32Index = <usize>fieldTable32.index;
       let fieldTable64Index = <usize>fieldTable64.index;
+      let setEntryTableIndex = <usize>setEntryTable.index;
+      let setStringEntryTableIndex = <usize>setStringEntryTable.index;
 
       let length = referenceTableIndex
         + dataSegmentTableIndex
@@ -317,7 +359,9 @@ export namespace ASON {
         + fieldTable8Index
         + fieldTable16Index
         + fieldTable32Index
-        + fieldTable64Index;
+        + fieldTable64Index
+        + setEntryTableIndex
+        + setStringEntryTableIndex;
 
       length += offsetof<ASONHeader>();
       let result = new StaticArray<u8>(<i32>length);
@@ -332,6 +376,8 @@ export namespace ASON {
       header.fieldTable16ByteLength = fieldTable16Index;
       header.fieldTable32ByteLength = fieldTable32Index;
       header.fieldTable64ByteLength = fieldTable64Index;
+      header.setEntryTableByteLength = setEntryTableIndex;
+      header.setStringEntryTableByteLength = setStringEntryTableIndex;
 
       let offset = offsetof<ASONHeader>();
       referenceTable.copyTo(result, offset);
@@ -353,8 +399,70 @@ export namespace ASON {
       fieldTable32.copyTo(result, offset);
       offset += fieldTable32Index;
       fieldTable64.copyTo(result, offset);
+      offset += fieldTable64Index;
+      setEntryTable.copyTo(result, offset);
+      offset += setEntryTableIndex;
+      setStringEntryTable.copyTo(result, offset);
+
       // set the result
       return result;
+    }
+
+    private putSet<U>(value: U): u32 {
+      if (isReference<indexof<U>>()) {
+        let entryId = this.assembleEmptyReferenceSet(value);
+
+        // @ts-ignore: it's a set
+        let values = value.values();
+        let length = values.length;
+        let setEntryTable = this.setEntryTable;
+        let setStringEntryTable = this.setStringEntryTable;
+        for (let i = 0; i < length; i++) {
+          let value = unchecked(values[i]);
+          // inlined at compile time
+          if (value instanceof String) {
+            let setStringValueEntryId = this.put(value);
+            let setStringEntry = setStringEntryTable.allocate();
+            setStringEntry.childEntryId = setStringValueEntryId;
+            setStringEntry.parentEntryId = entryId;
+          } else {
+            let setValueEntryId = this.put(value);
+            let setEntry = setEntryTable.allocate();
+            setEntry.parentEntryId = entryId;
+            setEntry.childEntryId = setValueEntryId;
+          }
+        }
+        return entryId;
+      } else {
+        return this.putReferenceWithChildren(value);
+      }
+    }
+
+    private assembleEmptyReferenceSet<U>(value: U): u32 {
+      let entryId = this.putReference(value);
+      this.entries.set(changetype<usize>(value), entryId);
+
+      // private buckets: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>BUCKET_SIZE);
+      let bucketsBufferEntry = this.referenceTable.allocate();
+      let bucketEntryId = bucketsBufferEntry.entryId = this.entryId++;
+      bucketsBufferEntry.offset = <usize>INITIAL_CAPACITY * BUCKET_SIZE;
+      bucketsBufferEntry.rttid = idof<ArrayBuffer>();
+      this.putLink(bucketEntryId, entryId, offsetof<U>("buckets"));
+
+      // private bucketsMask: u32 = INITIAL_CAPACITY - 1;
+      this.putField<u32>(entryId, <u32>INITIAL_CAPACITY - 1, offsetof<U>("bucketsMask"));
+
+      // private entries: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>ENTRY_SIZE<T>());
+      let entriesBufferEntry = this.referenceTable.allocate();
+      let entriesBufferEntryId = entriesBufferEntry.entryId = this.entryId++;
+      entriesBufferEntry.offset = INITIAL_CAPACITY * ENTRY_SIZE<T>();
+      entriesBufferEntry.rttid = idof<ArrayBuffer>();
+      this.putLink(entriesBufferEntryId, entryId, offsetof<U>("entries"));
+
+      // private entriesCapacity: i32 = INITIAL_CAPACITY;
+      this.putField<i32>(entryId, INITIAL_CAPACITY, offsetof<U>("entriesCapacity"));
+
+      return entryId;
     }
   }
 
@@ -400,6 +508,8 @@ export namespace ASON {
       let fieldTable16ByteLength = header.fieldTable16ByteLength;
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
+      let setEntryTableByteLength = header.setEntryTableByteLength;
+      let setStringEntryTableByteLength = header.setStringEntryTableByteLength;
 
       // Assert the sizes from the header match the length of data.
       assert(length == offsetof<ASONHeader>() +
@@ -412,7 +522,9 @@ export namespace ASON {
         fieldTable8ByteLength +
         fieldTable16ByteLength +
         fieldTable32ByteLength +
-        fieldTable64ByteLength, "Inputted array is malformed.");
+        fieldTable64ByteLength +
+        setEntryTableByteLength +
+        setStringEntryTableByteLength, "Inputted array is malformed.");
 
       // Find the start of each table.
       let referenceTablePointer = startPointer + offsetof<ASONHeader>();
@@ -425,7 +537,8 @@ export namespace ASON {
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
-
+      let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
+      let setStringEntryTablePointer = setEntryTablePointer + setStringEntryTableByteLength;
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
       let dataSegmentTable = Table.from<DataSegmentEntry>(dataSegmentTablePointer, dataSegmentTableByteLength);
@@ -437,7 +550,8 @@ export namespace ASON {
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
-
+      let setEntryTable = Table.from<SetEntry>(setEntryTablePointer, setEntryTableByteLength);
+      let setStringEntryTable = Table.from<SetStringEntry>(setStringEntryTablePointer, setStringEntryTableByteLength);
       // Make the object that will eventually become the object T.
       let entryMap = new Map<u32, Dummy>();
 
@@ -523,6 +637,28 @@ export namespace ASON {
         let parentDataPointer = load<usize>(parentPointer, offsetof<Array<usize>>("dataStart"))
         store<usize>(parentDataPointer + (<usize>entry.index << alignof<usize>()), childPointer);
         i += offsetof<ArrayLinkEntry>();
+      }
+
+      // link set references
+      i = 0;
+      while (i < setEntryTableByteLength) {
+        let entry = setEntryTable.allocate();
+        let ref = changetype<Set<Dummy>>(entryMap.get(entry.parentEntryId));
+        ref.add(changetype<Dummy>(entryMap.get(entry.childEntryId)));
+        i += offsetof<SetEntry>();
+      }
+
+      // link set strings
+      i = 0;
+      while (i < setStringEntryTableByteLength) {
+        let entry = setStringEntryTable.allocate();
+        assert(entryMap.has(entry.parentEntryId));
+        assert(entryMap.has(entry.childEntryId));
+        let ref = changetype<Set<String>>(entryMap.get(entry.parentEntryId));
+        let str = changetype<string>(entryMap.get(entry.childEntryId));
+        trace(str);
+        ref.add(str);
+        i += offsetof<SetStringEntry>();
       }
 
       // Assign 1-Byte Fields.
