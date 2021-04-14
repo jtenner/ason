@@ -420,11 +420,12 @@ export namespace ASON {
         for (let i = 0; i < length; i++) {
           let value = unchecked(values[i]);
           // inlined at compile time
-          if (value instanceof String) {
-            let setStringValueEntryId = this.put(value);
+          if (isString(value)) {
+            let setStringValueEntryId = this.putDataSegment(value);
+            trace(value);
             let setStringEntry = setStringEntryTable.allocate();
-            setStringEntry.childEntryId = setStringValueEntryId;
             setStringEntry.parentEntryId = entryId;
+            setStringEntry.childEntryId = setStringValueEntryId;
           } else {
             let setValueEntryId = this.put(value);
             let setEntry = setEntryTable.allocate();
@@ -538,7 +539,7 @@ export namespace ASON {
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
       let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
-      let setStringEntryTablePointer = setEntryTablePointer + setStringEntryTableByteLength;
+      let setStringEntryTablePointer = setEntryTablePointer + setEntryTableByteLength;
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
       let dataSegmentTable = Table.from<DataSegmentEntry>(dataSegmentTablePointer, dataSegmentTableByteLength);
@@ -656,7 +657,6 @@ export namespace ASON {
         assert(entryMap.has(entry.childEntryId));
         let ref = changetype<Set<String>>(entryMap.get(entry.parentEntryId));
         let str = changetype<string>(entryMap.get(entry.childEntryId));
-        trace(str);
         ref.add(str);
         i += offsetof<SetStringEntry>();
       }

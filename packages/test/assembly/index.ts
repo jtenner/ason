@@ -1,4 +1,5 @@
 import { ASON } from "@ason/assembly";
+import { OBJECT, TOTAL_OVERHEAD } from "rt/common";
 
 class Vec3 {
   constructor(
@@ -242,6 +243,11 @@ function setOfStrings(): void {
 
   let result = ASON.deserialize<Set<string>>(ASON.serialize(value));
   assert(result);
+  assert(changetype<OBJECT>(changetype<usize>(result) - TOTAL_OVERHEAD).rtId == idof<Set<string>>());
+  trace("pointers", 2,
+    <f64>load<usize>(changetype<usize>(result), offsetof<Set<string>>("buckets")),
+    <f64>load<usize>(changetype<usize>(result), offsetof<Set<string>>("entries")),
+  )
   assert(result.has("Test1"));
   assert(result.has("Test2"));
   assert(result.has("Test3"));
