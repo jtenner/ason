@@ -31,6 +31,8 @@ export function _start(): void {
   staticArrayData();
   arrayOfSameReferenceWithCircular();
   serializeNumericValues();
+  setOfStrings();
+  setOfIntegers();
 }
 
 function testBasicVectors(): void {
@@ -184,4 +186,34 @@ function serializeNumericValues(): void {
   assert(ASON.deserialize<i32>(ASON.serialize(64)) == 64);
   assert(ASON.deserialize<u8>(ASON.serialize(<u8>255)) == 255);
   trace("[Pass] numeric values");
+}
+
+function setOfStrings(): void {
+  let a = new Set<string>();
+  a.add("one");
+  a.add("two");
+  a.add("three");
+
+  let value = ASON.deserialize<Set<string>>(ASON.serialize(a));
+  assert(value);
+  assert(value.has("one"));
+  assert(value.has("two"));
+  assert(value.has("three"));
+  trace("[Pass] set of strings");
+}
+
+function setOfIntegers(): void {
+  let a = new Set<i32>();
+  a.add(1);
+  a.add(2);
+  a.add(3);
+  a.add(42);
+
+  let value = ASON.deserialize<Set<i32>>(ASON.serialize(a));
+  assert(value);
+  assert(value.has(1));
+  assert(value.has(2));
+  assert(value.has(3));
+  assert(value.has(42));
+  trace("[Pass] set of integers");
 }

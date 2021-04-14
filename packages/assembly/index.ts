@@ -5,11 +5,28 @@ import {
   ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
 } from "./configuration";
 // @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
-import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry8, FieldEntry16, FieldEntry32, FieldEntry64 } from "./util";
+import {
+  DataSegmentEntry,
+  ArrayDataSegmentEntry,
+  LinkEntry,
+  Table,
+  ReferenceEntry,
+  ASONHeader,
+  ArrayEntry,
+  ArrayLinkEntry,
+  FieldEntry8,
+  FieldEntry16,
+  FieldEntry32,
+  FieldEntry64,
+  SetEntry,
+ } from "./util";
+
+class Dummy {}
 
 // @ts-ignore: valid inline
 @inline
@@ -21,6 +38,8 @@ function getObjectSize<T>(value: T): usize {
 function getObjectType(value: usize): u32 {
   return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
 }
+
+const dummySet = new Set<Dummy>();
 
 // @ts-ignore: valid global
 @global
@@ -41,6 +60,7 @@ export namespace ASON {
     private fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    private setEntryTable: Table<SetEntry> = new Table<SetEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
 
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
@@ -65,6 +85,7 @@ export namespace ASON {
       this.fieldTable16.reset();
       this.fieldTable32.reset();
       this.fieldTable64.reset();
+      this.setEntryTable.reset();
 
       assert(this.put(value) == <u32>0);
 
@@ -77,7 +98,9 @@ export namespace ASON {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
       }
 
-      if (value instanceof ArrayBuffer) {
+      if (value instanceof Set) {
+        return this.putSet(value);
+      } else if (value instanceof ArrayBuffer) {
         // arraybuffer
         return this.putDataSegment(value);
       } else if (value instanceof String) {
@@ -121,17 +144,43 @@ export namespace ASON {
         // it's not a reference, we are a data segment
         return this.putArrayDataSegment(value);
       } else {
-        let entryId = this.putReference(value);
-        if (isNullable(value)) {
-          // @ts-ignore: defined in each class
-          value!.__asonPut(this, entryId);
-          return entryId;
-        } else {
-          // @ts-ignore: defined in each class
-          value.__asonPut(this, entryId);
-          return entryId;
-        }
+        return this.putReferenceAndFields(value);
       }
+    }
+
+    private putSet<U>(value: U): u32 {
+      // @ts-ignore: indexof<U> defined, and do memory copies
+      if (!isReference<indexof<U>>()) {
+        return this.putReferenceAndFields(value);
+      }
+
+      let entryId = this.putReferenceAndFields(changetype<U>(dummySet));
+      // @ts-ignore: indexof<U> defined as array<indexof<U>>
+      let childEntries = value.values();
+      let length: i32 = childEntries.length;
+      let setEntryTable = this.setEntryTable;
+
+      for (let i = 0; i < length; i++) {
+        let child = unchecked(childEntries[i]);
+        let childEntryId = this.put(child);
+        let childEntry = setEntryTable.allocate();
+        childEntry.childEntryId = childEntryId;
+        childEntry.parentEntryId = entryId;
+        childEntry.isString = isString(child);
+      }
+      return entryId;
+    }
+
+    private putReferenceAndFields<U>(value: U): u32 {
+      let entryId = this.putReference(value);
+      if (isNullable(value)) {
+        // @ts-ignore: defined in each class
+        value!.__asonPut(this, entryId);
+      } else {
+        // @ts-ignore: defined in each class
+        value.__asonPut(this, entryId);
+      }
+      return entryId;
     }
 
     private putDataSegment<U>(value: U): u32 {
@@ -285,6 +334,7 @@ export namespace ASON {
       let fieldTable16 = this.fieldTable16;
       let fieldTable32 = this.fieldTable32;
       let fieldTable64 = this.fieldTable64;
+      let setEntryTable = this.setEntryTable;
 
         // referenceTableByteLength: usize;
         // dataSegmentTableByteLength: usize;
@@ -307,6 +357,7 @@ export namespace ASON {
       let fieldTable16Index = <usize>fieldTable16.index;
       let fieldTable32Index = <usize>fieldTable32.index;
       let fieldTable64Index = <usize>fieldTable64.index;
+      let setEntryTableIndex = <usize>setEntryTable.index;
 
       let length = referenceTableIndex
         + dataSegmentTableIndex
@@ -317,7 +368,8 @@ export namespace ASON {
         + fieldTable8Index
         + fieldTable16Index
         + fieldTable32Index
-        + fieldTable64Index;
+        + fieldTable64Index
+        + setEntryTableIndex;
 
       length += offsetof<ASONHeader>();
       let result = new StaticArray<u8>(<i32>length);
@@ -332,6 +384,7 @@ export namespace ASON {
       header.fieldTable16ByteLength = fieldTable16Index;
       header.fieldTable32ByteLength = fieldTable32Index;
       header.fieldTable64ByteLength = fieldTable64Index;
+      header.setEntryTableByteLength = setEntryTableIndex;
 
       let offset = offsetof<ASONHeader>();
       referenceTable.copyTo(result, offset);
@@ -353,12 +406,13 @@ export namespace ASON {
       fieldTable32.copyTo(result, offset);
       offset += fieldTable32Index;
       fieldTable64.copyTo(result, offset);
+      offset += fieldTable64Index;
+      setEntryTable.copyTo(result, offset);
+
       // set the result
       return result;
     }
   }
-
-  class Dummy {}
 
   export class Deserializer<T> {
     /**
@@ -377,7 +431,7 @@ export namespace ASON {
             throw new Error("Cannot return null with null buffer when type T is not nullable.");
           }
         }
-        if (data.length == 0 && !isNullable<T>()) assert(false, "")
+        if (data.length == 0 && !isNullable<T>()) assert(false, "");
       }
 
       let startPointer = changetype<usize>(data);
@@ -400,6 +454,7 @@ export namespace ASON {
       let fieldTable16ByteLength = header.fieldTable16ByteLength;
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
+      let setEntryTableByteLength = header.setEntryTableByteLength;
 
       // Assert the sizes from the header match the length of data.
       assert(length == offsetof<ASONHeader>() +
@@ -412,7 +467,8 @@ export namespace ASON {
         fieldTable8ByteLength +
         fieldTable16ByteLength +
         fieldTable32ByteLength +
-        fieldTable64ByteLength, "Inputted array is malformed.");
+        fieldTable64ByteLength +
+        setEntryTableByteLength, "Inputted array is malformed.");
 
       // Find the start of each table.
       let referenceTablePointer = startPointer + offsetof<ASONHeader>();
@@ -425,6 +481,7 @@ export namespace ASON {
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
+      let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
 
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
@@ -437,6 +494,7 @@ export namespace ASON {
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
+      let setEntryTable = Table.from<SetEntry>(setEntryTablePointer, setEntryTableByteLength);
 
       // Make the object that will eventually become the object T.
       let entryMap = new Map<u32, Dummy>();
@@ -587,6 +645,27 @@ export namespace ASON {
         store<u64>(entryPointer + offset, val);
 
         i += offsetof<FieldEntry64>();
+      }
+
+      // Sets and Maps are initialized at this point
+      i = 0;
+      while (i < setEntryTableByteLength) {
+        let entry = setEntryTable.allocate();
+        let parentEntryId = entry.parentEntryId;
+        assert(entryMap.has(parentEntryId));
+        let parent = entryMap.get(parentEntryId);
+        let childEntryId = entry.childEntryId;
+        assert(entryMap.has(childEntryId));
+        let child = entryMap.get(childEntryId);
+        if (entry.isString) {
+          let parentStringSet = changetype<Set<string>>(parent);
+          let childString = changetype<string>(child);
+          parentStringSet.add(childString);
+        } else {
+          changetype<Set<Dummy>>(parent).add(child);
+        }
+
+        i += offsetof<SetEntry>();
       }
 
       // Return the original object, stored in the 0th element of the entryMap.
