@@ -196,6 +196,7 @@ function setOfStrings(): void {
 
   let value = ASON.deserialize<Set<string>>(ASON.serialize(a));
   assert(value);
+  assert(value.size == 3);
   assert(value.has("one"));
   assert(value.has("two"));
   assert(value.has("three"));
