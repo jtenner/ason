@@ -11,6 +11,7 @@ export class ASONHeader {
   fieldTable32ByteLength: usize;
   fieldTable64ByteLength: usize;
   setEntryTableByteLength: usize;
+  mapKeyValueEntryTableByteLength: usize;
 }
 
 @unmanaged
@@ -91,6 +92,23 @@ export class SetEntry {
   isString: bool;
 }
 
+export const enum MapKeyValueType {
+  Dummy,
+  String,
+  Number,
+}
+
+@unmanaged
+export class MapKeyValuePairEntry {
+  parentEntryId: i32;
+  keySize: i32;
+  keyType: MapKeyValueType;
+  valueSize: i32;
+  valueType: MapKeyValueType;
+  key: u64;
+  value: u64;
+}
+
 export class Table<T> {
   data: StaticArray<u8>;
   index: i32 = 0;
@@ -131,6 +149,7 @@ export class Table<T> {
 
   reset(): void {
     this.index = 0;
+    memory.fill(changetype<usize>(this.data), 0, this.data.length);
   }
 
   public static from<T>(data: usize, length: usize): Table<T> {
