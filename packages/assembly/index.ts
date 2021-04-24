@@ -224,7 +224,7 @@ export namespace ASON {
               parentEntryId = this.putReferenceAndFields(changetype<U>(dummy64Map));
               break;
             }
-            default: ERROR("Somehow impossible");
+            default: assert(false);
           }
         }
       } else {

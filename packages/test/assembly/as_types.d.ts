@@ -1,1 +1,1 @@
-//   / <reference types="@ason/assembly" />
+/// <reference types="@ason/assembly" />

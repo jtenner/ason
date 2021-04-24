@@ -1,4 +1,4 @@
-import { ASON } from "@ason/assembly";
+import { ASON } from "../../../assembly/index";
 
 class Vec3 {
   constructor(
@@ -20,23 +20,27 @@ class B {
   c: i32 = 42;
 }
 
-export function _start(): void {
-  testBasicVectors();
-  testComplexObjects();
-  testComplexCircularObject();
-  testDataArrays();
-  testReferenceArrays();
-  checkSerializeNull();
-  staticArrayOfReferences();
-  staticArrayData();
-  arrayOfSameReferenceWithCircular();
-  serializeNumericValues();
-  setOfStrings();
-  setOfIntegers();
-  testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
-  testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
-  testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]);
-}
+describe("ASON test suite", () => {
+  test("basic vectors", testBasicVectors);
+  test("complex objects", testComplexObjects);
+  test("complex circular objects", testComplexCircularObject);
+  test("data arrays", testDataArrays);
+  test("reference arrays", testReferenceArrays);
+  test("serialize null", checkSerializeNull);
+  test("static array of references", staticArrayOfReferences);
+  test("static array data", staticArrayData);
+  test("complex array circular", arrayOfSameReferenceWithCircular);
+  test("serialize numeric values", serializeNumericValues);
+  test("set of strings", setOfStrings);
+  test("set of integers", setOfIntegers);
+
+  describe("map", () => {
+    testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
+    testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
+    testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]);
+    testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+  });
+});
 
 function testBasicVectors(): void {
   let a = new Vec3(1, 2, 3);
@@ -233,11 +237,5 @@ function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TVal
   let result = ASON.deserialize<Map<TKey, TValue>>(ASON.serialize(value));
 
   assert(result);
-  assert(result.size == len);
-  for (let i = 0; i < len; i++) {
-    let key = keys[i];
-    let value = values[i];
-    assert(result.has(key));
-    assert(result.get(key) == value);
-  }
+  expect(result).toStrictEqual(value);
 }
