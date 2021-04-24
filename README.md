@@ -95,7 +95,7 @@ export class ReferenceEntry {
 }
 ```
 
-Think of a c-like `ReferenceEntry*` pointer. For every reference in an object tree, we can allocate some space in a buffer to describe it's shape. The next step is to describe how they are linked using a `LinkEntry` class.
+For every reference in an object tree, we can allocate some space in a buffer to describe it's shape. The `ReferenceEntry` object acts as a c-like pointer, pointing to each of the references in the buffer. The next step is to describe how they are linked using a `LinkEntry` class.
 
 ```ts
 @unmanaged
@@ -106,7 +106,7 @@ export class LinkEntry {
 }
 ```
 
-This particular entry makes it easy to describe circular references too. For instance, given a class like a `TreeNode` where each `TreeNode` can have a parent, and a collection of children, ASON will generate a `LinkEntry` that describes each relationship at `Serialization` time.
+Since the links between parents and children are defined by way of this LinkEntry class, it makes it easy to describe circular references too. For instance, given a class like a `TreeNode` where each `TreeNode` can have a parent, and a collection of children, ASON will generate a `LinkEntry` that describes each relationship at `Serialization` time.
 
 
 ```ts
@@ -118,7 +118,7 @@ b.children = [a];
 ASON.serialize(b);
 ```
 
-This particular example happens to use another kind of `LinkEntry` called an `ArrayLinkEntry` because `children` is an array, and linking objects to Arrays must be handled differently.
+This particular example happens to use another kind of `LinkEntry` called an `ArrayLinkEntry` because `children` is an array of objects, and linking objects to Arrays must be handled differently.
 
 However, the link entry table might conceptually look something like this as a JSON document:
 
@@ -139,7 +139,7 @@ Lastly, we assert that the `entryId` stored at entry `0` is the primary entry a 
 
 # Caveats
 
-When using the regular `ASON.serialize` method, values will be boxed for you.
+When using the regular `ASON.serialize` method, values automatically will be boxed and unboxed for you.
 
 ```ts
 assert(ASON.deserialize<i32>(ASON.serialize(42)) == 42);
