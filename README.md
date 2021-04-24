@@ -116,7 +116,7 @@ ASON.serialize(b);
 
 This particular example happens to use another kind of `LinkEntry` called an `ArrayLinkEntry` because `children` is an array, and linking objects to Arrays must be handled differently.
 
-However, the link entry table might conceptually look something like this in a JSON representation:
+However, the link entry table might conceptually look something like this as a JSON document:
 
 ```ts
 {
