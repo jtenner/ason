@@ -28,8 +28,6 @@
     "assemblyscript": "^0.18.22"
   },
   "scripts": {
-    "pretest": "npm run asbuild",
-    "asbuild": "asc assembly/index.ts",
     "test": "asp --summary"
   }
 }
