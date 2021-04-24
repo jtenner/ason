@@ -33,10 +33,10 @@ Import the library and serialize away!
 import { ASON } from "@ason/assembly";
 
 // serialize can determine type information
-let buffer = ASON.serialize([29, 6, 4] as StaticArray<u8>);
+let buffer: StaticArray<u8> = ASON.serialize([29, 6, 4] as Array<u8>);
 
 // deserialize must have the type passed (to perform type assertions)
-let result = ASON.deserialize<StaticArray<u8>>(buffer);
+let result: Array<u8> = ASON.deserialize<Array<u8>>(buffer);
 
 assert(result.length == 3);
 assert(result[0] == <u8>29);
