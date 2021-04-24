@@ -4,9 +4,9 @@
 
 ASON is a data oriented algorithm designed for compact and speedy storage of AssemblyScript objects in a binary format.
 
-There are many Serialization methods out there that can turn a conceptual object into a buffer or string of some kind, like JSON and protobuf. Each one of these methods has their benefits, and none of them can take advantage of the runtime type information provided by the AssemblyScript compiler.
+There are many Serialization methods that can serialize a conceptual object into a buffer or string of some kind, like JSON and protobuf. ASON however is fine tuned just for AssemblyScript objects.
 
-Serialization methods tend to be "tree-like" to describe the "shape" of a given reference instead of data oriented. JSON and XML are declarative tree-like data structure formats. Instead of a declarative data structure, ASON uses a collection of tables to describe objects, effectively looping over each record and performing an action.
+JSON and XML are declarative tree-like data structure formats. ASON uses a data-oriented approach, which means instead of a declarative data structure, it uses a collection of tables to describe object shapes. Assembling a tree becomes a linear time operation with a minimal amount of jumps.
 
 # How To Use
 
