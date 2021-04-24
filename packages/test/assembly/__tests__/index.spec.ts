@@ -35,10 +35,29 @@ describe("ASON test suite", () => {
   test("set of integers", setOfIntegers);
 
   describe("map", () => {
-    testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
-    testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
-    testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]);
-    testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+    test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
+    test("string to int maps", () => { testMap<string, u8>(["one", "two", "three"], [3, 6, 9]); });
+    test("different sized int to int maps", () => { testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]); });
+    test("float to int maps", () => { testMap<f32, u8>([-1.01, 4.0, 341.44], [4, 5, 7]); });
+    test("different sized float to float maps", () => { testMap<f32, f64>([1.44, -0.00000425, 3334445], [9.8, 756, 0.00000000000000004478]); });
+    test("object to int maps", () => { testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]); });
+    test("float to string maps, with emoji", () => { testMap<f32, string>([2.1, 3.1415926, 2.71828], ["TwoAndABit", "Pi", "🇪"]); });
+    test("int to complex object maps", () => {
+      let a1 = new A();
+      a1.a = 0.989;
+      let a2 = new A();
+      testMap<i8, A>([-1, 1], [a1, a2]);
+    });
+    test("int to complex object maps, with multiple and circular references", () => {
+      let a1 = new A();
+      a1.a = 0.989;
+      let a2 = new A();
+      a2.b.a = a1;
+      testMap<i8, A>([-1, 1, 2], [a1, a2, a1]);
+    });
+    test("float to nullable object", () => { testMap<f32, A | null>([4.2], [null]); });
+    // Complex objects, multiple references, and circular references.
+    
   });
 });
 

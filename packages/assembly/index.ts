@@ -179,10 +179,13 @@ export namespace ASON {
       let parentEntryId: u32 = 0;
 
       // string keys
+      // @ts-ignore: type U is guaranteed to be a Map
       if (isString<indexof<U>>()) {
-        if (isReference<valueof<U>>()) {
+      // @ts-ignore: type U is guaranteed to be a Map
+      if (isReference<valueof<U>>()) {
           parentEntryId = this.putReferenceAndFields(changetype<U>(stringDummyMap));
         } else {
+          // @ts-ignore: type U is guaranteed to be a Map
           switch (sizeof<valueof<U>>()) {
             case 1: {
               parentEntryId = this.putReferenceAndFields(changetype<U>(string8Map));
@@ -203,10 +206,13 @@ export namespace ASON {
             default: assert(false);
           }
         }
+      // @ts-ignore: type U is guaranteed to be a Map
       } else if (isReference<indexof<U>>()) {
+        // @ts-ignore: type U is guaranteed to be a Map
         if (isReference<valueof<U>>()) {
           parentEntryId = this.putReferenceAndFields(changetype<U>(dummyDummyMap));
         } else {
+          // @ts-ignore: type U is guaranteed to be a Map
           switch (sizeof<valueof<U>>()) {
             case 1: {
               parentEntryId = this.putReferenceAndFields(changetype<U>(dummy8Map));
@@ -228,6 +234,7 @@ export namespace ASON {
           }
         }
       } else {
+        // @ts-ignore: type U is guaranteed to be a Map
         switch (sizeof<indexof<U>>()) {
           case 1: {
             parentEntryId = this.putReferenceAndFields(changetype<U>(__8dummyMap));
@@ -245,12 +252,15 @@ export namespace ASON {
             parentEntryId = this.putReferenceAndFields(changetype<U>(__64dummyMap));
             break;
           }
-          default: ERROR("Somehow impossible");
+          default: assert(false);
         }
       }
 
+      // @ts-ignore: type U is guaranteed to be a Map
       let keys = value.keys();
+      // @ts-ignore: type U is guaranteed to be a Map
       let values = value.values();
+      // @ts-ignore: type U is guaranteed to be a Map
       let size = value.size;
       let mapKeyValuePairsTable = this.mapKeyValuePairsTable;
       for (let i = 0; i < size; i++) {
@@ -268,11 +278,13 @@ export namespace ASON {
           );
         } else {
           entry.keyType = MapKeyValueType.Number;
+          // @ts-ignore: type U is guaranteed to be a Map
           store<indexof<U>>(
             changetype<usize>(entry),
             key,
             offsetof<MapKeyValuePairEntry>("key"),
           );
+          // @ts-ignore: type U is guaranteed to be a Map
           entry.keySize = sizeof<indexof<U>>();
         }
         if (isReference(value)) {
@@ -284,11 +296,13 @@ export namespace ASON {
           );
         } else {
           entry.valueType = MapKeyValueType.Number;
+          // @ts-ignore: type U is guaranteed to be a Map
           store<valueof<U>>(
             changetype<usize>(entry),
             value,
             offsetof<MapKeyValuePairEntry>("value"),
           );
+          // @ts-ignore: type U is guaranteed to be a Map
           entry.valueSize = sizeof<valueof<U>>();
         }
       }

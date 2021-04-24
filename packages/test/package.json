@@ -28,6 +28,6 @@
     "assemblyscript": "^0.18.22"
   },
   "scripts": {
-    "test": "asp --summary"
+    "test": "asp --verbose"
   }
 }
