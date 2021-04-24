@@ -672,6 +672,7 @@ export namespace ASON {
 
       // Make the object that will eventually become the object T.
       let entryMap = new Map<u32, Dummy>();
+      entryMap.set(u32.MAX_VALUE, changetype<Dummy>(0));
 
       // Set up references of the object in the entryMap.
       let i: usize = 0;
