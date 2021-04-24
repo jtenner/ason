@@ -286,12 +286,15 @@ export namespace ASON {
           );
           // @ts-ignore: type U is guaranteed to be a Map
           entry.keySize = sizeof<indexof<U>>();
+          // @ts-ignore: type U is guaranteed to be a Map
+          entry.keyIsSigned = isSigned<indexof<U>>() || isFloat<indexof<U>>();
         }
         if (isReference(value)) {
           entry.valueType = MapKeyValueType.Dummy;
-          store<i32>(
+          let valueId = this.put(value);
+          store<u32>(
             changetype<usize>(entry),
-            this.put(value),
+            valueId,
             offsetof<MapKeyValuePairEntry>("value"),
           );
         } else {
@@ -959,33 +962,64 @@ export namespace ASON {
             break;
           }
           case MapKeyValueType.Number: {
+            let mapValueEntryId = load<u32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"));
+            assert(entryMap.has(mapValueEntryId));
+            let mapValue = entryMap.get(mapValueEntryId);
             switch (entry.keySize) {
               case 1: {
-                changetype<Map<u8, Dummy>>(parent).set(
-                  load<u8>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
-                  changetype<Dummy>(load<usize>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"))),
-                );
+                if (entry.keyIsSigned) {
+                  changetype<Map<i8, Dummy>>(parent).set(
+                    load<i8>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u8, Dummy>>(parent).set(
+                    load<u8>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
                 break;
               }
               case 2: {
-                changetype<Map<u16, Dummy>>(parent).set(
-                  load<u16>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
-                  changetype<Dummy>(load<usize>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"))),
-                );
+                if (entry.keyIsSigned) {
+                  changetype<Map<i16, Dummy>>(parent).set(
+                    load<i16>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u16, Dummy>>(parent).set(
+                    load<u16>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
                 break;
               }
               case 4: {
-                changetype<Map<u32, Dummy>>(parent).set(
-                  load<u32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
-                  changetype<Dummy>(load<usize>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"))),
-                );
+                if (entry.keyIsSigned) {
+                  changetype<Map<i32, Dummy>>(parent).set(
+                    load<i32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u32, Dummy>>(parent).set(
+                    load<u32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
                 break;
               }
               case 8: {
-                changetype<Map<u64, Dummy>>(parent).set(
-                  load<u64>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
-                  changetype<Dummy>(load<usize>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"))),
-                );
+                if (entry.keyIsSigned) {
+                  changetype<Map<i64, Dummy>>(parent).set(
+                    load<i64>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u64, Dummy>>(parent).set(
+                    load<u64>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
                 break;
               }
               default: assert(false);

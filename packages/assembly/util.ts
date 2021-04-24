@@ -103,6 +103,7 @@ export class MapKeyValuePairEntry {
   parentEntryId: i32;
   keySize: i32;
   keyType: MapKeyValueType;
+  keyIsSigned: bool;
   valueSize: i32;
   valueType: MapKeyValueType;
   key: u64;
