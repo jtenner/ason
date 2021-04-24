@@ -4,18 +4,16 @@
 
 ASON is a data oriented algorithm designed for compact and speedy storage of AssemblyScript objects in a binary format.
 
-There are many Serialization methods out there that can turn a conceptual object into a buffer of some kind, like JSON and protobuf. Each one of these methods has their benefits, and none of them can take advantage of runtime type information provided by the AssemblyScript compiler and the runtime type information.
+There are many Serialization methods out there that can turn a conceptual object into a buffer or string of some kind, like JSON and protobuf. Each one of these methods has their benefits, and none of them can take advantage of the runtime type information provided by the AssemblyScript compiler.
 
-Another problem with serialization methods is that they tend to be "tree-like" instead of data oriented. To make matters worse, there are no ways for developers to determine field definitions on a given generic reference object at runtime. This is where the ASON algorithm comes in handy.
-
-Instead of storing a tree structure, ASON stores a set of instructions to assemble an object from scratch using the smallest amount of space possible.
+Serialization methods is that they tend to be "tree-like" instead of data oriented, much like JSON creates a document. However, instead of storing a tree structure, ASON stores a set of linear instructions to assemble an object from scratch using the smallest amount of space possible.
 
 # How To Use
 
 Install from npm:
 
 ```
-npm install @ason/assembly
+npm install --save-dev @ason/assembly
 ```
 
 Modify your asconfig to include the transform:
@@ -84,8 +82,6 @@ If JSON is too verbose or requires too much space in memory, ASON is a better al
 
 The ASON serialization and deserialization methods use a collection of tables to describe the shape of a given reference by recording entries for every field, every reference, every array, and every data segment (string, array of data, and static arrays.) It also uses a few tables to describe how objects are linked to each other to contend with the garbage collection algorithm and assert that objects will not be freed or mishandled at deserialization time.
 
-With all this in mind, it becomes necessary to keep track of a few key pieces of data about our reference shape. In fact, each reference on the object tree gets it's own record.
-
 ```ts
 @unmanaged
 export class ReferenceEntry {
@@ -134,40 +130,6 @@ However, the link entry table might conceptually look something like this in a J
 ```
 
 Figuring out the shape of `ArrayLinkEntry` objects is left as an exercise to the reader.
-
-Finally we need to describe all the fields on a given reference by storing their values and offsets on each entry. We can use the following shapes:
-
-```ts
-@unmanaged
-export class FieldEntry8 {
-  entryId: u32;
-  offset: usize;
-  value: u8;
-}
-
-@unmanaged
-export class FieldEntry16 {
-  entryId: u32;
-  offset: usize;
-  value: u16;
-}
-
-@unmanaged
-export class FieldEntry32 {
-  entryId: u32;
-  offset: usize;
-  value: u32;
-}
-
-@unmanaged
-export class FieldEntry64 {
-  entryId: u32;
-  offset: usize;
-  value: u64;
-}
-```
-
-Since there are only four different field sizes, it makes sense to describe an object using four different field types. Storing the numeric type is unnecessary, because the bytes can be stored and restored, as long as size is properly accounted for without the need to cast numeric values to floats or integers.
 
 Lastly, we assert that the `entryId` stored at entry `0` is the primary entry a buffer. This of course assumes the generic type of the `Serializer` used is actually a reference.
 
