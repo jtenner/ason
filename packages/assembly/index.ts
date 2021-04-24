@@ -176,7 +176,7 @@ export namespace ASON {
         return this.putReferenceAndFields(value);
       }
 
-      let parentEntryId: i32;
+      let parentEntryId: u32 = 0;
 
       // string keys
       if (isString<indexof<U>>()) {
@@ -200,7 +200,7 @@ export namespace ASON {
               parentEntryId = this.putReferenceAndFields(changetype<U>(string64Map));
               break;
             }
-            default: ERROR("Somehow impossible");
+            default: assert(false);
           }
         }
       } else if (isReference<indexof<U>>()) {
@@ -260,9 +260,10 @@ export namespace ASON {
         entry.parentEntryId = parentEntryId;
         if (isReference(key)) {
           entry.keyType = isString(key) ? MapKeyValueType.String : MapKeyValueType.Dummy;
-          store<i32>(
+          let keyEntryId = this.put(key)
+          store<u32>(
             changetype<usize>(entry),
-            this.put(key),
+            keyEntryId,
             offsetof<MapKeyValuePairEntry>("key"),
           );
         } else {
@@ -275,7 +276,7 @@ export namespace ASON {
           entry.keySize = sizeof<indexof<U>>();
         }
         if (isReference(value)) {
-          entry.valueType = isString(value) ? MapKeyValueType.String : MapKeyValueType.Dummy;
+          entry.valueType = MapKeyValueType.Dummy;
           store<i32>(
             changetype<usize>(entry),
             this.put(value),
@@ -283,14 +284,15 @@ export namespace ASON {
           );
         } else {
           entry.valueType = MapKeyValueType.Number;
-          store<indexof<U>>(
+          store<valueof<U>>(
             changetype<usize>(entry),
             value,
             offsetof<MapKeyValuePairEntry>("value"),
           );
-          entry.keySize = sizeof<valueof<U>>();
+          entry.valueSize = sizeof<valueof<U>>();
         }
       }
+      return parentEntryId;
     }
 
     private putSet<U>(value: U): u32 {
@@ -635,7 +637,7 @@ export namespace ASON {
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
       let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
-      let mapKeyValueEntryTablePointer = setEntryTablePointer + mapKeyValueEntryTableByteLength;
+      let mapKeyValueEntryTablePointer = setEntryTablePointer + setEntryTableByteLength;
 
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
@@ -831,11 +833,115 @@ export namespace ASON {
         let parent = entryMap.get(parentEntryId);
         switch (entry.keyType) {
           case MapKeyValueType.Dummy: {
-            // TODO: Dummy Keys
+            let keyEntryId = load<u32>(
+              changetype<usize>(entry),
+              offsetof<MapKeyValuePairEntry>("key"),
+            );
+            assert(entryMap.has(keyEntryId));
+            let key = entryMap.get(keyEntryId);
+            if (entry.valueType == MapKeyValueType.Dummy) {
+              let valueEntryId = load<u32>(
+                changetype<usize>(entry),
+                offsetof<MapKeyValuePairEntry>("value"),
+              );
+              assert(entryMap.has(valueEntryId));
+              changetype<Map<Dummy, Dummy>>(parent).set(
+                key,
+                entryMap.get(valueEntryId),
+              );
+            } else {
+              switch (entry.valueSize) {
+                case 1: {
+                  let value = load<u8>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u8>>(parent).set(key, value);
+                  break;
+                }
+                case 2: {
+                  let value = load<u16>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u16>>(parent).set(key, value);
+                  break;
+                }
+                case 4: {
+                  let value = load<u32>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u32>>(parent).set(key, value);
+                  break;
+                }
+                case 8: {
+                  let value = load<u64>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u64>>(parent).set(key, value);
+                  break;
+                }
+                default: assert(false);
+              }
+            }
             break;
           }
           case MapKeyValueType.String: {
-            // TODO: String Keys
+            let keyEntryId = load<u32>(
+              changetype<usize>(entry),
+              offsetof<MapKeyValuePairEntry>("key"),
+            );
+            assert(entryMap.has(keyEntryId));
+            let key = changetype<string>(entryMap.get(keyEntryId));
+            if (entry.valueType == MapKeyValueType.Dummy) {
+              let valueEntryId = load<u32>(
+                changetype<usize>(entry),
+                offsetof<MapKeyValuePairEntry>("value"),
+              );
+              assert(entryMap.has(valueEntryId));
+              changetype<Map<string, Dummy>>(parent).set(
+                key,
+                entryMap.get(valueEntryId),
+              );
+            } else {
+              switch (entry.valueSize) {
+                case 1: {
+                  let value = load<u8>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u8>>(parent).set(key, value);
+                  break;
+                }
+                case 2: {
+                  let value = load<u16>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u16>>(parent).set(key, value);
+                  break;
+                }
+                case 4: {
+                  let value = load<u32>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u32>>(parent).set(key, value);
+                  break;
+                }
+                case 8: {
+                  let value = load<u64>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u64>>(parent).set(key, value);
+                  break;
+                }
+                default: assert(false);
+              }
+            }
             break;
           }
           case MapKeyValueType.Number: {

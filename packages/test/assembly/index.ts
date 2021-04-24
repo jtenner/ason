@@ -33,6 +33,9 @@ export function _start(): void {
   serializeNumericValues();
   setOfStrings();
   setOfIntegers();
+  testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
+  testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
+  testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]);
 }
 
 function testBasicVectors(): void {
@@ -217,4 +220,24 @@ function setOfIntegers(): void {
   assert(value.has(3));
   assert(value.has(42));
   trace("[Pass] set of integers");
+}
+
+function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TValue>): void {
+  assert(keys.length == values.length);
+  let len = keys.length;
+  let value = new Map<TKey, TValue>();
+  for (let i = 0; i < len; i++) {
+    value.set(keys[i], values[i]);
+  }
+
+  let result = ASON.deserialize<Map<TKey, TValue>>(ASON.serialize(value));
+
+  assert(result);
+  assert(result.size == len);
+  for (let i = 0; i < len; i++) {
+    let key = keys[i];
+    let value = values[i];
+    assert(result.has(key));
+    assert(result.get(key) == value);
+  }
 }
