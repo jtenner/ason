@@ -6,7 +6,7 @@ ASON is a data oriented algorithm designed for compact and speedy storage of Ass
 
 There are many Serialization methods out there that can turn a conceptual object into a buffer or string of some kind, like JSON and protobuf. Each one of these methods has their benefits, and none of them can take advantage of the runtime type information provided by the AssemblyScript compiler.
 
-Serialization methods is that they tend to be "tree-like" instead of data oriented, much like JSON creates a document. However, instead of storing a tree structure, ASON stores a set of linear instructions to assemble an object from scratch using the smallest amount of space possible.
+Serialization methods tend to be "tree-like" to describe the "shape" of a given reference instead of data oriented. JSON and XML are declarative tree-like data structure formats. Instead of a declarative data structure, ASON uses a collection of tables to describe objects, effectively looping over each record and performing an action.
 
 # How To Use
 
@@ -33,15 +33,15 @@ Import the library and serialize away!
 import { ASON } from "@ason/assembly";
 
 // serialize can determine type information
-let buffer: StaticArray<u8> = ASON.serialize([29, 6, 4] as Array<u8>);
+let buffer: StaticArray<u8> = ASON.serialize([3.14, 99, 25.624] as Array<f64>);
 
 // deserialize must have the type passed (to perform type assertions)
-let result: Array<u8> = ASON.deserialize<Array<u8>>(buffer);
+let result: Array<f64> = ASON.deserialize<Array<f64>>(buffer);
 
 assert(result.length == 3);
-assert(result[0] == <u8>29);
-assert(result[1] == <u8>6);
-assert(result[2] == <u8>4);
+assert(result[0] == <f64>3.14);
+assert(result[1] == <f64>99);
+assert(result[2] == <f64>25.624);
 ```
 
 It's also possible to save heap allocations and re-use a `Serializer` and `Deserializer` object when serializing multiple objects of the same type.
@@ -72,11 +72,15 @@ for (let i = 0; i < 10; i++) {
 
 # Uses
 
-This library is perfect for transferring references from one module of the same type to another module of the exact same type. However, if the modules using this library are different, then it's possible that the runtime type information might not match. This will result in runtime errors.
+This library is perfect for transferring references from one module of the same type to another module of the exact same type.
 
 These serialization methods are also great for helping store references like configuration files on disk.
 
-If JSON is too verbose or requires too much space in memory, ASON is a better alternative.
+If JSON is too verbose or requires too much space in memory, ASON is a better alternative, because it reduces overhead byte storage a very large amount.
+
+# Caveats
+
+If the modules using this library are different, then runtime type information might not match. This will result in runtime errors, `instanceof` checks failing, and undefined behavior. ASON also performs type information validation for objects at the top level, so providing the wrong reference type parameter to `ASON` will result in a runtime error.
 
 # Implementation
 
@@ -146,16 +150,17 @@ However, when using the `Serializer` and `Deserializer` class directly, values m
 ```ts
 class Box<T> { constructor(public value: T) {} }
 
+let ser = new Serializer<f32>(); // Compile time error!
+
+// instead do this
 let ser = new ASON.Serializer<Box<f32>>();
 let des = new ASON.Deserializer<Box<f32>>();
 assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);
 ```
 
-This is because `ASON` only serializes references. The reason why is because ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
+ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
 
-# License
-
-MIT
+# MIT License
 
 ```
 MIT License
