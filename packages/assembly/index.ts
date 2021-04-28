@@ -34,6 +34,14 @@ import {
 
 class Dummy {}
 
+
+/** Structure of a map entry. Credit: https://github.com/AssemblyScript/assemblyscript/blob/master/std/assembly/map.ts */
+@unmanaged class MapEntry<K,V> {
+  key: K;
+  value: V;
+  taggedNext: usize; // LSB=1 indicates EMPTY
+}
+
 // @ts-ignore: valid inline
 @inline
 function getObjectSize<T>(value: T): usize {
@@ -173,29 +181,17 @@ export namespace ASON {
       mapEntry.entryId = mapEntryId;
       mapEntry.rtId = idof<U>();
 
-      // Keys first
       // @ts-ignore: type U is guaranteed to be a Map
-      mapEntry.keySize = sizeof<indexof<U>>();
-      // The following if statements are inlined
+      let maxkv = max<i32>(sizeof<indexof<U>>(), sizeof<valueof<U>>());
       // @ts-ignore: type U is guaranteed to be a Map
-      if (isString<indexof<U>>()) {
-        mapEntry.keyType = MapKeyValueType.String;
-        // @ts-ignore: type U is guaranteed to be a Map
-      } else if (isReference<indexof<U>>()) {
-        mapEntry.keyType = MapKeyValueType.Dummy;
-      } else {
-        mapEntry.keyType = MapKeyValueType.Number;
-      }
+      let align = max<usize>(maxkv, sizeof<usize>()) - 1;
+      // @ts-ignore: type U is guaranteed to be a Map
+      let entryOffset = offsetof<MapEntry<indexof<U>, valueof<U>>>();
+      let entrySize = (entryOffset + align) & ~align;
+      mapEntry.entrySize = entrySize;
 
-      // Then values...
       // @ts-ignore: type U is guaranteed to be a Map
-      mapEntry.valueSize = sizeof<valueof<U>>();
-      // @ts-ignore: type U is guaranteed to be a Map
-      if (isReference<valueof<U>>()) {
-        mapEntry.valueType = MapKeyValueType.Dummy;
-      } else {
-        mapEntry.valueType = MapKeyValueType.Number;
-      }
+      mapEntry.capacity = 1 << (32 - clz<i32>(value.size));
 
       // @ts-ignore: type U is guaranteed to be a Map
       let keys = value.keys();
@@ -588,7 +584,7 @@ export namespace ASON {
         fieldTable32ByteLength +
         fieldTable64ByteLength +
         setEntryTableByteLength +
-        mapReferenceTableByteLength + 
+        mapReferenceTableByteLength +
         mapKeyValueEntryTableByteLength, "Inputted array is malformed.");
 
       // Find the start of each table.
@@ -673,54 +669,43 @@ export namespace ASON {
         let entry = mapReferenceTable.allocate();
         let entryId = entry.entryId;
         let rtId = entry.rtId;
-        let keySize = entry.keySize;
-        let keyType = entry.keyType;
-        let valueSize = entry.valueSize;
-        let valueType = entry.valueType;
+        let entrySize = entry.entrySize;
+        let capacity = entry.capacity;
 
-        let mapPtr: usize = 0;
-        if (keyType == MapKeyValueType.String) {
-          if (valueType == MapKeyValueType.Dummy) {
-            mapPtr = changetype<usize>(new Map<string, Dummy>());
-          } else {
-            if (valueSize == 1) {
-              mapPtr = changetype<usize>(new Map<string, u8>());
-            } else if (valueSize == 2) {
-              mapPtr = changetype<usize>(new Map<string, u16>());
-            } else if (valueSize == 4) {
-              mapPtr = changetype<usize>(new Map<string, u32>());
-            } else if (valueSize == 8) {
-              mapPtr = changetype<usize>(new Map<string, u64>());
-            } else assert(false);
-          }
-        } else if (keyType == MapKeyValueType.Dummy) {
-          if (valueType == MapKeyValueType.Dummy) {
-            mapPtr = changetype<usize>(new Map<Dummy, Dummy>());
-          } else {
-            if (valueSize == 1) {
-              mapPtr = changetype<usize>(new Map<Dummy, u8>());
-            } else if (valueSize == 2) {
-              mapPtr = changetype<usize>(new Map<Dummy, u16>());
-            } else if (valueSize == 4) {
-              mapPtr = changetype<usize>(new Map<Dummy, u32>());
-            } else if (valueSize == 8) {
-              mapPtr = changetype<usize>(new Map<Dummy, u64>());
-            } else assert(false);
-          }
-        } else {
-          // number
-          if (keySize == 1) {
-            mapPtr = changetype<usize>(new Map<u8, Dummy>());
-          } else if (keySize == 2) {
-            mapPtr = changetype<usize>(new Map<u16, Dummy>());
-          } else if (keySize == 4) {
-            mapPtr = changetype<usize>(new Map<u32, Dummy>());
-          } else if (keySize == 8) {
-            mapPtr = changetype<usize>(new Map<u64, Dummy>());
-          } else assert(false);
-        }
-        changetype<OBJECT>(mapPtr - TOTAL_OVERHEAD).rtId = rtId;
-        entryMap.set(entryId, changetype<Dummy>(mapPtr));
+        let mapPtr = changetype<Dummy>(__new(rtId, offsetof<Map<u32, Dummy>>()));
+        // private buckets: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>BUCKET_SIZE);
+        let buckets = new ArrayBuffer(capacity * <i32>sizeof<usize>());
+        store<usize>(
+          changetype<usize>(mapPtr),
+          changetype<usize>(buckets),
+          offsetof<Map<u32, Dummy>>("buckets"),
+        );
+        __link(changetype<usize>(mapPtr), changetype<usize>(buckets), false);
+
+        // private bucketsMask: u32 = INITIAL_CAPACITY - 1; // 0b0111
+        store<u32>(
+          changetype<usize>(mapPtr),
+          capacity - 1,
+          offsetof<Map<u32, Dummy>>("bucketsMask"),
+        );
+        // entries in insertion order, MapEntry<K,V>[entriesCapacity]
+        // private entries: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>ENTRY_SIZE<K,V>());
+        let entries = new ArrayBuffer(capacity * <i32>entrySize);
+        store<usize>(
+          changetype<usize>(mapPtr),
+          changetype<usize>(entries),
+          offsetof<Map<u32, Dummy>>("entries"),
+        );
+        __link(changetype<usize>(mapPtr), changetype<usize>(entries), false);
+        // private entriesCapacity: i32 = INITIAL_CAPACITY;
+        store<i32>(
+          changetype<usize>(mapPtr),
+          capacity,
+          offsetof<Map<u32, Dummy>>("entriesCapacity"),
+        );
+
+        changetype<OBJECT>(changetype<usize>(mapPtr) - TOTAL_OVERHEAD).rtId = rtId;
+        entryMap.set(entryId, mapPtr);
         i += offsetof<MapReferenceEntry>();
       }
 
@@ -733,16 +718,21 @@ export namespace ASON {
       while (i < linkTableByteLength) {
         let entry = linkTable.allocate();
 
+        // get the parent, make sure it exists
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
         let parentPointer = changetype<usize>(entryMap.get(parentEntryId));
 
+        // get the child, make sure it exists
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
         let childPointer = changetype<usize>(entryMap.get(childEntryId));
 
+        // form the link and attach it to the parent
         __link(parentPointer, childPointer, false);
         store<usize>(parentPointer + entry.offset, childPointer);
+
+        // advance to the next link
         i += offsetof<LinkEntry>();
       }
 

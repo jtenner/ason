@@ -97,10 +97,8 @@ export class SetEntry {
 export class MapReferenceEntry {
   entryId: u32;
   rtId: u32;
-  keySize: i32;
-  keyType: MapKeyValueType;
-  valueSize: i32;
-  valueType: MapKeyValueType;
+  capacity: i32;
+  entrySize: usize;
 }
 
 export const enum MapKeyValueType {
