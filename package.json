@@ -30,8 +30,8 @@
   ],
   "homepage": "https://github.com/jtenner/ason#readme",
   "devDependencies": {
-    "@as-pect/cli": "^6.0.0",
-    "assemblyscript": "^0.18.27",
+    "@as-pect/cli": "^6.1.0",
+    "assemblyscript": "^0.18.29",
     "lerna": "^4.0.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^4.2.4"
