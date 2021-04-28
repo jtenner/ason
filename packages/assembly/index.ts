@@ -8,6 +8,7 @@ import {
   ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH,
 } from "./configuration";
 
 // @ts-ignore rt/common is defined by assemblyscript
@@ -28,6 +29,7 @@ import {
   SetEntry,
   MapKeyValuePairEntry,
   MapKeyValueType,
+  MapReferenceEntry,
  } from "./util";
 
 class Dummy {}
@@ -44,20 +46,7 @@ function getObjectType(value: usize): u32 {
 }
 
 const dummySet = new Set<Dummy>();
-const dummy8Map = new Map<Dummy, u8>();
-const dummy16Map = new Map<Dummy, u16>();
-const dummy32Map = new Map<Dummy, u32>();
-const dummy64Map = new Map<Dummy, u64>();
-const dummyDummyMap = new Map<Dummy, Dummy>();
-const string8Map = new Map<string, u8>();
-const string16Map = new Map<string, u16>();
-const string32Map = new Map<string, u32>();
-const string64Map = new Map<string, u64>();
-const stringDummyMap = new Map<string, Dummy>();
-const __8dummyMap = new Map<u8, Dummy>();
-const __16dummyMap = new Map<u16, Dummy>();
-const __32dummyMap = new Map<u32, Dummy>();
-const __64dummyMap = new Map<u64, Dummy>();
+
 
 // @ts-ignore: valid global
 @global
@@ -79,8 +68,8 @@ export namespace ASON {
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private setEntryTable: Table<SetEntry> = new Table<SetEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
+    private mapReferenceTable: Table<MapReferenceEntry> = new Table<MapReferenceEntry>(ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH);
     private mapKeyValuePairsTable: Table<MapKeyValuePairEntry> = new Table<MapKeyValuePairEntry>(ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH);
-
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
     }
@@ -105,6 +94,8 @@ export namespace ASON {
       this.fieldTable32.reset();
       this.fieldTable64.reset();
       this.setEntryTable.reset();
+      this.mapReferenceTable.reset();
+      this.mapKeyValuePairsTable.reset();
 
       assert(this.put(value) == <u32>0);
 
@@ -176,84 +167,34 @@ export namespace ASON {
         return this.putReferenceAndFields(value);
       }
 
-      let parentEntryId: u32 = 0;
+      let mapEntryId: u32 = this.entryId++;
 
-      // string keys
+      let mapEntry = this.mapReferenceTable.allocate();
+      mapEntry.entryId = mapEntryId;
+      mapEntry.rtId = idof<U>();
+
+      // Keys first
+      // @ts-ignore: type U is guaranteed to be a Map
+      mapEntry.keySize = sizeof<indexof<U>>();
+      // The following if statements are inlined
       // @ts-ignore: type U is guaranteed to be a Map
       if (isString<indexof<U>>()) {
+        mapEntry.keyType = MapKeyValueType.String;
+        // @ts-ignore: type U is guaranteed to be a Map
+      } else if (isReference<indexof<U>>()) {
+        mapEntry.keyType = MapKeyValueType.Dummy;
+      } else {
+        mapEntry.keyType = MapKeyValueType.Number;
+      }
+
+      // Then values...
+      // @ts-ignore: type U is guaranteed to be a Map
+      mapEntry.valueSize = sizeof<valueof<U>>();
       // @ts-ignore: type U is guaranteed to be a Map
       if (isReference<valueof<U>>()) {
-          parentEntryId = this.putReferenceAndFields(changetype<U>(stringDummyMap));
-        } else {
-          // @ts-ignore: type U is guaranteed to be a Map
-          switch (sizeof<valueof<U>>()) {
-            case 1: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(string8Map));
-              break;
-            }
-            case 2: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(string16Map));
-              break;
-            }
-            case 4: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(string32Map));
-              break;
-            }
-            case 8: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(string64Map));
-              break;
-            }
-            default: assert(false);
-          }
-        }
-      // @ts-ignore: type U is guaranteed to be a Map
-      } else if (isReference<indexof<U>>()) {
-        // @ts-ignore: type U is guaranteed to be a Map
-        if (isReference<valueof<U>>()) {
-          parentEntryId = this.putReferenceAndFields(changetype<U>(dummyDummyMap));
-        } else {
-          // @ts-ignore: type U is guaranteed to be a Map
-          switch (sizeof<valueof<U>>()) {
-            case 1: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(dummy8Map));
-              break;
-            }
-            case 2: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(dummy16Map));
-              break;
-            }
-            case 4: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(dummy32Map));
-              break;
-            }
-            case 8: {
-              parentEntryId = this.putReferenceAndFields(changetype<U>(dummy64Map));
-              break;
-            }
-            default: assert(false);
-          }
-        }
+        mapEntry.valueType = MapKeyValueType.Dummy;
       } else {
-        // @ts-ignore: type U is guaranteed to be a Map
-        switch (sizeof<indexof<U>>()) {
-          case 1: {
-            parentEntryId = this.putReferenceAndFields(changetype<U>(__8dummyMap));
-            break;
-          }
-          case 2: {
-            parentEntryId = this.putReferenceAndFields(changetype<U>(__16dummyMap));
-            break;
-          }
-          case 4: {
-            parentEntryId = this.putReferenceAndFields(changetype<U>(__32dummyMap));
-            break;
-          }
-          case 8: {
-            parentEntryId = this.putReferenceAndFields(changetype<U>(__64dummyMap));
-            break;
-          }
-          default: assert(false);
-        }
+        mapEntry.valueType = MapKeyValueType.Number;
       }
 
       // @ts-ignore: type U is guaranteed to be a Map
@@ -267,7 +208,7 @@ export namespace ASON {
         let entry = mapKeyValuePairsTable.allocate();
         let key = unchecked(keys[i]);
         let value = unchecked(values[i]);
-        entry.parentEntryId = parentEntryId;
+        entry.parentEntryId = mapEntryId;
         if (isReference(key)) {
           entry.keyType = isString(key) ? MapKeyValueType.String : MapKeyValueType.Dummy;
           let keyEntryId = this.put(key)
@@ -309,7 +250,7 @@ export namespace ASON {
           entry.valueSize = sizeof<valueof<U>>();
         }
       }
-      return parentEntryId;
+      return mapEntryId;
     }
 
     private putSet<U>(value: U): u32 {
@@ -356,7 +297,7 @@ export namespace ASON {
 
       entry.byteLength = size;
       entry.entryId = entryId;
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
 
       // write the data to the table
       let segment = this.dataSegmentTable.allocateSegment(<i32>size);
@@ -382,7 +323,7 @@ export namespace ASON {
       entry.length = arrayLength;
       entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
 
       let size = <usize>arrayLength << (alignof<valueof<U>>());
 
@@ -408,7 +349,7 @@ export namespace ASON {
       let entry = this.referenceTable.allocate();
       entry.entryId = entryId;
       entry.offset = getObjectSize(value);
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
       return entryId;
     }
 
@@ -422,7 +363,7 @@ export namespace ASON {
       } else {
         entry.length = value.length;
       }
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
       return entryId;
     }
 
@@ -499,6 +440,7 @@ export namespace ASON {
       let fieldTable32 = this.fieldTable32;
       let fieldTable64 = this.fieldTable64;
       let setEntryTable = this.setEntryTable;
+      let mapReferenceTable = this.mapReferenceTable;
       let mapKeyValueEntryTable = this.mapKeyValuePairsTable;
 
         // referenceTableByteLength: usize;
@@ -523,6 +465,7 @@ export namespace ASON {
       let fieldTable32Index = <usize>fieldTable32.index;
       let fieldTable64Index = <usize>fieldTable64.index;
       let setEntryTableIndex = <usize>setEntryTable.index;
+      let mapReferenceTableIndex = <usize>mapReferenceTable.index;
       let mapKeyValueEntryTableIndex = <usize>mapKeyValueEntryTable.index;
 
       let length = referenceTableIndex
@@ -536,6 +479,7 @@ export namespace ASON {
         + fieldTable32Index
         + fieldTable64Index
         + setEntryTableIndex
+        + mapReferenceTableIndex
         + mapKeyValueEntryTableIndex;
 
       length += offsetof<ASONHeader>();
@@ -552,6 +496,7 @@ export namespace ASON {
       header.fieldTable32ByteLength = fieldTable32Index;
       header.fieldTable64ByteLength = fieldTable64Index;
       header.setEntryTableByteLength = setEntryTableIndex;
+      header.mapReferenceTableByteLength = mapReferenceTableIndex;
       header.mapKeyValueEntryTableByteLength = mapKeyValueEntryTableIndex;
 
       let offset = offsetof<ASONHeader>();
@@ -577,6 +522,8 @@ export namespace ASON {
       offset += fieldTable64Index;
       setEntryTable.copyTo(result, offset);
       offset += setEntryTableIndex;
+      mapReferenceTable.copyTo(result, offset);
+      offset += mapReferenceTableIndex;
       mapKeyValueEntryTable.copyTo(result, offset);
 
       // set the result
@@ -625,6 +572,7 @@ export namespace ASON {
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
       let setEntryTableByteLength = header.setEntryTableByteLength;
+      let mapReferenceTableByteLength = header.mapReferenceTableByteLength;
       let mapKeyValueEntryTableByteLength = header.mapKeyValueEntryTableByteLength;
 
       // Assert the sizes from the header match the length of data.
@@ -640,6 +588,7 @@ export namespace ASON {
         fieldTable32ByteLength +
         fieldTable64ByteLength +
         setEntryTableByteLength +
+        mapReferenceTableByteLength + 
         mapKeyValueEntryTableByteLength, "Inputted array is malformed.");
 
       // Find the start of each table.
@@ -654,7 +603,8 @@ export namespace ASON {
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
       let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
-      let mapKeyValueEntryTablePointer = setEntryTablePointer + setEntryTableByteLength;
+      let mapReferenceTablePointer = setEntryTablePointer + setEntryTableByteLength;
+      let mapKeyValueEntryTablePointer = mapReferenceTablePointer + mapReferenceTableByteLength;
 
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
@@ -668,6 +618,7 @@ export namespace ASON {
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
       let setEntryTable = Table.from<SetEntry>(setEntryTablePointer, setEntryTableByteLength);
+      let mapReferenceTable = Table.from<MapReferenceEntry>(mapReferenceTablePointer, mapReferenceTableByteLength);
       let mapKeyValueEntryTable = Table.from<MapKeyValuePairEntry>(mapKeyValueEntryTablePointer, mapKeyValueEntryTableByteLength);
 
       // Make the object that will eventually become the object T.
@@ -678,7 +629,7 @@ export namespace ASON {
       let i: usize = 0;
       while (i < referenceTableByteLength) {
         let entry = referenceTable.allocate();
-        let referencePointer = __new(entry.offset, entry.rttid);
+        let referencePointer = __new(entry.offset, entry.rtId);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i += offsetof<ReferenceEntry>();
       }
@@ -689,7 +640,7 @@ export namespace ASON {
         let entry = dataSegmentTable.allocate();
         let segmentLength = entry.byteLength;
         let segment = dataSegmentTable.allocateSegment(<i32>segmentLength);
-        let referencePointer = __new(entry.byteLength, entry.rttid);
+        let referencePointer = __new(entry.byteLength, entry.rtId);
         memory.copy(referencePointer, segment, segmentLength);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = dataSegmentTable.index;
@@ -701,7 +652,7 @@ export namespace ASON {
         let entry = arrayTable.allocate();
         let length = entry.length;
         let temp = new ArrayBuffer(length << <i32>alignof<usize>());
-        let referencePointer = __newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp));
+        let referencePointer = __newArray(length, alignof<usize>(), entry.rtId, changetype<usize>(temp));
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = offsetof<ArrayEntry>();
       }
@@ -712,9 +663,65 @@ export namespace ASON {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
         let segment = arrayDataSegmentTable.allocateSegment(length);
-        let referencePointer = __newArray(length, entry.align, entry.rttid, segment);
+        let referencePointer = __newArray(length, entry.align, entry.rtId, segment);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
+      }
+
+      i = 0;
+      while (i < mapReferenceTableByteLength) {
+        let entry = mapReferenceTable.allocate();
+        let entryId = entry.entryId;
+        let rtId = entry.rtId;
+        let keySize = entry.keySize;
+        let keyType = entry.keyType;
+        let valueSize = entry.valueSize;
+        let valueType = entry.valueType;
+
+        let mapPtr: usize = 0;
+        if (keyType == MapKeyValueType.String) {
+          if (valueType == MapKeyValueType.Dummy) {
+            mapPtr = changetype<usize>(new Map<string, Dummy>());
+          } else {
+            if (valueSize == 1) {
+              mapPtr = changetype<usize>(new Map<string, u8>());
+            } else if (valueSize == 2) {
+              mapPtr = changetype<usize>(new Map<string, u16>());
+            } else if (valueSize == 4) {
+              mapPtr = changetype<usize>(new Map<string, u32>());
+            } else if (valueSize == 8) {
+              mapPtr = changetype<usize>(new Map<string, u64>());
+            } else assert(false);
+          }
+        } else if (keyType == MapKeyValueType.Dummy) {
+          if (valueType == MapKeyValueType.Dummy) {
+            mapPtr = changetype<usize>(new Map<Dummy, Dummy>());
+          } else {
+            if (valueSize == 1) {
+              mapPtr = changetype<usize>(new Map<Dummy, u8>());
+            } else if (valueSize == 2) {
+              mapPtr = changetype<usize>(new Map<Dummy, u16>());
+            } else if (valueSize == 4) {
+              mapPtr = changetype<usize>(new Map<Dummy, u32>());
+            } else if (valueSize == 8) {
+              mapPtr = changetype<usize>(new Map<Dummy, u64>());
+            } else assert(false);
+          }
+        } else {
+          // number
+          if (keySize == 1) {
+            mapPtr = changetype<usize>(new Map<u8, Dummy>());
+          } else if (keySize == 2) {
+            mapPtr = changetype<usize>(new Map<u16, Dummy>());
+          } else if (keySize == 4) {
+            mapPtr = changetype<usize>(new Map<u32, Dummy>());
+          } else if (keySize == 8) {
+            mapPtr = changetype<usize>(new Map<u64, Dummy>());
+          } else assert(false);
+        }
+        changetype<OBJECT>(mapPtr - TOTAL_OVERHEAD).rtId = rtId;
+        entryMap.set(entryId, changetype<Dummy>(mapPtr));
+        i += offsetof<MapReferenceEntry>();
       }
 
       // all the references have been allocated, let's get entry 0 and validate type info

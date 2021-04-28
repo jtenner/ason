@@ -11,12 +11,13 @@ export class ASONHeader {
   fieldTable32ByteLength: usize;
   fieldTable64ByteLength: usize;
   setEntryTableByteLength: usize;
+  mapReferenceTableByteLength: usize;
   mapKeyValueEntryTableByteLength: usize;
 }
 
 @unmanaged
 export class ReferenceEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   offset: usize;
 }
@@ -58,21 +59,21 @@ export class LinkEntry {
 
 @unmanaged
 export class DataSegmentEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   byteLength: usize;
 }
 
 @unmanaged
 export class ArrayEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   length: i32;
 }
 
 @unmanaged
 export class ArrayDataSegmentEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   align: usize;
   length: i32;
@@ -90,6 +91,16 @@ export class SetEntry {
   parentEntryId: i32;
   childEntryId: i32;
   isString: bool;
+}
+
+@unmanaged
+export class MapReferenceEntry {
+  entryId: u32;
+  rtId: u32;
+  keySize: i32;
+  keyType: MapKeyValueType;
+  valueSize: i32;
+  valueType: MapKeyValueType;
 }
 
 export const enum MapKeyValueType {
