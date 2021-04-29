@@ -36,7 +36,7 @@ import {
 
 class Dummy {}
 
-/** Structure of a set entry. */
+/** Structure of a set entry. Credit: https://github.com/AssemblyScript/assemblyscript/blob/master/std/assembly/set.ts */
 @unmanaged class SetEntry<K> {
   key: K;
   taggedNext: usize; // LSB=1 indicates EMPTY
@@ -87,6 +87,11 @@ export namespace ASON {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
     }
 
+    /**
+     * Serialize a given `T`, and return a buffer.
+     * @param {T} value - The T to be serialized.
+     * @returns {StaticArray<u8>} - A buffer.
+     */
     public serialize(value: T): StaticArray<u8> {
       if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
 
@@ -95,7 +100,7 @@ export namespace ASON {
       this.entries.clear();
       this.entries.set(0, u32.MAX_VALUE);
 
-      // dataSegments
+      // reset all the tables to index = 0
       this.dataSegmentTable.reset();
       this.arrayDataSegmentTable.reset();
       this.linkTable.reset();
@@ -111,12 +116,15 @@ export namespace ASON {
       this.mapReferenceTable.reset();
       this.mapKeyValuePairsTable.reset();
 
-      assert(this.put(value) == <u32>0);
+      // call `put`, and validate the first reference is entry 0
+      let entryId = this.put(value);
+      assert(entryId == <u32>0);
 
       // write everything to a buffer
       return this.commit();
     }
 
+    /** This is a private method that must be publicly exposed to work. Please do not use it. */
     @unsafe public put<U>(value: U): u32 {
       if (isReference(value)) {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
@@ -174,7 +182,6 @@ export namespace ASON {
       }
     }
 
-    // TODO: remove extends clause here
     private putMap<U>(value: U): u32 {
       // @ts-ignore: U can be indexed and valued
       if (!isReference<indexof<U>>() && !isReference<valueof<U>>()) {
@@ -206,11 +213,17 @@ export namespace ASON {
       // @ts-ignore: type U is guaranteed to be a Map
       let size = value.size;
       let mapKeyValuePairsTable = this.mapKeyValuePairsTable;
+
+      // Loop over every key value pair
       for (let i = 0; i < size; i++) {
         let entry = mapKeyValuePairsTable.allocate();
         let key = unchecked(keys[i]);
         let value = unchecked(values[i]);
+
+        // set the parent entry id
         entry.parentEntryId = mapEntryId;
+
+        // if the key is a reference, we store an entryId
         if (isReference(key)) {
           entry.keyType = isString(key) ? MapKeyValueType.String : MapKeyValueType.Dummy;
           let keyEntryId = this.put(key)
@@ -220,6 +233,7 @@ export namespace ASON {
             offsetof<MapKeyValuePairEntry>("key"),
           );
         } else {
+          // numbers require entry size, isSigned and storing it
           entry.keyType = MapKeyValueType.Number;
           // @ts-ignore: type U is guaranteed to be a Map
           store<indexof<U>>(
@@ -234,10 +248,10 @@ export namespace ASON {
         }
         if (isReference(value)) {
           entry.valueType = MapKeyValueType.Dummy;
-          let valueId = this.put(value);
+          let valueEntryId = this.put(value);
           store<u32>(
             changetype<usize>(entry),
-            valueId,
+            valueEntryId,
             offsetof<MapKeyValuePairEntry>("value"),
           );
         } else {
@@ -265,6 +279,7 @@ export namespace ASON {
       const align = sizeof<usize>() - 1;
       const entrySize = (offsetof<SetEntry<T>>() + align) & ~align;
 
+      // store a set reference to the setReferenceTable
       let entryId = this.entryId++;
       let entry = this.setReferenceTable.allocate();
       entry.entryId = entryId;
@@ -272,13 +287,12 @@ export namespace ASON {
       entry.entrySize = entrySize;
       entry.capacity = capacity;
 
-      // let entryId = this.putReferenceAndFields(changetype<U>(dummySet));
-
-      // @ts-ignore: indexof<U> defined as array<indexof<U>>
+      // @ts-ignore: childentries is array<indexof<U>>
       let childEntries = value.values();
       let length: i32 = childEntries.length;
       let setEntryTable = this.setEntryTable;
 
+      // loop over each child, and add a setEntry
       for (let i = 0; i < length; i++) {
         let child = unchecked(childEntries[i]);
         let childEntryId = this.put(child);
@@ -313,7 +327,7 @@ export namespace ASON {
       entry.entryId = entryId;
       entry.rtId = idof<U>();
 
-      // write the data to the table
+      // write the data to the table after the header
       let segment = this.dataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, changetype<usize>(value), size);
 
@@ -443,6 +457,7 @@ export namespace ASON {
     }
 
     private commit(): StaticArray<u8> {
+      // reference every table
       let referenceTable = this.referenceTable;
       let dataSegmentTable = this.dataSegmentTable;
       let arrayTable = this.arrayTable;
@@ -458,17 +473,7 @@ export namespace ASON {
       let mapReferenceTable = this.mapReferenceTable;
       let mapKeyValueEntryTable = this.mapKeyValuePairsTable;
 
-        // referenceTableByteLength: usize;
-        // dataSegmentTableByteLength: usize;
-        // arrayTableByteLength: usize;
-        // arrayDataSegmentTableByteLength: usize;
-        // linkTableByteLength: usize;
-        // arrayLinkTableByteLength: usize;
-        // fieldTable8ByteLength: usize;
-        // fieldTable16ByteLength: usize;
-        // fieldTable32ByteLength: usize;
-        // fieldTable64ByteLength: usize;
-
+      // get every index
       let referenceTableIndex = <usize>referenceTable.index;
       let dataSegmentTableIndex = <usize>dataSegmentTable.index;
       let arrayTableIndex = <usize>arrayTable.index;
@@ -484,6 +489,7 @@ export namespace ASON {
       let mapReferenceTableIndex = <usize>mapReferenceTable.index;
       let mapKeyValueEntryTableIndex = <usize>mapKeyValueEntryTable.index;
 
+      // calculate the buffer length
       let length = referenceTableIndex
         + dataSegmentTableIndex
         + arrayTableIndex
@@ -497,10 +503,13 @@ export namespace ASON {
         + setReferenceTableIndex
         + setEntryTableIndex
         + mapReferenceTableIndex
-        + mapKeyValueEntryTableIndex;
+        + mapKeyValueEntryTableIndex
+        + offsetof<ASONHeader>();
 
-      length += offsetof<ASONHeader>();
+      // create a buffer
       let result = new StaticArray<u8>(<i32>length);
+
+      // write all the data to the buffer header
       let header = changetype<ASONHeader>(result);
       header.referenceTableByteLength = referenceTableIndex;
       header.dataSegmentTableByteLength = dataSegmentTableIndex;
@@ -517,6 +526,7 @@ export namespace ASON {
       header.mapReferenceTableByteLength = mapReferenceTableIndex;
       header.mapKeyValueEntryTableByteLength = mapKeyValueEntryTableIndex;
 
+      // copy each table to the buffer in succession
       let offset = offsetof<ASONHeader>();
       referenceTable.copyTo(result, offset);
       offset += referenceTableIndex;
@@ -546,11 +556,14 @@ export namespace ASON {
       offset += mapReferenceTableIndex;
       mapKeyValueEntryTable.copyTo(result, offset);
 
-      // set the result
+      // return the result
       return result;
     }
   }
 
+  /**
+   * A class that deserializes a buffer and assembles a final reference.
+   */
   export class Deserializer<T> {
     /**
      * deserialize
@@ -1111,15 +1124,27 @@ export namespace ASON {
 
   class Box<T> { constructor(public value: T) {} }
 
-  export function serialize<T>(ref: T): StaticArray<u8> {
-    if (!isReference(ref)) return ASON.serialize(new Box<T>(ref));
+  /**
+   * Serialize a given value. Numeric values will be `Box`ed for you.
+   *
+   * @param value - The value to be serialized.
+   * @returns {StaticArray<u8>} A serialized buffer.
+   */
+  export function serialize<T>(value: T): StaticArray<u8> {
+    if (!isReference(value)) return ASON.serialize(new Box<T>(value));
     let a = new Serializer<T>();
-    return a.serialize(ref);
+    return a.serialize(value);
   }
 
-  export function deserialize<T>(data: StaticArray<u8>): T {
-    if (!isReference<T>()) return ASON.deserialize<Box<T>>(data).value;
+  /**
+   * Deserialize a given ASON buffer.
+   *
+   * @param buffer - The buffer to be deserialized.
+   * @returns {T} - An object of type `T`
+   */
+  export function deserialize<T>(buffer: StaticArray<u8>): T {
+    if (!isReference<T>()) return ASON.deserialize<Box<T>>(buffer).value;
     let a = new Deserializer<T>();
-    return a.deserialize(data);
+    return a.deserialize(buffer);
   }
 }
