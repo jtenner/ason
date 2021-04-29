@@ -10,11 +10,15 @@ export class ASONHeader {
   fieldTable16ByteLength: usize;
   fieldTable32ByteLength: usize;
   fieldTable64ByteLength: usize;
+  setReferenceTableByteLength: usize;
+  setEntryTableByteLength: usize;
+  mapReferenceTableByteLength: usize;
+  mapKeyValueEntryTableByteLength: usize;
 }
 
 @unmanaged
 export class ReferenceEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   offset: usize;
 }
@@ -56,21 +60,21 @@ export class LinkEntry {
 
 @unmanaged
 export class DataSegmentEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   byteLength: usize;
 }
 
 @unmanaged
 export class ArrayEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   length: i32;
 }
 
 @unmanaged
 export class ArrayDataSegmentEntry {
-  rttid: u32;
+  rtId: u32;
   entryId: u32;
   align: usize;
   length: i32;
@@ -81,6 +85,47 @@ export class ArrayLinkEntry {
   parentEntryId: u32;
   index: i32;
   childEntryId: u32;
+}
+
+@unmanaged
+export class SetReferenceEntry {
+  entryId: u32;
+  rtId: u32;
+  entrySize: usize;
+  capacity: i32;
+}
+
+@unmanaged
+export class SetKeyEntry {
+  parentEntryId: u32;
+  childEntryId: u32;
+  isString: bool;
+}
+
+@unmanaged
+export class MapReferenceEntry {
+  entryId: u32;
+  rtId: u32;
+  capacity: i32;
+  entrySize: usize;
+}
+
+export const enum MapKeyValueType {
+  Dummy,
+  String,
+  Number,
+}
+
+@unmanaged
+export class MapKeyValuePairEntry {
+  parentEntryId: i32;
+  keySize: i32;
+  keyType: MapKeyValueType;
+  keyIsSigned: bool;
+  valueSize: i32;
+  valueType: MapKeyValueType;
+  key: u64;
+  value: u64;
 }
 
 export class Table<T> {
@@ -123,6 +168,7 @@ export class Table<T> {
 
   reset(): void {
     this.index = 0;
+    memory.fill(changetype<usize>(this.data), 0, this.data.length);
   }
 
   public static from<T>(data: usize, length: usize): Table<T> {

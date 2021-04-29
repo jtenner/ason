@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
+  "files": ["lib"],
   "scripts": {
     "build": "tsc"
   },

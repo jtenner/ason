@@ -5,11 +5,49 @@ import {
   ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH
+  ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH,
 } from "./configuration";
+
 // @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
-import { DataSegmentEntry, ArrayDataSegmentEntry, LinkEntry, Table, ReferenceEntry, ASONHeader, ArrayEntry, ArrayLinkEntry, FieldEntry8, FieldEntry16, FieldEntry32, FieldEntry64 } from "./util";
+import {
+  DataSegmentEntry,
+  ArrayDataSegmentEntry,
+  LinkEntry,
+  Table,
+  ReferenceEntry,
+  ASONHeader,
+  ArrayEntry,
+  ArrayLinkEntry,
+  FieldEntry8,
+  FieldEntry16,
+  FieldEntry32,
+  FieldEntry64,
+  SetReferenceEntry,
+  SetKeyEntry,
+  MapKeyValuePairEntry,
+  MapKeyValueType,
+  MapReferenceEntry,
+ } from "./util";
+
+class Dummy {}
+
+/** Structure of a set entry. Credit: https://github.com/AssemblyScript/assemblyscript/blob/master/std/assembly/set.ts */
+@unmanaged class SetEntry<K> {
+  key: K;
+  taggedNext: usize; // LSB=1 indicates EMPTY
+}
+
+/** Structure of a map entry. Credit: https://github.com/AssemblyScript/assemblyscript/blob/master/std/assembly/map.ts */
+@unmanaged class MapEntry<K,V> {
+  key: K;
+  value: V;
+  taggedNext: usize; // LSB=1 indicates EMPTY
+}
 
 // @ts-ignore: valid inline
 @inline
@@ -41,11 +79,19 @@ export namespace ASON {
     private fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
-
+    private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
+    private setEntryTable: Table<SetKeyEntry> = new Table<SetKeyEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
+    private mapReferenceTable: Table<MapReferenceEntry> = new Table<MapReferenceEntry>(ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH);
+    private mapKeyValuePairsTable: Table<MapKeyValuePairEntry> = new Table<MapKeyValuePairEntry>(ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH);
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
     }
 
+    /**
+     * Serialize a given `T`, and return a buffer.
+     * @param {T} value - The T to be serialized.
+     * @returns {StaticArray<u8>} - A buffer.
+     */
     public serialize(value: T): StaticArray<u8> {
       if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
 
@@ -54,7 +100,7 @@ export namespace ASON {
       this.entries.clear();
       this.entries.set(0, u32.MAX_VALUE);
 
-      // dataSegments
+      // reset all the tables to index = 0
       this.dataSegmentTable.reset();
       this.arrayDataSegmentTable.reset();
       this.linkTable.reset();
@@ -65,19 +111,30 @@ export namespace ASON {
       this.fieldTable16.reset();
       this.fieldTable32.reset();
       this.fieldTable64.reset();
+      this.setReferenceTable.reset();
+      this.setEntryTable.reset();
+      this.mapReferenceTable.reset();
+      this.mapKeyValuePairsTable.reset();
 
-      assert(this.put(value) == <u32>0);
+      // call `put`, and validate the first reference is entry 0
+      let entryId = this.put(value);
+      assert(entryId == <u32>0);
 
       // write everything to a buffer
       return this.commit();
     }
 
+    /** This is a private method that must be publicly exposed to work. Please do not use it. */
     @unsafe public put<U>(value: U): u32 {
       if (isReference(value)) {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
       }
 
-      if (value instanceof ArrayBuffer) {
+      if (value instanceof Map) {
+        return this.putMap(value);
+      } else if (value instanceof Set) {
+        return this.putSet(value);
+      } else if (value instanceof ArrayBuffer) {
         // arraybuffer
         return this.putDataSegment(value);
       } else if (value instanceof String) {
@@ -121,17 +178,142 @@ export namespace ASON {
         // it's not a reference, we are a data segment
         return this.putArrayDataSegment(value);
       } else {
-        let entryId = this.putReference(value);
-        if (isNullable(value)) {
-          // @ts-ignore: defined in each class
-          value!.__asonPut(this, entryId);
-          return entryId;
+        return this.putReferenceAndFields(value);
+      }
+    }
+
+    private putMap<U>(value: U): u32 {
+      // @ts-ignore: U can be indexed and valued
+      if (!isReference<indexof<U>>() && !isReference<valueof<U>>()) {
+        return this.putReferenceAndFields(value);
+      }
+
+      let mapEntryId: u32 = this.entryId++;
+
+      let mapEntry = this.mapReferenceTable.allocate();
+      mapEntry.entryId = mapEntryId;
+      mapEntry.rtId = idof<U>();
+
+      // @ts-ignore: type U is guaranteed to be a Map
+      let maxkv = max<i32>(sizeof<indexof<U>>(), sizeof<valueof<U>>());
+      // @ts-ignore: type U is guaranteed to be a Map
+      let align = max<usize>(maxkv, sizeof<usize>()) - 1;
+      // @ts-ignore: type U is guaranteed to be a Map
+      let entryOffset = offsetof<MapEntry<indexof<U>, valueof<U>>>();
+      let entrySize = (entryOffset + align) & ~align;
+      mapEntry.entrySize = entrySize;
+
+      // @ts-ignore: type U is guaranteed to be a Map
+      mapEntry.capacity = 1 << (32 - clz<i32>(value.size));
+
+      // @ts-ignore: type U is guaranteed to be a Map
+      let keys = value.keys();
+      // @ts-ignore: type U is guaranteed to be a Map
+      let values = value.values();
+      // @ts-ignore: type U is guaranteed to be a Map
+      let size = value.size;
+      let mapKeyValuePairsTable = this.mapKeyValuePairsTable;
+
+      // Loop over every key value pair
+      for (let i = 0; i < size; i++) {
+        let entry = mapKeyValuePairsTable.allocate();
+        let key = unchecked(keys[i]);
+        let value = unchecked(values[i]);
+
+        // set the parent entry id
+        entry.parentEntryId = mapEntryId;
+
+        // if the key is a reference, we store an entryId
+        if (isReference(key)) {
+          entry.keyType = isString(key) ? MapKeyValueType.String : MapKeyValueType.Dummy;
+          let keyEntryId = this.put(key)
+          store<u32>(
+            changetype<usize>(entry),
+            keyEntryId,
+            offsetof<MapKeyValuePairEntry>("key"),
+          );
         } else {
-          // @ts-ignore: defined in each class
-          value.__asonPut(this, entryId);
-          return entryId;
+          // numbers require entry size, isSigned and storing it
+          entry.keyType = MapKeyValueType.Number;
+          // @ts-ignore: type U is guaranteed to be a Map
+          store<indexof<U>>(
+            changetype<usize>(entry),
+            key,
+            offsetof<MapKeyValuePairEntry>("key"),
+          );
+          // @ts-ignore: type U is guaranteed to be a Map
+          entry.keySize = sizeof<indexof<U>>();
+          // @ts-ignore: type U is guaranteed to be a Map
+          entry.keyIsSigned = isSigned<indexof<U>>() || isFloat<indexof<U>>();
+        }
+        if (isReference(value)) {
+          entry.valueType = MapKeyValueType.Dummy;
+          let valueEntryId = this.put(value);
+          store<u32>(
+            changetype<usize>(entry),
+            valueEntryId,
+            offsetof<MapKeyValuePairEntry>("value"),
+          );
+        } else {
+          entry.valueType = MapKeyValueType.Number;
+          // @ts-ignore: type U is guaranteed to be a Map
+          store<valueof<U>>(
+            changetype<usize>(entry),
+            value,
+            offsetof<MapKeyValuePairEntry>("value"),
+          );
+          // @ts-ignore: type U is guaranteed to be a Map
+          entry.valueSize = sizeof<valueof<U>>();
         }
       }
+      return mapEntryId;
+    }
+
+    private putSet<U>(value: U): u32 {
+      // @ts-ignore: indexof<U> defined, and do memory copies
+      if (!isReference<indexof<U>>()) {
+        return this.putReferenceAndFields(value);
+      }
+      // @ts-ignore: U is garunteed to be a Set
+      let capacity = 1 << (32 - clz<i32>(value.size));
+      const align = sizeof<usize>() - 1;
+      const entrySize = (offsetof<SetEntry<T>>() + align) & ~align;
+
+      // store a set reference to the setReferenceTable
+      let entryId = this.entryId++;
+      let entry = this.setReferenceTable.allocate();
+      entry.entryId = entryId;
+      entry.rtId = idof<U>();
+      entry.entrySize = entrySize;
+      entry.capacity = capacity;
+
+      // @ts-ignore: childentries is array<indexof<U>>
+      let childEntries = value.values();
+      let length: i32 = childEntries.length;
+      let setEntryTable = this.setEntryTable;
+
+      // loop over each child, and add a setEntry
+      for (let i = 0; i < length; i++) {
+        let child = unchecked(childEntries[i]);
+        let childEntryId = this.put(child);
+        let childEntry = setEntryTable.allocate();
+        childEntry.childEntryId = childEntryId;
+        childEntry.parentEntryId = entryId;
+        childEntry.isString = isString(child);
+      }
+      return entryId;
+    }
+
+    private putReferenceAndFields<U>(value: U): u32 {
+      let entryId = this.putReference(value);
+      if (isNullable(value)) {
+        // @ts-ignore: defined in each class
+        value!.__asonPut(this, entryId);
+      } else {
+        // @ts-ignore: defined in each class
+        value.__asonPut(this, entryId);
+      }
+      return entryId;
     }
 
     private putDataSegment<U>(value: U): u32 {
@@ -143,9 +325,9 @@ export namespace ASON {
 
       entry.byteLength = size;
       entry.entryId = entryId;
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
 
-      // write the data to the table
+      // write the data to the table after the header
       let segment = this.dataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, changetype<usize>(value), size);
 
@@ -169,7 +351,7 @@ export namespace ASON {
       entry.length = arrayLength;
       entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
 
       let size = <usize>arrayLength << (alignof<valueof<U>>());
 
@@ -195,7 +377,7 @@ export namespace ASON {
       let entry = this.referenceTable.allocate();
       entry.entryId = entryId;
       entry.offset = getObjectSize(value);
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
       return entryId;
     }
 
@@ -209,7 +391,7 @@ export namespace ASON {
       } else {
         entry.length = value.length;
       }
-      entry.rttid = idof<U>();
+      entry.rtId = idof<U>();
       return entryId;
     }
 
@@ -275,6 +457,7 @@ export namespace ASON {
     }
 
     private commit(): StaticArray<u8> {
+      // reference every table
       let referenceTable = this.referenceTable;
       let dataSegmentTable = this.dataSegmentTable;
       let arrayTable = this.arrayTable;
@@ -285,18 +468,12 @@ export namespace ASON {
       let fieldTable16 = this.fieldTable16;
       let fieldTable32 = this.fieldTable32;
       let fieldTable64 = this.fieldTable64;
+      let setReferenceTable = this.setReferenceTable;
+      let setEntryTable = this.setEntryTable;
+      let mapReferenceTable = this.mapReferenceTable;
+      let mapKeyValueEntryTable = this.mapKeyValuePairsTable;
 
-        // referenceTableByteLength: usize;
-        // dataSegmentTableByteLength: usize;
-        // arrayTableByteLength: usize;
-        // arrayDataSegmentTableByteLength: usize;
-        // linkTableByteLength: usize;
-        // arrayLinkTableByteLength: usize;
-        // fieldTable8ByteLength: usize;
-        // fieldTable16ByteLength: usize;
-        // fieldTable32ByteLength: usize;
-        // fieldTable64ByteLength: usize;
-
+      // get every index
       let referenceTableIndex = <usize>referenceTable.index;
       let dataSegmentTableIndex = <usize>dataSegmentTable.index;
       let arrayTableIndex = <usize>arrayTable.index;
@@ -307,7 +484,12 @@ export namespace ASON {
       let fieldTable16Index = <usize>fieldTable16.index;
       let fieldTable32Index = <usize>fieldTable32.index;
       let fieldTable64Index = <usize>fieldTable64.index;
+      let setReferenceTableIndex = <usize>setReferenceTable.index;
+      let setEntryTableIndex = <usize>setEntryTable.index;
+      let mapReferenceTableIndex = <usize>mapReferenceTable.index;
+      let mapKeyValueEntryTableIndex = <usize>mapKeyValueEntryTable.index;
 
+      // calculate the buffer length
       let length = referenceTableIndex
         + dataSegmentTableIndex
         + arrayTableIndex
@@ -317,10 +499,17 @@ export namespace ASON {
         + fieldTable8Index
         + fieldTable16Index
         + fieldTable32Index
-        + fieldTable64Index;
+        + fieldTable64Index
+        + setReferenceTableIndex
+        + setEntryTableIndex
+        + mapReferenceTableIndex
+        + mapKeyValueEntryTableIndex
+        + offsetof<ASONHeader>();
 
-      length += offsetof<ASONHeader>();
+      // create a buffer
       let result = new StaticArray<u8>(<i32>length);
+
+      // write all the data to the buffer header
       let header = changetype<ASONHeader>(result);
       header.referenceTableByteLength = referenceTableIndex;
       header.dataSegmentTableByteLength = dataSegmentTableIndex;
@@ -332,7 +521,12 @@ export namespace ASON {
       header.fieldTable16ByteLength = fieldTable16Index;
       header.fieldTable32ByteLength = fieldTable32Index;
       header.fieldTable64ByteLength = fieldTable64Index;
+      header.setReferenceTableByteLength = setReferenceTableIndex;
+      header.setEntryTableByteLength = setEntryTableIndex;
+      header.mapReferenceTableByteLength = mapReferenceTableIndex;
+      header.mapKeyValueEntryTableByteLength = mapKeyValueEntryTableIndex;
 
+      // copy each table to the buffer in succession
       let offset = offsetof<ASONHeader>();
       referenceTable.copyTo(result, offset);
       offset += referenceTableIndex;
@@ -353,13 +547,23 @@ export namespace ASON {
       fieldTable32.copyTo(result, offset);
       offset += fieldTable32Index;
       fieldTable64.copyTo(result, offset);
-      // set the result
+      offset += fieldTable64Index;
+      setReferenceTable.copyTo(result, offset);
+      offset += setReferenceTableIndex;
+      setEntryTable.copyTo(result, offset);
+      offset += setEntryTableIndex;
+      mapReferenceTable.copyTo(result, offset);
+      offset += mapReferenceTableIndex;
+      mapKeyValueEntryTable.copyTo(result, offset);
+
+      // return the result
       return result;
     }
   }
 
-  class Dummy {}
-
+  /**
+   * A class that deserializes a buffer and assembles a final reference.
+   */
   export class Deserializer<T> {
     /**
      * deserialize
@@ -377,7 +581,7 @@ export namespace ASON {
             throw new Error("Cannot return null with null buffer when type T is not nullable.");
           }
         }
-        if (data.length == 0 && !isNullable<T>()) assert(false, "")
+        if (data.length == 0 && !isNullable<T>()) assert(false, "");
       }
 
       let startPointer = changetype<usize>(data);
@@ -400,6 +604,10 @@ export namespace ASON {
       let fieldTable16ByteLength = header.fieldTable16ByteLength;
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
+      let setReferenceTableByteLength = header.setReferenceTableByteLength;
+      let setEntryTableByteLength = header.setEntryTableByteLength;
+      let mapReferenceTableByteLength = header.mapReferenceTableByteLength;
+      let mapKeyValueEntryTableByteLength = header.mapKeyValueEntryTableByteLength;
 
       // Assert the sizes from the header match the length of data.
       assert(length == offsetof<ASONHeader>() +
@@ -412,7 +620,11 @@ export namespace ASON {
         fieldTable8ByteLength +
         fieldTable16ByteLength +
         fieldTable32ByteLength +
-        fieldTable64ByteLength, "Inputted array is malformed.");
+        fieldTable64ByteLength +
+        setReferenceTableByteLength + 
+        setEntryTableByteLength +
+        mapReferenceTableByteLength +
+        mapKeyValueEntryTableByteLength, "Inputted array is malformed.");
 
       // Find the start of each table.
       let referenceTablePointer = startPointer + offsetof<ASONHeader>();
@@ -425,6 +637,10 @@ export namespace ASON {
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
+      let setReferenceTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
+      let setEntryTablePointer = setReferenceTablePointer + setReferenceTableByteLength;
+      let mapReferenceTablePointer = setEntryTablePointer + setEntryTableByteLength;
+      let mapKeyValueEntryTablePointer = mapReferenceTablePointer + mapReferenceTableByteLength;
 
       // Generate tables.
       let referenceTable = Table.from<ReferenceEntry>(referenceTablePointer, referenceTableByteLength);
@@ -437,15 +653,20 @@ export namespace ASON {
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
+      let setReferenceTable = Table.from<SetReferenceEntry>(setReferenceTablePointer, setReferenceTableByteLength);
+      let setEntryTable = Table.from<SetKeyEntry>(setEntryTablePointer, setEntryTableByteLength);
+      let mapReferenceTable = Table.from<MapReferenceEntry>(mapReferenceTablePointer, mapReferenceTableByteLength);
+      let mapKeyValueEntryTable = Table.from<MapKeyValuePairEntry>(mapKeyValueEntryTablePointer, mapKeyValueEntryTableByteLength);
 
       // Make the object that will eventually become the object T.
       let entryMap = new Map<u32, Dummy>();
+      entryMap.set(u32.MAX_VALUE, changetype<Dummy>(0));
 
       // Set up references of the object in the entryMap.
       let i: usize = 0;
       while (i < referenceTableByteLength) {
         let entry = referenceTable.allocate();
-        let referencePointer = __new(entry.offset, entry.rttid);
+        let referencePointer = __new(entry.offset, entry.rtId);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i += offsetof<ReferenceEntry>();
       }
@@ -456,7 +677,7 @@ export namespace ASON {
         let entry = dataSegmentTable.allocate();
         let segmentLength = entry.byteLength;
         let segment = dataSegmentTable.allocateSegment(<i32>segmentLength);
-        let referencePointer = __new(entry.byteLength, entry.rttid);
+        let referencePointer = __new(entry.byteLength, entry.rtId);
         memory.copy(referencePointer, segment, segmentLength);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = dataSegmentTable.index;
@@ -468,7 +689,7 @@ export namespace ASON {
         let entry = arrayTable.allocate();
         let length = entry.length;
         let temp = new ArrayBuffer(length << <i32>alignof<usize>());
-        let referencePointer = __newArray(length, alignof<usize>(), entry.rttid, changetype<usize>(temp));
+        let referencePointer = __newArray(length, alignof<usize>(), entry.rtId, changetype<usize>(temp));
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = offsetof<ArrayEntry>();
       }
@@ -479,9 +700,101 @@ export namespace ASON {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
         let segment = arrayDataSegmentTable.allocateSegment(length);
-        let referencePointer = __newArray(length, entry.align, entry.rttid, segment);
+        let referencePointer = __newArray(length, entry.align, entry.rtId, segment);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
+      }
+
+      i = 0;
+      while (i < setReferenceTableByteLength) {
+        let entry = setReferenceTable.allocate();
+        let entryId = entry.entryId;
+        let rtId = entry.rtId;
+        let entrySize = entry.entrySize;
+        let capacity = entry.capacity;
+
+        let set = changetype<Dummy>(__new(offsetof<Set<Dummy>>(), rtId));
+        entryMap.set(entryId, set);
+        // private buckets: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>BUCKET_SIZE);
+        let buckets = new ArrayBuffer(capacity * <i32>sizeof<usize>());
+        store<usize>(
+          changetype<usize>(set),
+          changetype<usize>(buckets),
+          offsetof<Set<Dummy>>("buckets"),
+        );
+        __link(changetype<usize>(set), changetype<usize>(buckets), false);
+
+        // private bucketsMask: u32 = INITIAL_CAPACITY - 1;
+        store<u32>(
+          changetype<usize>(set),
+          capacity - 1,
+          offsetof<Set<Dummy>>("bucketsMask"),
+        );
+        // buckets referencing their respective first entry, usize[bucketsMask + 1]
+
+        // entries in insertion order, SetEntry<K>[entriesCapacity]
+        // private entries: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>ENTRY_SIZE<T>());
+        let entries = new ArrayBuffer(capacity * <i32>entrySize);
+        store<usize>(
+          changetype<usize>(set),
+          changetype<usize>(entries),
+          offsetof<Set<Dummy>>("entries"),
+        );
+        __link(changetype<usize>(set), changetype<usize>(buckets), false);
+        // private entriesCapacity: i32 = INITIAL_CAPACITY;
+        store<i32>(
+          changetype<usize>(set),
+          capacity,
+          offsetof<Set<Dummy>>("entriesCapacity"),
+        );
+        changetype<OBJECT>(changetype<usize>(set) - TOTAL_OVERHEAD).rtId = rtId;
+
+        i += offsetof<SetReferenceEntry>();
+      }
+
+      i = 0;
+      while (i < mapReferenceTableByteLength) {
+        let entry = mapReferenceTable.allocate();
+        let entryId = entry.entryId;
+        let rtId = entry.rtId;
+        let entrySize = entry.entrySize;
+        let capacity = entry.capacity;
+
+        let mapPtr = changetype<Dummy>(__new(rtId, offsetof<Map<u32, Dummy>>()));
+        // private buckets: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>BUCKET_SIZE);
+        let buckets = new ArrayBuffer(capacity * <i32>sizeof<usize>());
+        store<usize>(
+          changetype<usize>(mapPtr),
+          changetype<usize>(buckets),
+          offsetof<Map<u32, Dummy>>("buckets"),
+        );
+        __link(changetype<usize>(mapPtr), changetype<usize>(buckets), false);
+
+        // private bucketsMask: u32 = INITIAL_CAPACITY - 1; // 0b0111
+        store<u32>(
+          changetype<usize>(mapPtr),
+          capacity - 1,
+          offsetof<Map<u32, Dummy>>("bucketsMask"),
+        );
+        // entries in insertion order, MapEntry<K,V>[entriesCapacity]
+        // private entries: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>ENTRY_SIZE<K,V>());
+        let entries = new ArrayBuffer(capacity * <i32>entrySize);
+        store<usize>(
+          changetype<usize>(mapPtr),
+          changetype<usize>(entries),
+          offsetof<Map<u32, Dummy>>("entries"),
+        );
+        __link(changetype<usize>(mapPtr), changetype<usize>(entries), false);
+        // private entriesCapacity: i32 = INITIAL_CAPACITY;
+        store<i32>(
+          changetype<usize>(mapPtr),
+          capacity,
+          offsetof<Map<u32, Dummy>>("entriesCapacity"),
+        );
+
+        changetype<OBJECT>(changetype<usize>(mapPtr) - TOTAL_OVERHEAD).rtId = rtId;
+        entryMap.set(entryId, mapPtr);
+        i += offsetof<MapReferenceEntry>();
       }
 
       // all the references have been allocated, let's get entry 0 and validate type info
@@ -493,16 +806,21 @@ export namespace ASON {
       while (i < linkTableByteLength) {
         let entry = linkTable.allocate();
 
+        // get the parent, make sure it exists
         let parentEntryId = entry.parentEntryId;
         assert(entryMap.has(parentEntryId));
         let parentPointer = changetype<usize>(entryMap.get(parentEntryId));
 
+        // get the child, make sure it exists
         let childEntryId = entry.childEntryId;
         assert(entryMap.has(childEntryId));
         let childPointer = changetype<usize>(entryMap.get(childEntryId));
 
+        // form the link and attach it to the parent
         __link(parentPointer, childPointer, false);
         store<usize>(parentPointer + entry.offset, childPointer);
+
+        // advance to the next link
         i += offsetof<LinkEntry>();
       }
 
@@ -589,6 +907,216 @@ export namespace ASON {
         i += offsetof<FieldEntry64>();
       }
 
+      // Sets and Maps are initialized at this point
+      i = 0;
+      while (i < setEntryTableByteLength) {
+        let entry = setEntryTable.allocate();
+        let parentEntryId = entry.parentEntryId;
+        assert(entryMap.has(parentEntryId));
+        let parent = entryMap.get(parentEntryId);
+        let childEntryId = entry.childEntryId;
+        assert(entryMap.has(childEntryId));
+        let child = entryMap.get(childEntryId);
+        if (entry.isString) {
+          let parentStringSet = changetype<Set<string>>(parent);
+          let childString = changetype<string>(child);
+          parentStringSet.add(childString);
+        } else {
+          changetype<Set<Dummy>>(parent).add(child);
+        }
+
+        i += offsetof<SetKeyEntry>();
+      }
+
+      i = 0;
+      while (i < mapKeyValueEntryTableByteLength) {
+        let entry = mapKeyValueEntryTable.allocate();
+        let parentEntryId = entry.parentEntryId;
+        assert(entryMap.has(parentEntryId));
+        let parent = entryMap.get(parentEntryId);
+        switch (entry.keyType) {
+          case MapKeyValueType.Dummy: {
+            let keyEntryId = load<u32>(
+              changetype<usize>(entry),
+              offsetof<MapKeyValuePairEntry>("key"),
+            );
+            assert(entryMap.has(keyEntryId));
+            let key = entryMap.get(keyEntryId);
+            if (entry.valueType == MapKeyValueType.Dummy) {
+              let valueEntryId = load<u32>(
+                changetype<usize>(entry),
+                offsetof<MapKeyValuePairEntry>("value"),
+              );
+              assert(entryMap.has(valueEntryId));
+              changetype<Map<Dummy, Dummy>>(parent).set(
+                key,
+                entryMap.get(valueEntryId),
+              );
+            } else {
+              switch (entry.valueSize) {
+                case 1: {
+                  let value = load<u8>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u8>>(parent).set(key, value);
+                  break;
+                }
+                case 2: {
+                  let value = load<u16>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u16>>(parent).set(key, value);
+                  break;
+                }
+                case 4: {
+                  let value = load<u32>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u32>>(parent).set(key, value);
+                  break;
+                }
+                case 8: {
+                  let value = load<u64>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<Dummy, u64>>(parent).set(key, value);
+                  break;
+                }
+                default: assert(false);
+              }
+            }
+            break;
+          }
+          case MapKeyValueType.String: {
+            let keyEntryId = load<u32>(
+              changetype<usize>(entry),
+              offsetof<MapKeyValuePairEntry>("key"),
+            );
+            assert(entryMap.has(keyEntryId));
+            let key = changetype<string>(entryMap.get(keyEntryId));
+            if (entry.valueType == MapKeyValueType.Dummy) {
+              let valueEntryId = load<u32>(
+                changetype<usize>(entry),
+                offsetof<MapKeyValuePairEntry>("value"),
+              );
+              assert(entryMap.has(valueEntryId));
+              changetype<Map<string, Dummy>>(parent).set(
+                key,
+                entryMap.get(valueEntryId),
+              );
+            } else {
+              switch (entry.valueSize) {
+                case 1: {
+                  let value = load<u8>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u8>>(parent).set(key, value);
+                  break;
+                }
+                case 2: {
+                  let value = load<u16>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u16>>(parent).set(key, value);
+                  break;
+                }
+                case 4: {
+                  let value = load<u32>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u32>>(parent).set(key, value);
+                  break;
+                }
+                case 8: {
+                  let value = load<u64>(
+                    changetype<usize>(entry),
+                    offsetof<MapKeyValuePairEntry>("value"),
+                  );
+                  changetype<Map<string, u64>>(parent).set(key, value);
+                  break;
+                }
+                default: assert(false);
+              }
+            }
+            break;
+          }
+          case MapKeyValueType.Number: {
+            let mapValueEntryId = load<u32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("value"));
+            assert(entryMap.has(mapValueEntryId));
+            let mapValue = entryMap.get(mapValueEntryId);
+            switch (entry.keySize) {
+              case 1: {
+                if (entry.keyIsSigned) {
+                  changetype<Map<i8, Dummy>>(parent).set(
+                    load<i8>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u8, Dummy>>(parent).set(
+                    load<u8>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
+                break;
+              }
+              case 2: {
+                if (entry.keyIsSigned) {
+                  changetype<Map<i16, Dummy>>(parent).set(
+                    load<i16>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u16, Dummy>>(parent).set(
+                    load<u16>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
+                break;
+              }
+              case 4: {
+                if (entry.keyIsSigned) {
+                  changetype<Map<i32, Dummy>>(parent).set(
+                    load<i32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u32, Dummy>>(parent).set(
+                    load<u32>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
+                break;
+              }
+              case 8: {
+                if (entry.keyIsSigned) {
+                  changetype<Map<i64, Dummy>>(parent).set(
+                    load<i64>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                } else {
+                  changetype<Map<u64, Dummy>>(parent).set(
+                    load<u64>(changetype<usize>(entry), offsetof<MapKeyValuePairEntry>("key")),
+                    mapValue,
+                  );
+                }
+                break;
+              }
+              default: assert(false);
+            }
+            break;
+          }
+          default: assert(false);
+        }
+        i += offsetof<MapKeyValuePairEntry>();
+      }
+
       // Return the original object, stored in the 0th element of the entryMap.
       return changetype<T>(entryMap.get(0));
     }
@@ -596,15 +1124,27 @@ export namespace ASON {
 
   class Box<T> { constructor(public value: T) {} }
 
-  export function serialize<T>(ref: T): StaticArray<u8> {
-    if (!isReference(ref)) return ASON.serialize(new Box<T>(ref));
+  /**
+   * Serialize a given value. Numeric values will be `Box`ed for you.
+   *
+   * @param value - The value to be serialized.
+   * @returns {StaticArray<u8>} A serialized buffer.
+   */
+  export function serialize<T>(value: T): StaticArray<u8> {
+    if (!isReference(value)) return ASON.serialize(new Box<T>(value));
     let a = new Serializer<T>();
-    return a.serialize(ref);
+    return a.serialize(value);
   }
 
-  export function deserialize<T>(data: StaticArray<u8>): T {
-    if (!isReference<T>()) return ASON.deserialize<Box<T>>(data).value;
+  /**
+   * Deserialize a given ASON buffer.
+   *
+   * @param buffer - The buffer to be deserialized.
+   * @returns {T} - An object of type `T`
+   */
+  export function deserialize<T>(buffer: StaticArray<u8>): T {
+    if (!isReference<T>()) return ASON.deserialize<Box<T>>(buffer).value;
     let a = new Deserializer<T>();
-    return a.deserialize(data);
+    return a.deserialize(buffer);
   }
 }

@@ -6,6 +6,6 @@
     "debug": true,
     "use": ["ASC_RTRACE=1"],
     "importMemory": true,
-    "transform": ["@ason/transform"]
+    "transform": ["../transform/lib/index.js"]
   }
 }
