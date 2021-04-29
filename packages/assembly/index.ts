@@ -6,6 +6,7 @@ import {
   ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH,
   ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH,
@@ -26,7 +27,8 @@ import {
   FieldEntry16,
   FieldEntry32,
   FieldEntry64,
-  SetEntry,
+  SetReferenceEntry,
+  SetKeyEntry,
   MapKeyValuePairEntry,
   MapKeyValueType,
   MapReferenceEntry,
@@ -34,6 +36,11 @@ import {
 
 class Dummy {}
 
+/** Structure of a set entry. */
+@unmanaged class SetEntry<K> {
+  key: K;
+  taggedNext: usize; // LSB=1 indicates EMPTY
+}
 
 /** Structure of a map entry. Credit: https://github.com/AssemblyScript/assemblyscript/blob/master/std/assembly/map.ts */
 @unmanaged class MapEntry<K,V> {
@@ -52,9 +59,6 @@ function getObjectSize<T>(value: T): usize {
 function getObjectType(value: usize): u32 {
   return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
 }
-
-const dummySet = new Set<Dummy>();
-
 
 // @ts-ignore: valid global
 @global
@@ -75,7 +79,8 @@ export namespace ASON {
     private fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
-    private setEntryTable: Table<SetEntry> = new Table<SetEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
+    private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
+    private setEntryTable: Table<SetKeyEntry> = new Table<SetKeyEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
     private mapReferenceTable: Table<MapReferenceEntry> = new Table<MapReferenceEntry>(ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH);
     private mapKeyValuePairsTable: Table<MapKeyValuePairEntry> = new Table<MapKeyValuePairEntry>(ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH);
     constructor() {
@@ -101,6 +106,7 @@ export namespace ASON {
       this.fieldTable16.reset();
       this.fieldTable32.reset();
       this.fieldTable64.reset();
+      this.setReferenceTable.reset();
       this.setEntryTable.reset();
       this.mapReferenceTable.reset();
       this.mapKeyValuePairsTable.reset();
@@ -254,8 +260,20 @@ export namespace ASON {
       if (!isReference<indexof<U>>()) {
         return this.putReferenceAndFields(value);
       }
+      // @ts-ignore: U is garunteed to be a Set
+      let capacity = 1 << (32 - clz<i32>(value.size));
+      const align = sizeof<usize>() - 1;
+      const entrySize = (offsetof<SetEntry<T>>() + align) & ~align;
 
-      let entryId = this.putReferenceAndFields(changetype<U>(dummySet));
+      let entryId = this.entryId++;
+      let entry = this.setReferenceTable.allocate();
+      entry.entryId = entryId;
+      entry.rtId = idof<U>();
+      entry.entrySize = entrySize;
+      entry.capacity = capacity;
+
+      // let entryId = this.putReferenceAndFields(changetype<U>(dummySet));
+
       // @ts-ignore: indexof<U> defined as array<indexof<U>>
       let childEntries = value.values();
       let length: i32 = childEntries.length;
@@ -435,6 +453,7 @@ export namespace ASON {
       let fieldTable16 = this.fieldTable16;
       let fieldTable32 = this.fieldTable32;
       let fieldTable64 = this.fieldTable64;
+      let setReferenceTable = this.setReferenceTable;
       let setEntryTable = this.setEntryTable;
       let mapReferenceTable = this.mapReferenceTable;
       let mapKeyValueEntryTable = this.mapKeyValuePairsTable;
@@ -460,6 +479,7 @@ export namespace ASON {
       let fieldTable16Index = <usize>fieldTable16.index;
       let fieldTable32Index = <usize>fieldTable32.index;
       let fieldTable64Index = <usize>fieldTable64.index;
+      let setReferenceTableIndex = <usize>setReferenceTable.index;
       let setEntryTableIndex = <usize>setEntryTable.index;
       let mapReferenceTableIndex = <usize>mapReferenceTable.index;
       let mapKeyValueEntryTableIndex = <usize>mapKeyValueEntryTable.index;
@@ -474,6 +494,7 @@ export namespace ASON {
         + fieldTable16Index
         + fieldTable32Index
         + fieldTable64Index
+        + setReferenceTableIndex
         + setEntryTableIndex
         + mapReferenceTableIndex
         + mapKeyValueEntryTableIndex;
@@ -491,6 +512,7 @@ export namespace ASON {
       header.fieldTable16ByteLength = fieldTable16Index;
       header.fieldTable32ByteLength = fieldTable32Index;
       header.fieldTable64ByteLength = fieldTable64Index;
+      header.setReferenceTableByteLength = setReferenceTableIndex;
       header.setEntryTableByteLength = setEntryTableIndex;
       header.mapReferenceTableByteLength = mapReferenceTableIndex;
       header.mapKeyValueEntryTableByteLength = mapKeyValueEntryTableIndex;
@@ -516,6 +538,8 @@ export namespace ASON {
       offset += fieldTable32Index;
       fieldTable64.copyTo(result, offset);
       offset += fieldTable64Index;
+      setReferenceTable.copyTo(result, offset);
+      offset += setReferenceTableIndex;
       setEntryTable.copyTo(result, offset);
       offset += setEntryTableIndex;
       mapReferenceTable.copyTo(result, offset);
@@ -567,6 +591,7 @@ export namespace ASON {
       let fieldTable16ByteLength = header.fieldTable16ByteLength;
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
+      let setReferenceTableByteLength = header.setReferenceTableByteLength;
       let setEntryTableByteLength = header.setEntryTableByteLength;
       let mapReferenceTableByteLength = header.mapReferenceTableByteLength;
       let mapKeyValueEntryTableByteLength = header.mapKeyValueEntryTableByteLength;
@@ -583,6 +608,7 @@ export namespace ASON {
         fieldTable16ByteLength +
         fieldTable32ByteLength +
         fieldTable64ByteLength +
+        setReferenceTableByteLength + 
         setEntryTableByteLength +
         mapReferenceTableByteLength +
         mapKeyValueEntryTableByteLength, "Inputted array is malformed.");
@@ -598,7 +624,8 @@ export namespace ASON {
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
-      let setEntryTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
+      let setReferenceTablePointer = fieldTable64Pointer + fieldTable64ByteLength;
+      let setEntryTablePointer = setReferenceTablePointer + setReferenceTableByteLength;
       let mapReferenceTablePointer = setEntryTablePointer + setEntryTableByteLength;
       let mapKeyValueEntryTablePointer = mapReferenceTablePointer + mapReferenceTableByteLength;
 
@@ -613,7 +640,8 @@ export namespace ASON {
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
       let fieldTable64 = Table.from<FieldEntry64>(fieldTable64Pointer, fieldTable64ByteLength);
-      let setEntryTable = Table.from<SetEntry>(setEntryTablePointer, setEntryTableByteLength);
+      let setReferenceTable = Table.from<SetReferenceEntry>(setReferenceTablePointer, setReferenceTableByteLength);
+      let setEntryTable = Table.from<SetKeyEntry>(setEntryTablePointer, setEntryTableByteLength);
       let mapReferenceTable = Table.from<MapReferenceEntry>(mapReferenceTablePointer, mapReferenceTableByteLength);
       let mapKeyValueEntryTable = Table.from<MapKeyValuePairEntry>(mapKeyValueEntryTablePointer, mapKeyValueEntryTableByteLength);
 
@@ -662,6 +690,53 @@ export namespace ASON {
         let referencePointer = __newArray(length, entry.align, entry.rtId, segment);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
+      }
+
+      i = 0;
+      while (i < setReferenceTableByteLength) {
+        let entry = setReferenceTable.allocate();
+        let entryId = entry.entryId;
+        let rtId = entry.rtId;
+        let entrySize = entry.entrySize;
+        let capacity = entry.capacity;
+
+        let set = changetype<Dummy>(__new(offsetof<Set<Dummy>>(), rtId));
+        entryMap.set(entryId, set);
+        // private buckets: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>BUCKET_SIZE);
+        let buckets = new ArrayBuffer(capacity * <i32>sizeof<usize>());
+        store<usize>(
+          changetype<usize>(set),
+          changetype<usize>(buckets),
+          offsetof<Set<Dummy>>("buckets"),
+        );
+        __link(changetype<usize>(set), changetype<usize>(buckets), false);
+
+        // private bucketsMask: u32 = INITIAL_CAPACITY - 1;
+        store<u32>(
+          changetype<usize>(set),
+          capacity - 1,
+          offsetof<Set<Dummy>>("bucketsMask"),
+        );
+        // buckets referencing their respective first entry, usize[bucketsMask + 1]
+
+        // entries in insertion order, SetEntry<K>[entriesCapacity]
+        // private entries: ArrayBuffer = new ArrayBuffer(INITIAL_CAPACITY * <i32>ENTRY_SIZE<T>());
+        let entries = new ArrayBuffer(capacity * <i32>entrySize);
+        store<usize>(
+          changetype<usize>(set),
+          changetype<usize>(entries),
+          offsetof<Set<Dummy>>("entries"),
+        );
+        __link(changetype<usize>(set), changetype<usize>(buckets), false);
+        // private entriesCapacity: i32 = INITIAL_CAPACITY;
+        store<i32>(
+          changetype<usize>(set),
+          capacity,
+          offsetof<Set<Dummy>>("entriesCapacity"),
+        );
+        changetype<OBJECT>(changetype<usize>(set) - TOTAL_OVERHEAD).rtId = rtId;
+
+        i += offsetof<SetReferenceEntry>();
       }
 
       i = 0;
@@ -837,7 +912,7 @@ export namespace ASON {
           changetype<Set<Dummy>>(parent).add(child);
         }
 
-        i += offsetof<SetEntry>();
+        i += offsetof<SetKeyEntry>();
       }
 
       i = 0;
