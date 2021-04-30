@@ -23,6 +23,7 @@ export class ReferenceEntry {
   offset: usize; // and how big it is
 }
 
+// A reference to a raw 8 bit value.
 @unmanaged
 export class FieldEntry8 {
   entryId: u32;
@@ -30,6 +31,7 @@ export class FieldEntry8 {
   value: u8;
 }
 
+// A reference to a raw 16 bit value.
 @unmanaged
 export class FieldEntry16 {
   entryId: u32;
@@ -37,6 +39,7 @@ export class FieldEntry16 {
   value: u16;
 }
 
+// A reference to a raw 32 bit value.
 @unmanaged
 export class FieldEntry32 {
   entryId: u32;
@@ -44,6 +47,7 @@ export class FieldEntry32 {
   value: u32;
 }
 
+// A reference to a raw 64 bit value.
 @unmanaged
 export class FieldEntry64 {
   entryId: u32;
@@ -51,6 +55,7 @@ export class FieldEntry64 {
   value: u64;
 }
 
+// Defines the links between two objects: Defines the entryId of the parent, and the entryId of the child.
 @unmanaged
 export class LinkEntry {
   parentEntryId: u32;
@@ -58,6 +63,7 @@ export class LinkEntry {
   childEntryId: u32;
 }
 
+// A reference to a Data Segment.
 @unmanaged
 export class DataSegmentEntry {
   rttid: u32;
@@ -65,6 +71,7 @@ export class DataSegmentEntry {
   byteLength: usize;
 }
 
+// A reference to an Array Entry.
 @unmanaged
 export class ArrayEntry {
   rttid: u32;
@@ -72,6 +79,7 @@ export class ArrayEntry {
   length: i32;
 }
 
+// A reference to an Array of Data Segments.
 @unmanaged
 export class ArrayDataSegmentEntry {
   rttid: u32;
@@ -80,6 +88,7 @@ export class ArrayDataSegmentEntry {
   length: i32;
 }
 
+// A reference to the links within arrays (This needs to be handled separately)
 @unmanaged
 export class ArrayLinkEntry {
   parentEntryId: u32;
@@ -87,6 +96,7 @@ export class ArrayLinkEntry {
   childEntryId: u32;
 }
 
+// Generic Table reference, T will be one of the above Entry classes.
 export class Table<T> {
   data: StaticArray<u8>;
   index: i32 = 0;
@@ -106,7 +116,7 @@ export class Table<T> {
     }
   }
 
-  // simple bump allocation
+  // Simple bump allocation
   allocate(): T {
     let index = this.index;
     let nextIndex = index + <i32>offsetof<T>();
@@ -116,6 +126,7 @@ export class Table<T> {
     return result;
   }
 
+  // More complex bump allocation
   allocateSegment(length: i32): usize {
     let index = this.index;
     let nextIndex = index + length;
@@ -129,6 +140,7 @@ export class Table<T> {
     this.index = 0;
   }
 
+  // Creates a table object of byte length `length`, from a memory address `data`, 
   public static from<T>(data: usize, length: usize): Table<T> {
     let result = __new(offsetof<Table<T>>(), idof<Table<T>>());
     // @ts-ignore: pin prevents garbage collection
@@ -144,6 +156,7 @@ export class Table<T> {
     return resultRef;
   }
 
+  // Copy this Table's `data` array to an inputted StaticArray `array`, at position `offset`.
   copyTo(array: StaticArray<u8>, offset: usize): void {
     memory.copy(changetype<usize>(array) + offset, changetype<usize>(this.data), <usize>this.index);
   }
