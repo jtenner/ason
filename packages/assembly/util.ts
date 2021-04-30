@@ -4,6 +4,7 @@ export class ASONHeader {
   dataSegmentTableByteLength: usize;
   arrayTableByteLength: usize;
   arrayDataSegmentTableByteLength: usize;
+  customTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
   fieldTable8ByteLength: usize;
@@ -126,6 +127,15 @@ export class MapKeyValuePairEntry {
   valueType: MapKeyValueType;
   key: u64;
   value: u64;
+}
+
+@unmanaged
+export class CustomEntry {
+  entryId: u32;
+  rtId: u32;
+  offset: usize;
+  byteLength: i32;
+  deserializeFuncIndex: i32;
 }
 
 export class Table<T> {

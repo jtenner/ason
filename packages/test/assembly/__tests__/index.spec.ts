@@ -1,3 +1,4 @@
+import { OBJECT, TOTAL_OVERHEAD } from "rt/common";
 import { ASON } from "../../../assembly/index";
 class Vec3 {
   constructor(
@@ -32,6 +33,8 @@ describe("ASON test suite", () => {
   test("serialize numeric values", serializeNumericValues);
   test("set of strings", setOfStrings);
   test("set of integers", setOfIntegers);
+  test("custom", testCustom);
+  test("customVector", testCustomVectorSerialization);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -261,4 +264,55 @@ function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TVal
   assert(result);
   expect(result).toStrictEqual(value);
   __collect();
+}
+
+let serializeCalled: i32 = 0;
+let deserializeCalled: i32 = 0;
+class CustomSerialize {
+  __asonSerialize(): StaticArray<u8> {
+    serializeCalled++;
+    let result = new StaticArray<u8>(3);
+    result[0] = 1;
+    result[1] = 2;
+    result[2] = 3;
+    return result;
+  }
+  __asonDeserialize(buffer: StaticArray<u8>): void {
+    deserializeCalled++;
+    assert(buffer);
+    assert(buffer.length == 3);
+    assert(buffer[0] == 1);
+    assert(buffer[1] == 2);
+    assert(buffer[2] == 3);
+    assert(this);
+    assert(changetype<OBJECT>(changetype<usize>(this) - TOTAL_OVERHEAD).rtId == idof<CustomSerialize>());
+  }
+}
+
+function testCustom(): void {
+  let result = ASON.deserialize<CustomSerialize>(ASON.serialize(new CustomSerialize()));
+  assert(result);
+  assert(serializeCalled == 1);
+  assert(deserializeCalled == 1);
+}
+
+class CustomVector {
+  x: f32 = 1;
+  y: f32 = 2;
+  z: f32 = 3;
+  __asonSerialize(): StaticArray<u8> {
+    let result = new StaticArray<u8>(offsetof<CustomVector>());
+    memory.copy(changetype<usize>(result), changetype<usize>(this), offsetof<CustomVector>());
+    return result;
+  }
+  __asonDeserialize(buffer: StaticArray<u8>): void {
+    assert(buffer.length == offsetof<CustomVector>());
+    memory.copy(changetype<usize>(this), changetype<usize>(buffer), offsetof<CustomVector>());
+  }
+}
+
+function testCustomVectorSerialization(): void {
+  let a = new CustomVector();
+  let b = ASON.deserialize<CustomVector>(ASON.serialize(a));
+  assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<CustomVector>()) == 0);
 }
