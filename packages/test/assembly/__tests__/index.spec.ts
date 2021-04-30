@@ -70,20 +70,18 @@ describe("ASON test suite", () => {
 
     // -0.0 and 0.0 map to the same value.
 
-    test("NaN floats to float maps", () => {
+    test("floats to float32 maps with NaN values", () => {
       let a : f32 = (Infinity * 0.0);
-      testMap<f32, f64>([a, 4.441],[44.44, -44.44]);
+      testMap<f32, f32>([-2.0, 4.441],[a, -44.44]);
     });
-    test("NaN floats to string maps", () => {
+    test("floats to float64 maps with NaN values", () => {
+      let a : f64 = (Infinity * 0.0);
+      testMap<f32, f64>([-2.0, 4.441],[a, -44.44]);
+    });
+    test("object to float maps with NaN values", () => {
       let a : f32 = (Infinity * 0.0);
-      testMap<f32, string>([a, 4.441],["Where did it go?","There it is"]);
-    });
-    test("NaN floats to object maps", () => {
-      let a : f32 = (Infinity * 0.0);
-      let a1 = new A();
-      a1.b.a = a1;
-      testMap<f32, A>([a, 4.441],[a1, a1]);
-    });
+      testMap<Vec3, f32>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [a, 6.2, -9]); });
+
   });
 });
 
