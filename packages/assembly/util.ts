@@ -1,4 +1,5 @@
 @unmanaged
+// The first object within the serialized array.
 export class ASONHeader {
   referenceTableByteLength: usize;
   dataSegmentTableByteLength: usize;
@@ -12,11 +13,14 @@ export class ASONHeader {
   fieldTable64ByteLength: usize;
 }
 
+// The reference that defines where each object is within the StaticArary<u8>
+// The base object is assumed to be in the ReferenceEntry table.
+// It is defined at entryId = 0, with rttid = typeof<T>
 @unmanaged
 export class ReferenceEntry {
-  rttid: u32;
-  entryId: u32;
-  offset: usize;
+  rttid: u32; // The type Id
+  entryId: u32; // some kind of unique entry identifier
+  offset: usize; // and how big it is
 }
 
 @unmanaged

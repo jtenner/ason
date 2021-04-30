@@ -29,6 +29,8 @@ Modify your asconfig to include the transform:
 
 Import the library and serialize away!
 
+You can use the built-in functions `Ason.serialize()` and `Ason.deserialize()`:
+
 ```ts
 import { ASON } from "@ason/assembly";
 
@@ -44,7 +46,7 @@ assert(result[1] == <f64>99);
 assert(result[2] == <f64>25.624);
 ```
 
-It's also possible to save heap allocations and re-use a `Serializer` and `Deserializer` object when serializing multiple objects of the same type.
+It's also possible to save heap allocations, by declaring a new `Serializer` and `Deserializer` object. This is optimal when serializing multiple objects of the same type:
 
 ```ts
 import { Serializer, Deserializer } from "@ason/assembly";
@@ -74,91 +76,46 @@ for (let i = 0; i < 10; i++) {
 
 This library is perfect for transferring references from one module of the same type to another module of the exact same type.
 
-These serialization methods are also great for helping store references like configuration files on disk.
-
-If JSON is too verbose or requires too much space in memory, ASON is a better alternative, because it reduces overhead byte storage a very large amount.
+These serialization methods are also great for helping store references like configuration files on disk. If JSON is too verbose, or requires too much memory, or takes too long to parse for the fast world of WebAssembly, ASON is a better alternative, since it reduces overhead byte storage a very large amount.
 
 # Caveats
 
-If the modules using this library are different, then runtime type information might not match. This will result in runtime errors, `instanceof` checks failing, and undefined behavior. ASON also performs type information validation for objects at the top level, so providing the wrong reference type parameter to `ASON` will result in a runtime error.
+- If the modules using this library are different, then runtime type information might not match. This will result in runtime errors, `instanceof` checks failing, and undefined behavior. ASON also performs type information validation for objects at the top level, so providing the wrong reference type parameter to `ASON` will result in a runtime error.
+
+- When using the regular `ASON.serialize` method, values automatically will be boxed and unboxed for you.  
+  
+```ts  
+assert(ASON.deserialize<i32>(ASON.serialize(42)) == 42);  
+```  
+
+- However, when using the `Serializer` and `Deserializer` class directly, values must be boxed like this:  
+  
+```ts  
+class Box<T> { constructor(public value: T) {} }  
+  
+let ser = new Serializer<f32>(); // Compile time error!  
+  
+// instead do this  
+let ser = new ASON.Serializer<Box<f32>>();  
+let des = new ASON.Deserializer<Box<f32>>();  
+assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);  
+```  
+
+- ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
+
+- `ASON` cannot serialize objects with more than `2^32-1` values or references in them. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
 
 # Implementation
 
-The ASON serialization and deserialization methods use a collection of tables to describe the shape of a given reference by recording entries for every field, every reference, every array, and every data segment (string, array of data, and static arrays.) It also uses a few tables to describe how objects are linked to each other to contend with the garbage collection algorithm and assert that objects will not be freed or mishandled at deserialization time.
+The object that the serializer returns is a `StaticArray<u8>`. This array has two basic components: The `ASONHeader` object, guaranteed to be the first few bytes of the array. Following the `ASONHeader` is a series of Tables describing the shape of every field (organized into 8 bit, 16 bit, 32 bit, and 64 bit field tables), every reference (stored like a table of c-like pointers), every array, and every data segment (string, array of data, and static arrays). 
 
-```ts
-@unmanaged
-export class ReferenceEntry {
-  rttid: u32; // The type Id
-  entryId: u32; // some kind of unique entry identifier
-  offset: usize; // and how big it is
-}
-```
+Each of the header's bytes define the length of their respective Table, in bytes. 
 
-For every reference in an object tree, we can allocate some space in a buffer to describe it's shape. The `ReferenceEntry` object acts as a c-like pointer, pointing to each of the references in the buffer. The next step is to describe how they are linked using a `LinkEntry` class.
+It also holds a table that defines every way objects are linked to each other within the serialized object, using the `LinkEntry` class. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them at deserialization time. 
 
-```ts
-@unmanaged
-export class LinkEntry {
-  parentEntryId: u32; // The parent entry id
-  offset: usize; // Where it should be stored on the parent
-  childEntryId: u32; // The child entry id
-}
-```
+One of the benefits of using a `LinkEntry` table to define the way parents are linked to children is the way this gracefully handles circular references. The serializer will recognize that a reference to a specific object already exists within one of the other tables, and instead of adding a duplicate reference, the LinkEntry will simply point to the existing reference.
 
-Since the links between parents and children are defined by way of this LinkEntry class, it makes it easy to describe circular references too. For instance, given a class like a `TreeNode` where each `TreeNode` can have a parent, and a collection of children, ASON will generate a `LinkEntry` that describes each relationship at `Serialization` time.
-
-
-```ts
-let a = new TreeNode();
-let b = new TreeNode();
-a.parent = b;
-b.children = [a];
-
-ASON.serialize(b);
-```
-
-This particular example happens to use another kind of `LinkEntry` called an `ArrayLinkEntry` because `children` is an array of objects, and linking objects to Arrays must be handled differently.
-
-However, the link entry table might conceptually look something like this as a JSON document:
-
-```ts
-{
-  "linkEntryTable": [
-    // the TreeNode
-    { parentEntryId: 0, childEntryId: 1, offset: offsetof<TreeNode>("parent") },
-    // the array
-    { parentEntryId: 1, childEntryId: 2, offset: offsetof<TreeNode>("children") },
-  ]
-}
-```
-
-Figuring out the shape of `ArrayLinkEntry` objects is left as an exercise to the reader.
-
-Lastly, we assert that the `entryId` stored at entry `0` is the primary entry a buffer. This of course assumes the generic type of the `Serializer` used is actually a reference.
-
-# Caveats
-
-When using the regular `ASON.serialize` method, values automatically will be boxed and unboxed for you.
-
-```ts
-assert(ASON.deserialize<i32>(ASON.serialize(42)) == 42);
-```
-
-However, when using the `Serializer` and `Deserializer` class directly, values must be boxed like this:
-
-```ts
-class Box<T> { constructor(public value: T) {} }
-
-let ser = new Serializer<f32>(); // Compile time error!
-
-// instead do this
-let ser = new ASON.Serializer<Box<f32>>();
-let des = new ASON.Deserializer<Box<f32>>();
-assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);
-```
-
-ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
+Lastly, we assert that the `entryId` stored at entry `0` is the primary entry of the buffer. This, of course, assumes the generic type of the `Serializer` used is actually a reference. 
 
 # MIT License
 
