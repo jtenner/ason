@@ -1,5 +1,6 @@
 import { OBJECT, TOTAL_OVERHEAD } from "rt/common";
 import { ASON } from "../../../assembly/index";
+import { ASONHeader } from "../../../assembly/util";
 class Vec3 {
   constructor(
     public x: f32 = 0,
@@ -35,6 +36,7 @@ describe("ASON test suite", () => {
   test("set of integers", setOfIntegers);
   test("custom", testCustom);
   test("customVector", testCustomVectorSerialization);
+  test("really long static strings", testStaticStrings);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -315,4 +317,12 @@ function testCustomVectorSerialization(): void {
   let a = new CustomVector();
   let b = ASON.deserialize<CustomVector>(ASON.serialize(a));
   assert(memory.compare(changetype<usize>(a), changetype<usize>(b), offsetof<CustomVector>()) == 0);
+}
+
+function testStaticStrings(): void {
+  let a = "Some really long static string";
+  let serialized = ASON.serialize(a);
+  let b = ASON.deserialize<string>(serialized);
+  assert(a == b);
+  trace("bytelength of serialized static string", 1, <f64>(serialized.length - <i32>offsetof<ASONHeader>()));
 }
