@@ -1,37 +1,39 @@
 import {
-  ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_CUSTOM_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH,
-  ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH,
 } from "./configuration";
 
 // @ts-ignore rt/common is defined by assemblyscript
 import { TOTAL_OVERHEAD, OBJECT } from "rt/common";
 import {
-  DataSegmentEntry,
   ArrayDataSegmentEntry,
-  LinkEntry,
-  Table,
-  ReferenceEntry,
-  ASONHeader,
   ArrayEntry,
   ArrayLinkEntry,
-  FieldEntry8,
+  ASONHeader,
+  CustomEntry,
+  DataSegmentEntry,
   FieldEntry16,
   FieldEntry32,
   FieldEntry64,
-  SetReferenceEntry,
-  SetKeyEntry,
+  FieldEntry8,
+  LinkEntry,
   MapKeyValuePairEntry,
   MapKeyValueType,
   MapReferenceEntry,
+  ReferenceEntry,
+  SetKeyEntry,
+  SetReferenceEntry,
+  Table,
  } from "./util";
 
 class Dummy {}
@@ -60,6 +62,11 @@ function getObjectType(value: usize): u32 {
   return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
 }
 
+function __unusedVoidCallDeserialize<T>(value: T): bool {
+  let buffer: StaticArray<u8>;
+  value.__asonDeserialize(buffer);
+  return true;
+}
 // @ts-ignore: valid global
 @global
 export namespace ASON {
@@ -69,20 +76,22 @@ export namespace ASON {
     private entries: Map<usize, u32> = new Map<usize, u32>();
 
     // tables
-    private dataSegmentTable: Table<DataSegmentEntry> = new Table<DataSegmentEntry>(ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH);
     private arrayDataSegmentTable: Table<ArrayDataSegmentEntry> = new Table<ArrayDataSegmentEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_DATA_SEGMENT_TABLE_LENGTH);
-    private linkTable: Table<LinkEntry> = new Table<LinkEntry>(ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH);
-    private referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
-    private arrayTable: Table<ArrayEntry> = new Table<ArrayEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH);
     private arrayLinkTable: Table<ArrayLinkEntry> = new Table<ArrayLinkEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_LINK_TABLE_LENGTH);
-    private fieldTable8: Table<FieldEntry8> = new Table<FieldEntry8>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    private arrayTable: Table<ArrayEntry> = new Table<ArrayEntry>(ASON_EFFECTIVE_INITIAL_ARRAY_TABLE_LENGTH);
+    private customTable: Table<CustomEntry> = new Table<CustomEntry>(ASON_EFFECTIVE_INITIAL_CUSTOM_TABLE_LENGTH);
+    private dataSegmentTable: Table<DataSegmentEntry> = new Table<DataSegmentEntry>(ASON_EFFECTIVE_INITIAL_DATA_SEGMENT_TABLE_LENGTH);
     private fieldTable16: Table<FieldEntry16> = new Table<FieldEntry16>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable32: Table<FieldEntry32> = new Table<FieldEntry32>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
     private fieldTable64: Table<FieldEntry64> = new Table<FieldEntry64>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
-    private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
-    private setEntryTable: Table<SetKeyEntry> = new Table<SetKeyEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
-    private mapReferenceTable: Table<MapReferenceEntry> = new Table<MapReferenceEntry>(ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH);
+    private fieldTable8: Table<FieldEntry8> = new Table<FieldEntry8>(ASON_EFFECTIVE_INITIAL_FIELD_TABLE_LENGTH);
+    private linkTable: Table<LinkEntry> = new Table<LinkEntry>(ASON_EFFECTIVE_INITIAL_LINK_TABLE_LENGTH);
     private mapKeyValuePairsTable: Table<MapKeyValuePairEntry> = new Table<MapKeyValuePairEntry>(ASON_EFFECTIVE_INITIAL_MAP_KEY_VALUE_PAIR_ENTRY_TABLE_LENGTH);
+    private mapReferenceTable: Table<MapReferenceEntry> = new Table<MapReferenceEntry>(ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH);
+    private referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
+    private setEntryTable: Table<SetKeyEntry> = new Table<SetKeyEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
+    private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
+
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
     }
@@ -107,6 +116,7 @@ export namespace ASON {
       this.arrayTable.reset();
       this.arrayLinkTable.reset();
       this.referenceTable.reset();
+      this.customTable.reset();
       this.fieldTable8.reset();
       this.fieldTable16.reset();
       this.fieldTable32.reset();
@@ -128,6 +138,42 @@ export namespace ASON {
     @unsafe public put<U>(value: U): u32 {
       if (isReference(value)) {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
+      }
+
+      // @ts-ignore: safe compile time check
+      if (isDefined(value.__asonSerialize)) {
+        // @ts-ignore: safe compile time check
+        if (isDefined(value.__asonDeserialize)) {
+          // custom serialization
+          let temp: StaticArray<u8>;
+          // @ts-ignore: safe compile time check
+          if (!isDefined(temp = value.__asonSerialize())) {
+            ERROR("__asonSerialize method must return a StaticArray<u8>");
+          }
+          // @ts-ignore: safe compile time check
+          if (!isDefined(__unusedVoidCallDeserialize(value))) {
+            ERROR("__asonDeserialize method must accept a StaticArray<u8>");
+          }
+          if (!isReference(value)) {
+            ERROR("Custom ASON serializtion can only be performed on a reference.");
+          }
+
+          // @ts-ignore: safe at compile time
+          let buffer: StaticArray<u8> = value.__asonSerialize();
+          let length = buffer.length;
+          let customTable = this.customTable;
+          let entry = customTable.allocate();
+          let entryId = this.entryId++;
+          entry.entryId = entryId;
+          entry.rtId = idof<U>();
+          entry.offset = offsetof<U>();
+          entry.byteLength = length;
+          // @ts-ignore: method index access, safe
+          entry.deserializeFuncIndex = value.__asonDeserialize.index;
+          let copyToPtr = customTable.allocateSegment(length);
+          memory.copy(copyToPtr, changetype<usize>(buffer), length);
+          return entryId;
+        }
       }
 
       if (value instanceof Map) {
@@ -464,6 +510,7 @@ export namespace ASON {
       let arrayDataSegmentTable = this.arrayDataSegmentTable;
       let linkTable = this.linkTable;
       let arrayLinkTable = this.arrayLinkTable;
+      let customTable = this.customTable;
       let fieldTable8 = this.fieldTable8;
       let fieldTable16 = this.fieldTable16;
       let fieldTable32 = this.fieldTable32;
@@ -480,6 +527,7 @@ export namespace ASON {
       let arrayDataSegmentTableIndex = <usize>arrayDataSegmentTable.index;
       let linkTableIndex = <usize>linkTable.index;
       let arrayLinkTableIndex = <usize>arrayLinkTable.index;
+      let customTableIndex = <usize>customTable.index;
       let fieldTable8Index = <usize>fieldTable8.index;
       let fieldTable16Index = <usize>fieldTable16.index;
       let fieldTable32Index = <usize>fieldTable32.index;
@@ -496,6 +544,7 @@ export namespace ASON {
         + arrayDataSegmentTableIndex
         + linkTableIndex
         + arrayLinkTableIndex
+        + customTableIndex
         + fieldTable8Index
         + fieldTable16Index
         + fieldTable32Index
@@ -517,6 +566,7 @@ export namespace ASON {
       header.arrayDataSegmentTableByteLength = arrayDataSegmentTableIndex;
       header.linkTableByteLength = linkTableIndex;
       header.arrayLinkTableByteLength = arrayLinkTableIndex;
+      header.customTableByteLength = customTableIndex;
       header.fieldTable8ByteLength = fieldTable8Index;
       header.fieldTable16ByteLength = fieldTable16Index;
       header.fieldTable32ByteLength = fieldTable32Index;
@@ -540,6 +590,8 @@ export namespace ASON {
       offset += linkTableIndex;
       arrayLinkTable.copyTo(result, offset);
       offset += arrayLinkTableIndex;
+      customTable.copyTo(result, offset);
+      offset += customTableIndex;
       fieldTable8.copyTo(result, offset);
       offset += fieldTable8Index;
       fieldTable16.copyTo(result, offset);
@@ -594,20 +646,21 @@ export namespace ASON {
       let header = changetype<ASONHeader>(data);
 
       // Cache values.
-      let referenceTableByteLength = header.referenceTableByteLength;
-      let dataSegmentTableByteLength = header.dataSegmentTableByteLength;
-      let arrayTableByteLength = header.arrayTableByteLength;
       let arrayDataSegmentTableByteLength = header.arrayDataSegmentTableByteLength;
-      let linkTableByteLength = header.linkTableByteLength;
       let arrayLinkTableByteLength = header.arrayLinkTableByteLength;
-      let fieldTable8ByteLength = header.fieldTable8ByteLength;
+      let arrayTableByteLength = header.arrayTableByteLength;
+      let customTableByteLength = header.customTableByteLength;
+      let dataSegmentTableByteLength = header.dataSegmentTableByteLength;
       let fieldTable16ByteLength = header.fieldTable16ByteLength;
       let fieldTable32ByteLength = header.fieldTable32ByteLength;
       let fieldTable64ByteLength = header.fieldTable64ByteLength;
-      let setReferenceTableByteLength = header.setReferenceTableByteLength;
-      let setEntryTableByteLength = header.setEntryTableByteLength;
-      let mapReferenceTableByteLength = header.mapReferenceTableByteLength;
+      let fieldTable8ByteLength = header.fieldTable8ByteLength;
+      let linkTableByteLength = header.linkTableByteLength;
       let mapKeyValueEntryTableByteLength = header.mapKeyValueEntryTableByteLength;
+      let mapReferenceTableByteLength = header.mapReferenceTableByteLength;
+      let referenceTableByteLength = header.referenceTableByteLength;
+      let setEntryTableByteLength = header.setEntryTableByteLength;
+      let setReferenceTableByteLength = header.setReferenceTableByteLength;
 
       // Assert the sizes from the header match the length of data.
       assert(length == offsetof<ASONHeader>() +
@@ -617,11 +670,12 @@ export namespace ASON {
         arrayDataSegmentTableByteLength +
         linkTableByteLength +
         arrayLinkTableByteLength +
+        customTableByteLength +
         fieldTable8ByteLength +
         fieldTable16ByteLength +
         fieldTable32ByteLength +
         fieldTable64ByteLength +
-        setReferenceTableByteLength + 
+        setReferenceTableByteLength +
         setEntryTableByteLength +
         mapReferenceTableByteLength +
         mapKeyValueEntryTableByteLength, "Inputted array is malformed.");
@@ -633,7 +687,8 @@ export namespace ASON {
       let arrayDataSegmentTablePointer = arrayTablePointer + arrayTableByteLength;
       let linkTablePointer = arrayDataSegmentTablePointer + arrayDataSegmentTableByteLength;
       let arrayLinkTablePointer = linkTablePointer + linkTableByteLength;
-      let fieldTable8Pointer = arrayLinkTablePointer + arrayLinkTableByteLength;
+      let customTablePointer = arrayLinkTablePointer + arrayLinkTableByteLength;
+      let fieldTable8Pointer = customTablePointer + customTableByteLength;
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
       let fieldTable64Pointer = fieldTable32Pointer + fieldTable32ByteLength;
@@ -649,6 +704,7 @@ export namespace ASON {
       let arrayDataSegmentTable = Table.from<ArrayDataSegmentEntry>(arrayDataSegmentTablePointer, arrayDataSegmentTableByteLength);
       let linkTable = Table.from<LinkEntry>(linkTablePointer, linkTableByteLength);
       let arrayLinkTable = Table.from<ArrayLinkEntry>(arrayLinkTablePointer, arrayLinkTableByteLength);
+      let customTable = Table.from<CustomEntry>(customTablePointer, customTableByteLength);
       let fieldTable8 = Table.from<FieldEntry8>(fieldTable8Pointer, fieldTable8ByteLength);
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
       let fieldTable32 = Table.from<FieldEntry32>(fieldTable32Pointer, fieldTable32ByteLength);
@@ -795,6 +851,28 @@ export namespace ASON {
         changetype<OBJECT>(changetype<usize>(mapPtr) - TOTAL_OVERHEAD).rtId = rtId;
         entryMap.set(entryId, mapPtr);
         i += offsetof<MapReferenceEntry>();
+      }
+
+      // custom serialization section
+      i = 0;
+      while (i < customTableByteLength) {
+        let entry = customTable.allocate();
+        let byteLength = entry.byteLength;
+        let entryId = entry.entryId;
+        let deserializeFuncIndex = entry.deserializeFuncIndex;
+        let offset = entry.offset;
+        let rtId = entry.rtId;
+
+        let ptr = __new(offset, rtId);
+        entryMap.set(entryId, changetype<Dummy>(ptr));
+
+        let buffer = new StaticArray<u8>(byteLength);
+        let sourcePtr = customTable.allocateSegment(byteLength);
+        memory.copy(changetype<usize>(buffer), sourcePtr, byteLength);
+        // obj.__asonDeserialize(buffer)
+        call_indirect(deserializeFuncIndex, ptr /* this */, buffer /* StaticArray<u8> */);
+
+        i = customTable.index;
       }
 
       // all the references have been allocated, let's get entry 0 and validate type info
