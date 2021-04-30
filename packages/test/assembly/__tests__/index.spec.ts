@@ -60,7 +60,30 @@ describe("ASON test suite", () => {
       let a1 = new A();
       testMap<i32, A | null>([4, -1], [null, a1]);
     });
-    test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
+    test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity, -Infinity],[44.44, -44.44]); });
+    test("infinite floats to string maps", () => { testMap<f32, string>([Infinity, -Infinity],["Infinite Power","Unlimited Power"]); });
+    test("infinite floats to object maps", () => {
+      let a1 = new A();
+      a1.b.a = a1;
+      testMap<f32, A>([Infinity, -Infinity],[a1, a1]);
+    });
+
+    // -0.0 and 0.0 map to the same value.
+
+    test("NaN floats to float maps", () => {
+      let a : f32 = (Infinity * 0.0);
+      testMap<f32, f64>([a, 4.441],[44.44, -44.44]);
+    });
+    test("NaN floats to string maps", () => {
+      let a : f32 = (Infinity * 0.0);
+      testMap<f32, string>([a, 4.441],["Where did it go?","There it is"]);
+    });
+    test("NaN floats to object maps", () => {
+      let a : f32 = (Infinity * 0.0);
+      let a1 = new A();
+      a1.b.a = a1;
+      testMap<f32, A>([a, 4.441],[a1, a1]);
+    });
   });
 });
 
@@ -258,6 +281,7 @@ function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TVal
 
   let result = ASON.deserialize<Map<TKey, TValue>>(ASON.serialize(value));
 
+  expect(result.size).toBe(len);
   assert(result);
   expect(result).toStrictEqual(value);
   __collect();
