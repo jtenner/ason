@@ -24,11 +24,10 @@
     "@ason/transform": "0.0.1"
   },
   "devDependencies": {
+    "@as-pect/cli": "^6.1.0",
     "assemblyscript": "^0.18.22"
   },
   "scripts": {
-    "pretest": "npm run asbuild",
-    "asbuild": "asc assembly/index.ts",
-    "test": "node index.js"
+    "test": "asp --verbose"
   }
 }

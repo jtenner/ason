@@ -50,8 +50,6 @@ typings/
 build/
 *.wat
 *.wasm
-*.wasm.map
+*.map
 *.asm.js
-
-# build folders
-packages/*/lib
+**/lib
