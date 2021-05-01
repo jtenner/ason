@@ -72,6 +72,27 @@ for (let i = 0; i < 10; i++) {
 }
 ```
 
+# Advanced: Custom Serializer and Deserializer
+
+Alternately, you can roll your own serializer and deserializer functions for your objects. Simply define a `__asonSerialize(): StaticArray<u8>` and a `__asonDeserialize(buffer: StaticArray<u8>): void` function for your object. This is useful if your objects have values that don't necessarily need to be stored in an ASON Byte Array to be preserved. The `__asonSerialize()` function should take the values in your objects, store them in a `StaticArray<u8>`, and return that Byte Array. The `__asonDeserialize()` function should take in the Byte Array, and use that to rebuild the object. 
+
+```ts
+class CustomVector {
+  x: f32 = 1;
+  y: f32 = 2;
+  z: f32 = 3;
+  __asonSerialize(): StaticArray<u8> {
+    let result = new StaticArray<u8>(offsetof<CustomVector>());
+    memory.copy(changetype<usize>(result), changetype<usize>(this), offsetof<CustomVector>());
+    return result;
+  }
+  __asonDeserialize(buffer: StaticArray<u8>): void {
+    assert(buffer.length == offsetof<CustomVector>());
+    memory.copy(changetype<usize>(this), changetype<usize>(buffer), offsetof<CustomVector>());
+  }
+}
+```
+
 # Uses
 
 This library is perfect for transferring references from one module of the same type to another module of the exact same type.
@@ -101,7 +122,7 @@ let des = new ASON.Deserializer<Box<f32>>();
 assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);  
 ```  
 
-- ASON serialization optimizes for large object trees at the cost of making simple serialization slightly more expensive.
+- ASON serialization optimizes for large object trees, at the cost of making simple serialization slightly more expensive.
 
 - `ASON` cannot serialize objects with more than `2^32-1` values or references in them. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
 
