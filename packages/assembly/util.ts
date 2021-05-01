@@ -5,6 +5,7 @@ export class ASONHeader {
   dataSegmentTableByteLength: usize;
   arrayTableByteLength: usize;
   arrayDataSegmentTableByteLength: usize;
+  staticReferenceTableByteLength: usize;
   customTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
@@ -145,6 +146,13 @@ export class MapKeyValuePairEntry {
   valueType: MapKeyValueType;
   key: u64;
   value: u64;
+}
+
+// A reference to a Static Reference, such as a String.
+@unmanaged
+export class StaticReferenceEntry {
+  entryId: u32;
+  ptr: usize;
 }
 
 // Used when the user defines their own deserialize function for an object.

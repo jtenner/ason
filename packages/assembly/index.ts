@@ -11,6 +11,7 @@ import {
   ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH,
   ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH,
   ASON_EFFECTIVE_MAP_REFERENCE_TABLE_LENGTH,
+  ASON_EFFECTIVE_INITIAL_STATIC_REFERENCE_TABLE_LENGTH,
 } from "./configuration";
 
 // @ts-ignore rt/common is defined by assemblyscript
@@ -33,6 +34,7 @@ import {
   ReferenceEntry,
   SetKeyEntry,
   SetReferenceEntry,
+  StaticReferenceEntry,
   Table,
  } from "./util";
 
@@ -64,6 +66,7 @@ function getObjectType(value: usize): u32 {
 
 function __unusedVoidCallDeserialize<T>(value: T): bool {
   let buffer: StaticArray<u8>;
+  // @ts-ignore
   value.__asonDeserialize(buffer);
   return true;
 }
@@ -91,6 +94,7 @@ export namespace ASON {
     private referenceTable: Table<ReferenceEntry> = new Table<ReferenceEntry>(ASON_EFFECTIVE_INITIAL_REFERENCE_TABLE_LENGTH)
     private setEntryTable: Table<SetKeyEntry> = new Table<SetKeyEntry>(ASON_EFFECTIVE_INITIAL_SET_ENTRY_TABLE_LENGTH);
     private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
+    private staticReferenceTable: Table<StaticReferenceEntry> = new Table<StaticReferenceEntry>(ASON_EFFECTIVE_INITIAL_STATIC_REFERENCE_TABLE_LENGTH);
 
     constructor() {
       if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
@@ -110,21 +114,22 @@ export namespace ASON {
       this.entries.set(0, u32.MAX_VALUE);
 
       // reset all the tables to index = 0
-      this.dataSegmentTable.reset();
       this.arrayDataSegmentTable.reset();
-      this.linkTable.reset();
-      this.arrayTable.reset();
       this.arrayLinkTable.reset();
-      this.referenceTable.reset();
+      this.arrayTable.reset();
       this.customTable.reset();
-      this.fieldTable8.reset();
+      this.dataSegmentTable.reset();
       this.fieldTable16.reset();
       this.fieldTable32.reset();
       this.fieldTable64.reset();
-      this.setReferenceTable.reset();
-      this.setEntryTable.reset();
-      this.mapReferenceTable.reset();
+      this.fieldTable8.reset();
+      this.linkTable.reset();
       this.mapKeyValuePairsTable.reset();
+      this.mapReferenceTable.reset();
+      this.referenceTable.reset();
+      this.setEntryTable.reset();
+      this.setReferenceTable.reset();
+      this.staticReferenceTable.reset();
 
       // call `put`, and validate the first reference is entry 0
       let entryId = this.put(value);
@@ -158,21 +163,7 @@ export namespace ASON {
             ERROR("Custom ASON serializtion can only be performed on a reference.");
           }
 
-          // @ts-ignore: safe at compile time
-          let buffer: StaticArray<u8> = value.__asonSerialize();
-          let length = buffer.length;
-          let customTable = this.customTable;
-          let entry = customTable.allocate();
-          let entryId = this.entryId++;
-          entry.entryId = entryId;
-          entry.rtId = idof<U>();
-          entry.offset = offsetof<U>();
-          entry.byteLength = length;
-          // @ts-ignore: method index access, safe
-          entry.deserializeFuncIndex = value.__asonDeserialize.index;
-          let copyToPtr = customTable.allocateSegment(length);
-          memory.copy(copyToPtr, changetype<usize>(buffer), length);
-          return entryId;
+          return this.putCustom(value);
         }
       }
 
@@ -184,6 +175,7 @@ export namespace ASON {
         // arraybuffer
         return this.putDataSegment(value);
       } else if (value instanceof String) {
+        if (changetype<usize>(value) < __heap_base) return this.putStaticReference(value);
         // strings
         return this.putDataSegment(value);
       } else if (value instanceof StaticArray) {
@@ -226,6 +218,34 @@ export namespace ASON {
       } else {
         return this.putReferenceAndFields(value);
       }
+    }
+
+    private putCustom<U>(value: U): u32 {
+      // @ts-ignore: safe at compile time
+      let buffer: StaticArray<u8> = value.__asonSerialize();
+      let length = buffer.length;
+      let customTable = this.customTable;
+      let entry = customTable.allocate();
+      let entryId = this.entryId++;
+      entry.entryId = entryId;
+      entry.rtId = idof<U>();
+      entry.offset = offsetof<U>();
+      entry.byteLength = length;
+      // @ts-ignore: method index access, safe
+      entry.deserializeFuncIndex = value.__asonDeserialize.index;
+      let copyToPtr = customTable.allocateSegment(length);
+      memory.copy(copyToPtr, changetype<usize>(buffer), length);
+      this.entries.set(changetype<usize>(value), entryId);
+      return entryId;
+    }
+
+    private putStaticReference<U>(value: U): u32 {
+      let entryId = this.entryId++;
+      let entry = this.staticReferenceTable.allocate();
+      entry.entryId = entryId;
+      entry.ptr = changetype<usize>(value);
+      this.entries.set(changetype<usize>(value), entryId);
+      return entryId;
     }
 
     private putMap<U>(value: U): u32 {
@@ -510,6 +530,7 @@ export namespace ASON {
       let arrayDataSegmentTable = this.arrayDataSegmentTable;
       let linkTable = this.linkTable;
       let arrayLinkTable = this.arrayLinkTable;
+      let staticReferenceTable = this.staticReferenceTable;
       let customTable = this.customTable;
       let fieldTable8 = this.fieldTable8;
       let fieldTable16 = this.fieldTable16;
@@ -527,6 +548,7 @@ export namespace ASON {
       let arrayDataSegmentTableIndex = <usize>arrayDataSegmentTable.index;
       let linkTableIndex = <usize>linkTable.index;
       let arrayLinkTableIndex = <usize>arrayLinkTable.index;
+      let staticReferenceTableIndex = <usize>staticReferenceTable.index;
       let customTableIndex = <usize>customTable.index;
       let fieldTable8Index = <usize>fieldTable8.index;
       let fieldTable16Index = <usize>fieldTable16.index;
@@ -544,6 +566,7 @@ export namespace ASON {
         + arrayDataSegmentTableIndex
         + linkTableIndex
         + arrayLinkTableIndex
+        + staticReferenceTableIndex
         + customTableIndex
         + fieldTable8Index
         + fieldTable16Index
@@ -566,6 +589,7 @@ export namespace ASON {
       header.arrayDataSegmentTableByteLength = arrayDataSegmentTableIndex;
       header.linkTableByteLength = linkTableIndex;
       header.arrayLinkTableByteLength = arrayLinkTableIndex;
+      header.staticReferenceTableByteLength = staticReferenceTableIndex;
       header.customTableByteLength = customTableIndex;
       header.fieldTable8ByteLength = fieldTable8Index;
       header.fieldTable16ByteLength = fieldTable16Index;
@@ -590,6 +614,8 @@ export namespace ASON {
       offset += linkTableIndex;
       arrayLinkTable.copyTo(result, offset);
       offset += arrayLinkTableIndex;
+      staticReferenceTable.copyTo(result, offset);
+      offset += staticReferenceTableIndex;
       customTable.copyTo(result, offset);
       offset += customTableIndex;
       fieldTable8.copyTo(result, offset);
@@ -661,6 +687,7 @@ export namespace ASON {
       let referenceTableByteLength = header.referenceTableByteLength;
       let setEntryTableByteLength = header.setEntryTableByteLength;
       let setReferenceTableByteLength = header.setReferenceTableByteLength;
+      let staticReferenceTableByteLength = header.staticReferenceTableByteLength;
 
       // Assert the sizes from the header match the length of data.
       assert(length == offsetof<ASONHeader>() +
@@ -670,6 +697,7 @@ export namespace ASON {
         arrayDataSegmentTableByteLength +
         linkTableByteLength +
         arrayLinkTableByteLength +
+        staticReferenceTableByteLength +
         customTableByteLength +
         fieldTable8ByteLength +
         fieldTable16ByteLength +
@@ -687,7 +715,8 @@ export namespace ASON {
       let arrayDataSegmentTablePointer = arrayTablePointer + arrayTableByteLength;
       let linkTablePointer = arrayDataSegmentTablePointer + arrayDataSegmentTableByteLength;
       let arrayLinkTablePointer = linkTablePointer + linkTableByteLength;
-      let customTablePointer = arrayLinkTablePointer + arrayLinkTableByteLength;
+      let staticReferenceTablePointer = arrayLinkTablePointer + arrayLinkTableByteLength;
+      let customTablePointer = staticReferenceTablePointer + staticReferenceTableByteLength;
       let fieldTable8Pointer = customTablePointer + customTableByteLength;
       let fieldTable16Pointer = fieldTable8Pointer + fieldTable8ByteLength;
       let fieldTable32Pointer = fieldTable16Pointer + fieldTable16ByteLength;
@@ -704,6 +733,7 @@ export namespace ASON {
       let arrayDataSegmentTable = Table.from<ArrayDataSegmentEntry>(arrayDataSegmentTablePointer, arrayDataSegmentTableByteLength);
       let linkTable = Table.from<LinkEntry>(linkTablePointer, linkTableByteLength);
       let arrayLinkTable = Table.from<ArrayLinkEntry>(arrayLinkTablePointer, arrayLinkTableByteLength);
+      let staticReferenceTable = Table.from<StaticReferenceEntry>(staticReferenceTablePointer, staticReferenceTableByteLength);
       let customTable = Table.from<CustomEntry>(customTablePointer, customTableByteLength);
       let fieldTable8 = Table.from<FieldEntry8>(fieldTable8Pointer, fieldTable8ByteLength);
       let fieldTable16 = Table.from<FieldEntry16>(fieldTable16Pointer, fieldTable16ByteLength);
@@ -851,6 +881,14 @@ export namespace ASON {
         changetype<OBJECT>(changetype<usize>(mapPtr) - TOTAL_OVERHEAD).rtId = rtId;
         entryMap.set(entryId, mapPtr);
         i += offsetof<MapReferenceEntry>();
+      }
+
+      // static strings and immutable references
+      i = 0;
+      while (i < staticReferenceTableByteLength) {
+        let entry = staticReferenceTable.allocate();
+        entryMap.set(entry.entryId, changetype<Dummy>(entry.ptr));
+        i += offsetof<StaticReferenceEntry>();
       }
 
       // custom serialization section
