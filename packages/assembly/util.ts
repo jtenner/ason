@@ -9,10 +9,6 @@ export class ASONHeader {
   customTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
-  fieldTable8ByteLength: usize;
-  fieldTable16ByteLength: usize;
-  fieldTable32ByteLength: usize;
-  fieldTable64ByteLength: usize;
   setReferenceTableByteLength: usize;
   setEntryTableByteLength: usize;
   mapReferenceTableByteLength: usize;
