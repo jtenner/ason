@@ -4,6 +4,7 @@ export class ASONHeader {
   dataSegmentTableByteLength: usize;
   arrayTableByteLength: usize;
   arrayDataSegmentTableByteLength: usize;
+  staticReferenceTableByteLength: usize;
   customTableByteLength: usize;
   linkTableByteLength: usize;
   arrayLinkTableByteLength: usize;
@@ -109,6 +110,12 @@ export class MapReferenceEntry {
   rtId: u32;
   capacity: i32;
   entrySize: usize;
+}
+
+@unmanaged
+export class StaticReferenceEntry {
+  entryId: u32;
+  ptr: usize;
 }
 
 export const enum MapKeyValueType {
