@@ -10,7 +10,7 @@ JSON and XML are declarative tree-like data structure formats. ASON uses a data-
 
 This library is perfect for transferring references from one module of the same type to another module of the exact same type.
 
-These serialization methods are also great for helping store references like configuration files on disk. If JSON is too verbose, or requires too much memory, or takes too long to parse for the fast world of WebAssembly, ASON is a better alternative, since it reduces overhead byte storage a very large amount.
+These serialization methods are also great for helping store references like configuration files on disk. If JSON is too verbose, or requires too much memory, or takes too long to parse for the fast world of WebAssembly, ASON is a better alternative, since it reduces overhead byte storage by a very large amount.
 
 # How To Use
 
@@ -127,19 +127,19 @@ assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>
 
 - ASON serialization optimizes for large object trees, at the cost of making simple serialization slightly more expensive.
 
-- `ASON` cannot serialize objects with more than `2^32-1` values or references in them. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
+- ASON cannot serialize objects with more than `2^32-1` values or references in them. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
 
 # Implementation
 
-The object that the serializer returns is a `StaticArray<u8>`. This array has two basic components: The `ASONHeader` object, guaranteed to be the first few bytes of the array. Following the `ASONHeader` is a series of Tables describing the shape of every field (organized into 8 bit, 16 bit, 32 bit, and 64 bit field tables), every reference (stored like a table of c-like pointers), every array, and every data segment (string, array of data, and static arrays). 
+The object that the serializer returns is a `StaticArray<u8>`. This array has two basic components: The Header, and The Tables. The `ASONHeader` object is guaranteed to be the first few bytes of the array. Each of the header's bytes define the length of their respective Table, in bytes. 
 
-Each of the header's bytes define the length of their respective Table, in bytes. 
+After the `ASONHeader` is a series of Tables describing the shape and contents of every field (organized into 8 bit, 16 bit, 32 bit, and 64 bit field Tables), every reference (stored like a Table of c-like pointers), and every possible combination of data segments, sets, maps, etc. that could be contained within an object.
 
-It also holds a table that defines every way objects are linked to each other within the serialized object, using the `LinkEntry` class. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them at deserialization time. 
+It also holds a Table that defines every way objects are linked to each other within the serialized object, using the `LinkEntry` class. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them at deserialization time. 
 
-One of the benefits of using a `LinkEntry` table to define the way parents are linked to children is the way this gracefully handles circular references. The serializer will recognize that a reference to a specific object already exists within one of the other tables, and instead of adding a duplicate reference, the LinkEntry will simply point to the existing reference.
+One of the benefits of using a `LinkEntry` Table to define the way parents are linked to children is the way this gracefully handles circular references. The serializer will recognize that a reference to a specific object already exists within one of the other Tables, and instead of adding a duplicate reference, the LinkEntry will simply point to the existing reference.
 
-Lastly, we assert that the `entryId` stored at entry `0` is the primary entry of the buffer. This, of course, assumes the generic type of the `Serializer` used is actually a reference. 
+Lastly, we assert that the `entryId` stored at entry `0` is the primary entry of the buffer. This, of course, assumes the generic type of the `Serializer` used is actually a reference; this is why primitive types are automatically `Box`ed when you use the ASON.serialize() function.
 
 # MIT License
 
