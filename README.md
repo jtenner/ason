@@ -133,7 +133,7 @@ assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>
 
 The object that the serializer returns is a `StaticArray<u8>`. This array has two basic components: The Header, and The Tables. The `ASONHeader` object is guaranteed to be the first few bytes of the array. Each of the header's bytes define the length of their respective Table, in bytes. 
 
-After the `ASONHeader` is a series of Tables describing the shape and contents of every field (organized into 8 bit, 16 bit, 32 bit, and 64 bit field Tables), every reference (stored like a Table of c-like pointers), and every possible combination of data segments, sets, maps, etc. that could be contained within an object.
+After the `ASONHeader` is a series of Tables describing the shape and contents of every field, every reference (stored like a Table of c-like pointers), and every possible combination of data segments, sets, maps, etc. that could be contained within an object.
 
 It also holds a Table that defines every way objects are linked to each other within the serialized object, using the `LinkEntry` class. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them at deserialization time. 
 
