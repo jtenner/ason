@@ -25,38 +25,6 @@ export class ReferenceEntry {
   offset: usize; // and how big it is
 }
 
-// A reference to a raw 8 bit value.
-@unmanaged
-export class FieldEntry8 {
-  entryId: u32;
-  offset: usize;
-  value: u8;
-}
-
-// A reference to a raw 16 bit value.
-@unmanaged
-export class FieldEntry16 {
-  entryId: u32;
-  offset: usize;
-  value: u16;
-}
-
-// A reference to a raw 32 bit value.
-@unmanaged
-export class FieldEntry32 {
-  entryId: u32;
-  offset: usize;
-  value: u32;
-}
-
-// A reference to a raw 64 bit value.
-@unmanaged
-export class FieldEntry64 {
-  entryId: u32;
-  offset: usize;
-  value: u64;
-}
-
 // Defines the links between two objects: Defines the entryId of the parent, and the entryId of the child.
 @unmanaged
 export class LinkEntry {
