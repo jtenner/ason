@@ -37,6 +37,7 @@ describe("ASON test suite", () => {
   test("custom", testCustom);
   test("customVector", testCustomVectorSerialization);
   test("really long static strings", testStaticStrings);
+  test("typed array", testTypedArray);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -325,4 +326,18 @@ function testStaticStrings(): void {
   let b = ASON.deserialize<string>(serialized);
   assert(a == b);
   trace("bytelength of serialized static string", 1, <f64>(serialized.length - <i32>offsetof<ASONHeader>()));
+}
+
+function testTypedArray(): void {
+  let a = new Float64Array(15);
+  for (let i = 0; i < 15; i++) {
+    a[i] = <f64>i;
+  }
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<Float64Array>(buffer);
+  assert(b);
+  assert(b.length == 15);
+  for (let i = 0; i < 15; i++) {
+    assert(b[i] == <f64>i);
+  }
 }

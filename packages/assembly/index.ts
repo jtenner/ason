@@ -157,7 +157,10 @@ export namespace ASON {
         }
       }
 
-      if (value instanceof Map) {
+      // @ts-ignore
+      if (value instanceof ArrayBufferView) {
+        return this.putArrayDataSegment(value);
+      } else if (value instanceof Map) {
         return this.putMap(value);
       } else if (value instanceof Set) {
         return this.putSet(value);
@@ -391,24 +394,28 @@ export namespace ASON {
       return entryId;
     }
 
-    private putArrayDataSegment<U extends Array<valueof<U>>>(value: U): u32 {
+    private putArrayDataSegment<U>(value: U): u32 {
       let entryId = this.entryId++;
       this.entries.set(changetype<usize>(value), entryId);
 
       let arrayLength: i32;
 
       if (isNullable<U>()) {
+        // @ts-ignore: array / typedarray length is defined
         arrayLength = value!.length;
       } else {
+        // @ts-ignore: array / typedarray length is defined
         arrayLength = value.length;
       }
 
       let entry = this.arrayDataSegmentTable.allocate();
       entry.length = arrayLength;
+      // @ts-ignore: valueof<U> is defined
       entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
       entry.rtId = idof<U>();
 
+      // @ts-ignore: valueof<U> is defined
       let size = <usize>arrayLength << (alignof<valueof<U>>());
 
       // copy the data
@@ -707,7 +714,7 @@ export namespace ASON {
       while (i < arrayDataSegmentTableByteLength) {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
-        let segment = arrayDataSegmentTable.allocateSegment(length);
+        let segment = arrayDataSegmentTable.allocateSegment(length << entry.align);
         let referencePointer = __newArray(length, entry.align, entry.rtId, segment);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
