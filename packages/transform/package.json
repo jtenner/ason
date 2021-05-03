@@ -10,7 +10,7 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "typescript": "^4.2.3"
+    "typescript": "^4.2.4"
   },
   "dependencies": {
     "visitor-as": "^0.5.0"

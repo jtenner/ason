@@ -88,9 +88,7 @@ export namespace ASON {
     private setReferenceTable: Table<SetReferenceEntry> = new Table<SetReferenceEntry>(ASON_EFFECTIVE_INITIAL_SET_REFERENCE_TABLE_LENGTH);
     private staticReferenceTable: Table<StaticReferenceEntry> = new Table<StaticReferenceEntry>(ASON_EFFECTIVE_INITIAL_STATIC_REFERENCE_TABLE_LENGTH);
 
-    constructor() {
-      if (!isReference<T>()) ERROR("Value T cannot be serialized. Please Box all value types.");
-    }
+    constructor() {}
 
     /**
      * Serialize a given `T`, and return a buffer.
@@ -98,7 +96,9 @@ export namespace ASON {
      * @returns {StaticArray<u8>} - A buffer.
      */
     public serialize(value: T): StaticArray<u8> {
-      if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
+      if (isReference(value)) {
+        if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
+      }
 
       // reset entry id indicies
       this.entryId = 0;
@@ -121,8 +121,13 @@ export namespace ASON {
       this.setReferenceTable.reset();
       this.staticReferenceTable.reset();
 
-      // call `put`, and validate the first reference is entry 0
-      let entryId = this.put(value);
+      let entryId: u32;
+
+      if (isReference(value)) {
+        entryId = this.put(value);
+      } else {
+        entryId = this.put(new Box<T>(value));
+      }
       assert(entryId == <u32>0);
 
       // write everything to a buffer
@@ -445,7 +450,7 @@ export namespace ASON {
       let offset = getObjectSize(value);
       entry.offset = offset;
       entry.rtId = idof<U>();
-      let segment = this.referenceTable.allocateSegment(offset);
+      let segment = this.referenceTable.allocateSegment(<i32>offset);
       this.segments.set(entryId, segment);
       return entryId;
     }
@@ -600,9 +605,7 @@ export namespace ASON {
             throw new Error("Cannot return null with null buffer when type T is not nullable.");
           }
         }
-        if (data.length == 0 && !isNullable<T>()) assert(false, "");
       }
-
       let startPointer = changetype<usize>(data);
 
       // Assert data is larger than the ASONHeader object.
@@ -681,7 +684,7 @@ export namespace ASON {
         let referencePointer = __new(offset, entry.rtId);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
 
-        let segment = referenceTable.allocateSegment(offset);
+        let segment = referenceTable.allocateSegment(<i32>offset);
         memory.copy(referencePointer, segment, offset);
         i = referenceTable.index;
       }
@@ -714,7 +717,7 @@ export namespace ASON {
       while (i < arrayDataSegmentTableByteLength) {
         let entry = arrayDataSegmentTable.allocate();
         let length = entry.length;
-        let segment = arrayDataSegmentTable.allocateSegment(length << entry.align);
+        let segment = arrayDataSegmentTable.allocateSegment(<i32>(length << (<i32>entry.align)));
         let referencePointer = __newArray(length, entry.align, entry.rtId, segment);
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
         i = arrayDataSegmentTable.index;
@@ -844,7 +847,11 @@ export namespace ASON {
 
       // all the references have been allocated, let's get entry 0 and validate type info
       let entry0 = changetype<usize>(entryMap.get(0));
-      assert(getObjectType(entry0) == idof<T>());
+      if (isReference<T>()) {
+        assert(getObjectType(entry0) == idof<T>());
+      } else {
+        assert(getObjectType(entry0) == idof<Box<T>>());
+      }
 
       // Link every part in the entryMap.
       i = 0;
@@ -1098,8 +1105,12 @@ export namespace ASON {
         i += offsetof<MapKeyValuePairEntry>();
       }
 
-      // Return the original object, stored in the 0th element of the entryMap.
-      return changetype<T>(entryMap.get(0));
+      if (isReference<T>()) {
+        // Return the original object, stored in the 0th element of the entryMap.
+        return changetype<T>(entryMap.get(0));
+      } else {
+        return changetype<Box<T>>(entryMap.get(0)).value;
+      }
     }
   }
 
@@ -1112,7 +1123,6 @@ export namespace ASON {
    * @returns {StaticArray<u8>} A serialized buffer.
    */
   export function serialize<T>(value: T): StaticArray<u8> {
-    if (!isReference(value)) return ASON.serialize(new Box<T>(value));
     let a = new Serializer<T>();
     return a.serialize(value);
   }
@@ -1124,7 +1134,6 @@ export namespace ASON {
    * @returns {T} - An object of type `T`
    */
   export function deserialize<T>(buffer: StaticArray<u8>): T {
-    if (!isReference<T>()) return ASON.deserialize<Box<T>>(buffer).value;
     let a = new Deserializer<T>();
     return a.deserialize(buffer);
   }
