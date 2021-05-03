@@ -1128,4 +1128,23 @@ export namespace ASON {
     let a = new Deserializer<T>();
     return a.deserialize(buffer);
   }
+
+  // @ts-ignore: valid decorator
+  @inline
+  export function allocateBuffer<T>(): T {
+    if (!isReference<T>()) ERROR("Cannot allocate a buffer of type T where T is not a reference.");
+    return changetype<T>(new StaticArray<u8>(offsetof<T>()));
+  }
+
+  // @ts-ignore: valid decorator
+  @inline
+  export function castToBuffer<T>(value: T): StaticArray<u8> {
+    return changetype<StaticArray<u8>>(value);
+  }
+
+  // @ts-ignore: valid decorator
+  @inline
+  export function uncastBuffer<T>(value: StaticArray<u8>): T {
+    return changetype<T>(value);
+  }
 }
