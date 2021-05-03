@@ -104,42 +104,21 @@ class CustomVector {
 
 # Caveats
 
-- If the modules using this library are different, then runtime type information might not match. This will result in runtime errors, `instanceof` checks failing, and undefined behavior. ASON also performs type information validation for objects at the top level, so providing the wrong reference type parameter to `ASON` will result in a runtime error.
-
-- When using the regular `ASON.serialize` method, values automatically will be boxed and unboxed for you.  
-  
-```ts  
-assert(ASON.deserialize<i32>(ASON.serialize(42)) == 42);  
-```  
-
-- However, when using the `Serializer` and `Deserializer` class directly, values must be boxed like this:  
-  
-```ts  
-class Box<T> { constructor(public value: T) {} }  
-  
-let ser = new Serializer<f32>(); // Compile time error!  
-  
-// instead do this  
-let ser = new ASON.Serializer<Box<f32>>();  
-let des = new ASON.Deserializer<Box<f32>>();  
-assert(des.deserialize<Box<f32>>(ser.serialize(new Box<f32>(42))).value == <f32>42);  
-```  
+- If the modules using this library are different, then runtime type information might not match. This will result in runtime errors, `instanceof` checks failing, and undefined behavior. ASON also performs type information validation for objects at the top level, so providing the wrong reference type parameter to the `ASON.deserialize` function  will result in a runtime error.
 
 - ASON serialization optimizes for large object trees, at the cost of making simple serialization slightly more expensive.
 
-- ASON cannot serialize objects with more than `2^32-1` values or references in them. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
+- ASON cannot serialize objects with more than `2^32-1` values or references in them. This is because `u32.MAX_VALUE` is reserved for null references so that map keys and set entries can contain null values. We have chosen to accept this limitation, because if you are attempting to serialize single objects that are 4 Gigabytes in size (at an absolute minimum), we will not pass judgment, but we will recommend refactoring.
 
 # Implementation
 
-The object that the serializer returns is a `StaticArray<u8>`. This array has two basic components: The Header, and The Tables. The `ASONHeader` object is guaranteed to be the first few bytes of the array. Each of the header's bytes define the length of their respective Table, in bytes. 
+The object that the serializer returns is a `StaticArray<u8>`, which is just a buffer of bytes. This array is composed of a Header at the beginning of the buffer (which will be changing quite a lot until the API becomes stable,) and the individual Tables that compose an ASON serialization. The header simply contains the byte length of each Table.
 
 After the `ASONHeader` is a series of Tables describing the shape and contents of every field, every reference (stored like a Table of c-like pointers), and every possible combination of data segments, sets, maps, etc. that could be contained within an object.
 
-It also holds a Table that defines every way objects are linked to each other within the serialized object, using the `LinkEntry` class. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them at deserialization time. 
+It also holds a linking Table, that defines every way objects are linked to each other within the serialized object. These links must be defined, and asserted while deserializing, otherwise the garbage collection algorithm could potentially free objects, or otherwise mishandle them while they are being assembled back together at deserialization time. An additional benefit of using this kind of linking Table is the way this gracefully handles circular references: the serializer will recognize that a reference to a specific object already exists within one of the other Tables, and instead of adding a duplicate reference, the linking Table will simply point to the existing reference.
 
-One of the benefits of using a `LinkEntry` Table to define the way parents are linked to children is the way this gracefully handles circular references. The serializer will recognize that a reference to a specific object already exists within one of the other Tables, and instead of adding a duplicate reference, the LinkEntry will simply point to the existing reference.
-
-Lastly, we assert that the `entryId` stored at entry `0` is the primary entry of the buffer. This, of course, assumes the generic type of the `Serializer` used is actually a reference; this is why primitive types are automatically `Box`ed when you use the ASON.serialize() function.
+Lastly, we assert that the `entryId` stored at entry `0` is the primary entry of the buffer. If the generic type `T` of the Serializer is a number, it asserts that the primary entry of the reference table is a `Box<T>` instead of a `T`. The serializer wraps the primary entry in a `Box<T>`, if it does not already have a box.
 
 # MIT License
 

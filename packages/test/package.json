@@ -20,12 +20,12 @@
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@ason/assembly": "0.0.1",
+    "@ason/assembly": "0.0.2",
     "@ason/transform": "0.0.1"
   },
   "devDependencies": {
     "@as-pect/cli": "^6.1.0",
-    "assemblyscript": "^0.18.22"
+    "assemblyscript": "^0.18.30"
   },
   "scripts": {
     "test": "asp --verbose"
