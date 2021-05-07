@@ -1113,7 +1113,7 @@ export namespace ASON {
       }
     }
   }
-
+  @ason
   class Box<T> { constructor(public value: T) {} }
 
   /**
