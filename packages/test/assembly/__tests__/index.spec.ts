@@ -1,6 +1,8 @@
 import { OBJECT, TOTAL_OVERHEAD } from "rt/common";
 import { ASON } from "../../../assembly/index";
 import { ASONHeader } from "../../../assembly/util";
+
+@ason
 class Vec3 {
   constructor(
     public x: f32 = 0,
@@ -9,6 +11,7 @@ class Vec3 {
   ) {}
 }
 
+@ason
 class A {
   a: f32 = 1;
   b: B = new B();
@@ -16,6 +19,7 @@ class A {
   x: u8 = 32;
 }
 
+@ason
 class B {
   a: A | null;
   c: i32 = 42;
@@ -173,6 +177,7 @@ function checkSerializeNull(): void {
   __collect();
 }
 
+@ason
 class Box<T> {
   constructor(public value: T) {}
 }
@@ -198,6 +203,7 @@ function staticArrayData(): void {
   __collect();
 }
 
+@ason
 class ArrayChild {
   circular: Array<ArrayChild> | null;
 }

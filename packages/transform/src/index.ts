@@ -7,7 +7,7 @@ import {
   Statement,
   Source,
 } from "visitor-as/as";
-
+import { utils } from "visitor-as";
 import { createAsonPutMethod } from "./createAsonPutMethod";
 
 export = class ASONTransform extends Transform {
@@ -30,10 +30,17 @@ export = class ASONTransform extends Transform {
 };
 
 function traverseStatements(statements: Statement[]): void {
+  if (statements.length == 0) {
+    return;
+  }
+  const isLibrary = utils.isLibrary(statements[0].range.source);
   // for each statement in the source
   for (const statement of statements) {
     // find each class declaration
-    if (statement.kind === NodeKind.CLASSDECLARATION) {
+    if (
+      statement.kind === NodeKind.CLASSDECLARATION &&
+      (isLibrary || utils.hasDecorator(<ClassDeclaration>statement, "ason"))
+    ) {
       // cast and create a strictEquals function
       const classDeclaration = <ClassDeclaration>statement;
       createAsonPutMethod(classDeclaration);
