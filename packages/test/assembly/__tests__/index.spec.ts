@@ -376,10 +376,10 @@ function testHugeObject(): void {
   ];
 
   let buff = ASON.serialize(bigobj);
-  let b = ASON.deserialize<übermenschObject>(buff); // It enters an infinite loop here
+  let b = ASON.deserialize<übermenschObject>(buff);
 
   assert(bigobj != b, "New object created");
-  expect(bigobj).toStrictEqual(b); // Does this even work with such a convoluted object?
+  expect(bigobj).toStrictEqual(b);
 
   __collect();
 }
