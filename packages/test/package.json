@@ -20,7 +20,7 @@
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@ason/assembly": "0.0.2",
+    "@ason/assembly": "0.0.3",
     "@ason/transform": "0.0.1"
   },
   "devDependencies": {

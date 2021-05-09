@@ -709,7 +709,7 @@ export namespace ASON {
         let temp = new ArrayBuffer(length << <i32>alignof<usize>());
         let referencePointer = __newArray(length, alignof<usize>(), entry.rtId, changetype<usize>(temp));
         entryMap.set(entry.entryId, changetype<Dummy>(referencePointer));
-        i = offsetof<ArrayEntry>();
+        i += offsetof<ArrayEntry>();
       }
 
       // Set up the Array DataSegments of the object in the entryMap.

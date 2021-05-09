@@ -68,6 +68,7 @@ describe("ASON test suite", () => {
     });
     test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
   });
+  test("Major objects that should engage all parts of ASON", testHugeObject);
 });
 
 function testBasicVectors(): void {
@@ -340,4 +341,45 @@ function testTypedArray(): void {
   for (let i = 0; i < 15; i++) {
     assert(b[i] == <f64>i);
   }
+}
+
+class übermenschObject {
+  a: A = new A();
+  b: B = new B();
+  c: Set<f32> = new Set<f32>();
+  d: Map<Vec3, A> = new Map<Vec3, A>();
+  e: i16[] = [];
+  f: A[] = [];
+  g: Array<String> = new Array<String>();
+  //h: funcref | null;
+}
+
+function testHugeObject(): void {
+  let bigobj: übermenschObject = new übermenschObject();
+  bigobj.a.a = 0.444444;
+  bigobj.b.a = bigobj.a;
+  bigobj.c.add(3.1415);
+  bigobj.c.add(2.7183);
+  bigobj.d.set(new Vec3(1,1,1), bigobj.a);
+  bigobj.d.set(new Vec3(1,2,3), new A());
+  let d3: Vec3 = new Vec3(2,3,4);
+  bigobj.d.set(d3, new A());
+  bigobj.e = [-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
+  bigobj.f.push(bigobj.a);
+  bigobj.f.push(bigobj.d.get(d3));
+  bigobj.g = [
+    "I know a song that gets on everybody's nerves",
+    "Everybody's nerves",
+    "Everybody's nerves.",
+    "I know a song that gets on everybody's nerves,",
+    "And this is how it goes:"
+  ];
+
+  let buff = ASON.serialize(bigobj);
+  let b = ASON.deserialize<übermenschObject>(buff);
+
+  assert(bigobj != b, "New object created");
+  expect(bigobj).toStrictEqual(b);
+
+  __collect();
 }
