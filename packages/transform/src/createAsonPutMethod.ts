@@ -5,11 +5,8 @@ import {
   Statement,
   FieldDeclaration,
   TypeNode,
-  Token,
-  AssertionKind,
   ParameterKind,
 } from "visitor-as/as";
-import { djb2Hash } from "./util";
 
 export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
   const statements = [] as Statement[];
