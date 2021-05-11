@@ -1,6 +1,6 @@
 {
   "name": "ason",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "AssemblyScript Objects Encoded and Decoded in a standardized way",
   "main": "index.js",
   "scripts": {
