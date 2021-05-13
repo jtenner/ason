@@ -38,6 +38,7 @@ describe("ASON test suite", () => {
   test("customVector", testCustomVectorSerialization);
   test("really long static strings", testStaticStrings);
   test("typed array", testTypedArray);
+  test("extension", objectExtension);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -301,6 +302,8 @@ function testCustom(): void {
 }
 
 class CustomVector {
+  constructor() {}
+
   x: f32 = 1;
   y: f32 = 2;
   z: f32 = 3;
@@ -382,4 +385,21 @@ function testHugeObject(): void {
   expect(bigobj).toStrictEqual(b);
 
   __collect();
+}
+
+class ExtendedVector extends CustomVector {
+  constructor() {
+    super();
+  }
+  a: f32 = 1;
+  b: f32 = 2;
+  c: f32 = 4;
+}
+
+function objectExtension(): void {
+  let a = new ExtendedVector();
+
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<ExtendedVector>(buffer);
+  expect(a).toStrictEqual(b);
 }
