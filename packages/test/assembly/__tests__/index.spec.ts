@@ -387,7 +387,7 @@ function testHugeObject(): void {
   __collect();
 }
 
-class ExtendedVector extends CustomVector {
+class ExtendedVector extends Vec3 {
   constructor() {
     super();
   }
