@@ -180,21 +180,23 @@ function createSuperAsonPutCall(
       ],
       classDeclaration.range
     ),
-    TypeNode.createCallExpression(
-      TypeNode.createPropertyAccessExpression(
-        TypeNode.createSuperExpression(classDeclaration.range),
-        TypeNode.createIdentifierExpression(
-          "__asonPut",
+    TypeNode.createExpressionStatement(
+      TypeNode.createCallExpression(
+        TypeNode.createPropertyAccessExpression(
+          TypeNode.createSuperExpression(classDeclaration.range),
+          TypeNode.createIdentifierExpression(
+            "__asonPut",
+            classDeclaration.range
+          ),
           classDeclaration.range
         ),
+        null,
+        [
+          TypeNode.createIdentifierExpression("ser", classDeclaration.range),
+          TypeNode.createIdentifierExpression("entryId", classDeclaration.range),
+        ],
         classDeclaration.range
-      ),
-      null,
-      [
-        TypeNode.createIdentifierExpression("ser", classDeclaration.range),
-        TypeNode.createIdentifierExpression("entryId", classDeclaration.range),
-      ],
-      classDeclaration.range
+      )
     ),
     null,
     classDeclaration.range
