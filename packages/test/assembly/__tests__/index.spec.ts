@@ -39,6 +39,7 @@ describe("ASON test suite", () => {
   test("really long static strings", testStaticStrings);
   test("typed array", testTypedArray);
   test("extension", objectExtension);
+  test("funtions", testCallbacks);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -402,4 +403,11 @@ function objectExtension(): void {
   let buffer = ASON.serialize(a);
   let b = ASON.deserialize<ExtendedVector>(buffer);
   expect(a).toStrictEqual(b);
+}
+
+function testCallbacks(): void {
+  let a = (): void => {};
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<() => void>(buffer);
+  b();
 }
