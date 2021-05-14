@@ -162,8 +162,10 @@ export namespace ASON {
         }
       }
 
-      // @ts-ignore
-      if (value instanceof ArrayBufferView) {
+      if (isFunction(value)) {
+        return this.putDataSegment(value);
+        // @ts-ignore: ArrayBufferView is global
+      } else if (value instanceof ArrayBufferView) {
         return this.putArrayDataSegment(value);
       } else if (value instanceof Map) {
         return this.putMap(value);
