@@ -1,6 +1,6 @@
 {
   "name": "@ason/assembly",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AssemblyScript glue code for assemblyscript encoding and decoding",
   "ascMain": "index.ts",
   "types": "index.ts",
