@@ -35,8 +35,5 @@
     "lerna": "^4.0.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^4.2.4"
-  },
-  "dependencies": {
-    "visitor-as": "^0.5.0"
   }
 }
