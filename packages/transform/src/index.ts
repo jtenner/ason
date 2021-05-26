@@ -6,9 +6,11 @@ import {
   Parser,
   Statement,
   Source,
+  FieldDeclaration,
+  Program,
 } from "visitor-as/as";
 
-import { createAsonPutMethod } from "./createAsonPutMethod";
+import { PutTransform } from "./createAsonPutMethod";
 
 export = class ASONTransform extends Transform {
   /**
@@ -23,23 +25,7 @@ export = class ASONTransform extends Transform {
       ? (parser as any).program.sources
       : parser.sources;
     // for each program source
-    for (const source of sources) {
-      traverseStatements(source.statements);
-    }
+
+      PutTransform.visit(sources);
   }
 };
-
-function traverseStatements(statements: Statement[]): void {
-  // for each statement in the source
-  for (const statement of statements) {
-    // find each class declaration
-    if (statement.kind === NodeKind.CLASSDECLARATION) {
-      // cast and create a strictEquals function
-      const classDeclaration = <ClassDeclaration>statement;
-      createAsonPutMethod(classDeclaration);
-    } else if (statement.kind === NodeKind.NAMESPACEDECLARATION) {
-      const namespaceDeclaration = <NamespaceDeclaration>statement;
-      traverseStatements(namespaceDeclaration.members);
-    }
-  }
-}

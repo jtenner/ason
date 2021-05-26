@@ -1,204 +1,49 @@
 import {
   ClassDeclaration,
   CommonFlags,
-  NodeKind,
-  Statement,
   FieldDeclaration,
-  TypeNode,
-  ParameterKind,
+  Source,
 } from "visitor-as/as";
 
-export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
-  const statements = [] as Statement[];
+import { BaseVisitor, utils, SimpleParser } from "visitor-as";
+const getName = utils.getName;
 
-  for (const member of classDeclaration.members) {
-    if (
-      member.is(CommonFlags.INSTANCE) &&
-      member.kind === NodeKind.FIELDDECLARATION
-    ) {
-      statements.push(
-        createFieldPutStatement(classDeclaration, member as FieldDeclaration)
-      );
-    }
+export class PutTransform extends BaseVisitor {
+  currentClass: ClassDeclaration | null = null;
+  currentFields: string[] = [];
+
+  visitFieldDeclaration(node: FieldDeclaration): void {
+    if (node.is(CommonFlags.INSTANCE)) this.createFieldPutStatement(node);
   }
 
-  // if (isDefined(super.__asonPut)) super.__asonPut(ser, entryId)
-  statements.push(createSuperAsonPutCall(classDeclaration));
+  visitClassDeclaration(_class: ClassDeclaration): void {
+    this.currentFields = [];
+    this.currentClass = _class;
+    this.visit(_class.members);
+    this.currentFields.push(
+      `    if (isDefined(super.__asonPut) super.__asonPut(ser, entryId)`
+    );
 
-  let method = TypeNode.createMethodDeclaration(
-    TypeNode.createIdentifierExpression("__asonPut", classDeclaration.range),
-    null,
-    CommonFlags.PUBLIC |
-      CommonFlags.INSTANCE |
-      CommonFlags.GENERIC |
-      (classDeclaration.isGeneric ? CommonFlags.GENERIC_CONTEXT : 0),
-    [
-      TypeNode.createTypeParameter(
-        TypeNode.createIdentifierExpression("U", classDeclaration.range),
-        null,
-        null,
-        classDeclaration.range
-      ),
-    ],
-    TypeNode.createFunctionType(
-      [
-        // ser: Serializer<U>,
-        TypeNode.createParameter(
-          ParameterKind.DEFAULT,
-          TypeNode.createIdentifierExpression("ser", classDeclaration.range),
-          TypeNode.createNamedType(
-            TypeNode.createSimpleTypeName("U", classDeclaration.range),
-            null,
-            false,
-            classDeclaration.range
-          ),
-          null,
-          classDeclaration.range
-        ),
-        // entryId: u32,
-        TypeNode.createParameter(
-          ParameterKind.DEFAULT,
-          TypeNode.createIdentifierExpression(
-            "entryId",
-            classDeclaration.range
-          ),
-          TypeNode.createNamedType(
-            TypeNode.createSimpleTypeName("u32", classDeclaration.range),
-            null,
-            false,
-            classDeclaration.range
-          ),
-          null,
-          classDeclaration.range
-        ),
-      ],
-      TypeNode.createNamedType(
-        TypeNode.createSimpleTypeName("void", classDeclaration.range),
-        null,
-        false,
-        classDeclaration.range
-      ),
-      null,
-      false,
-      classDeclaration.range
-    ),
-    TypeNode.createBlockStatement(statements, classDeclaration.range),
-    classDeclaration.range
-  );
-  classDeclaration.members.push(method);
-}
+    const methodStr = `
+  public __asonPut<U>(ser: U, entryId: u32): void {
+    ${this.currentFields.join("\n")}
+  } 
+    `;
+    const method = SimpleParser.parseClassMember(methodStr, _class);
+    _class.members.push(method);
+  }
 
-function createFieldPutStatement(
-  classDeclaration: ClassDeclaration,
-  fieldDeclaration: FieldDeclaration
-): Statement {
-  // ser.putField(entryId, ser.field, offsetof<Class>("field"));
-  return TypeNode.createExpressionStatement(
-    TypeNode.createCallExpression(
-      TypeNode.createPropertyAccessExpression(
-        TypeNode.createIdentifierExpression("ser", fieldDeclaration.range),
-        TypeNode.createIdentifierExpression(
-          "putField",
-          fieldDeclaration.range
-        ),
-        fieldDeclaration.range
-      ),
-      null,
-      [
-        TypeNode.createIdentifierExpression(
-          "entryId",
-          fieldDeclaration.range
-        ),
-        TypeNode.createPropertyAccessExpression(
-          TypeNode.createThisExpression(fieldDeclaration.range),
-          TypeNode.createIdentifierExpression(
-            fieldDeclaration.name.text,
-            fieldDeclaration.range
-          ),
-          fieldDeclaration.range
-        ),
-        // offsetof<Class>("field")
-        TypeNode.createCallExpression(
-          TypeNode.createIdentifierExpression(
-            "offsetof",
-            fieldDeclaration.range
-          ),
-          [
-            TypeNode.createNamedType(
-              TypeNode.createSimpleTypeName(
-                classDeclaration.name.text,
-                fieldDeclaration.range
-              ),
-              classDeclaration.typeParameters
-                ? classDeclaration.typeParameters.map((e) =>
-                    TypeNode.createNamedType(
-                      TypeNode.createSimpleTypeName(
-                        e.name.text,
-                        fieldDeclaration.range
-                      ),
-                      null,
-                      false,
-                      fieldDeclaration.range
-                    )
-                  )
-                : null,
-              false,
-              fieldDeclaration.range
-            ),
-          ],
-          [
-            TypeNode.createStringLiteralExpression(
-              fieldDeclaration.name.text,
-              fieldDeclaration.range
-            ),
-          ],
-          fieldDeclaration.range
-        ),
-      ],
-      fieldDeclaration.range
-    )
-  );
-}
+  createFieldPutStatement(node: FieldDeclaration): void {
+    const name = getName(node);
+    const stmt = `    ser.putField(entryId, this.${name}, offsetof<${this.className}>("${name}"))`;
+    this.currentFields.push(stmt);
+  }
 
-function createSuperAsonPutCall(
-  classDeclaration: ClassDeclaration
-): Statement {
-  // if (isDefined(super.__asonPut))
-  return TypeNode.createIfStatement(
-    TypeNode.createCallExpression(
-      TypeNode.createIdentifierExpression("isDefined", classDeclaration.range),
-      null,
-      [
-        TypeNode.createPropertyAccessExpression(
-          TypeNode.createSuperExpression(classDeclaration.range),
-          TypeNode.createIdentifierExpression(
-            "__asonPut",
-            classDeclaration.range
-          ),
-          classDeclaration.range
-        ),
-      ],
-      classDeclaration.range
-    ),
-    TypeNode.createExpressionStatement(
-      TypeNode.createCallExpression(
-        TypeNode.createPropertyAccessExpression(
-          TypeNode.createSuperExpression(classDeclaration.range),
-          TypeNode.createIdentifierExpression(
-            "__asonPut",
-            classDeclaration.range
-          ),
-          classDeclaration.range
-        ),
-        null,
-        [
-          TypeNode.createIdentifierExpression("ser", classDeclaration.range),
-          TypeNode.createIdentifierExpression("entryId", classDeclaration.range),
-        ],
-        classDeclaration.range
-      )
-    ),
-    null,
-    classDeclaration.range
-  );
+  get className(): string {
+    return getName(this.currentClass!);
+  }
+
+  static visit(sources: Source[]): void {
+    new PutTransform().visit(sources);
+  }
 }
