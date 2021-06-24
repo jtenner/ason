@@ -30,10 +30,15 @@ describe("ASON test suite", () => {
   test("serialize null", checkSerializeNull);
   test("static array of references", staticArrayOfReferences);
   test("static array data", staticArrayData);
+  test("nullable array data segments", testArrayDataSegments);
+  test("nullable array references", testArrayNullableReferences);
+  test("reference with nullable references", testReferenceWithNullableReferences);
   test("complex array circular", arrayOfSameReferenceWithCircular);
+  test("complex array with circular reference", arrayOfSameReferenceWithActualCircular);
   test("serialize numeric values", serializeNumericValues);
   test("set of strings", setOfStrings);
   test("set of integers", setOfIntegers);
+  test("set of references", setOfReferences);
   test("custom", testCustom);
   test("customVector", testCustomVectorSerialization);
   test("really long static strings", testStaticStrings);
@@ -71,6 +76,10 @@ describe("ASON test suite", () => {
     test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
   });
   test("Major objects that should engage all parts of ASON", testHugeObject);
+  itThrows("when you attempt to deserialize an empty buffer into a non-nullable type", () => {
+    let buff = new StaticArray<u8>(0);
+    ASON.deserialize<Vec3>(buff);
+  });
 });
 
 function testBasicVectors(): void {
@@ -201,6 +210,40 @@ function staticArrayData(): void {
   __collect();
 }
 
+function testArrayDataSegments(): void {
+  let a: Array<i32> | null = [1,2,3];
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<Array<i32> | null>(buffer);
+  expect(a).toStrictEqual(b);
+}
+
+function testArrayNullableReferences(): void {
+  let a: Array<Vec3> | null = new Array();
+  a!.push(new Vec3(3,1,4));
+  a!.push(new Vec3(1,6,8));
+
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<Array<Vec3> | null>(buffer);
+  expect(a).toStrictEqual(b);
+}
+
+class C {
+  onlything: D | null;
+}
+class D {
+  int: i32;
+}
+
+function testReferenceWithNullableReferences(): void {
+  let c: C = new C();
+  let d: D = new D();
+  c.onlything = d;
+
+  let buffer = ASON.serialize(c);
+  let c2 = ASON.deserialize<C>(buffer);
+  expect(c).toStrictEqual(c2);
+}
+
 class ArrayChild {
   circular: Array<ArrayChild> | null;
 }
@@ -218,6 +261,22 @@ function arrayOfSameReferenceWithCircular(): void {
   }
   __collect();
 }
+
+function arrayOfSameReferenceWithActualCircular(): void {
+  let child = new ArrayChild();
+  let a = [child, child, child, child, child, child];
+  child.circular = a;
+  let buff = ASON.serialize(a);
+  let b = ASON.deserialize<Array<ArrayChild>>(buff);
+
+  assert(a.length == b.length);
+  let first = b[0];
+  for (let i = 0; i < a.length; i++) {
+    assert(b[i] == first);
+  }
+  __collect();
+}
+
 
 function serializeNumericValues(): void {
   assert(ASON.deserialize<f64>(ASON.serialize(<f64>3.14)) == 3.14);
@@ -255,6 +314,15 @@ function setOfIntegers(): void {
   assert(value.has(3));
   assert(value.has(42));
   __collect();
+}
+
+function setOfReferences(): void {
+  let a = new Set<A>();
+  a.add(new A());
+  a.add(new A());
+
+  let value = ASON.deserialize<Set<A>>(ASON.serialize(a));
+  expect(a).toStrictEqual(value);
 }
 
 function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TValue>): void {
