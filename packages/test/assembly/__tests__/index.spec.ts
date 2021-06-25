@@ -47,12 +47,34 @@ describe("ASON test suite", () => {
   test("funtions", testCallbacks);
 
   describe("map", () => {
-    test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
-    test("string to int maps", () => { testMap<string, u8>(["one", "two", "three"], [3, 6, 9]); });
+    test("int to int maps", () => { 
+      testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
+      testMap<u16, u16>([1, 2, 3], [3, 6, 9]);
+      testMap<u32, u32>([1, 2, 3], [3, 6, 9]);
+      testMap<u64, u64>([1, 2, 3], [3, 6, 9]);
+    });
+    test("signed int to int maps", () => { 
+      testMap<i8, i8>([1, 2, 3], [3, 6, 9]);
+      testMap<i16, i16>([1, 2, 3], [3, 6, 9]);
+      testMap<i32, i32>([1, 2, 3], [3, 6, 9]);
+      testMap<i64, i64>([1, 2, 3], [3, 6, 9]);
+    });
+    test("string to int maps", () => {
+      testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u16>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u32>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u64>(["one", "two", "three"], [3, 6, 9]);
+    });
+    test("string to object maps", () => { testMap<string, Vec3>(["one", "two", "three"], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); })
     test("different sized int to int maps", () => { testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]); });
     test("float to int maps", () => { testMap<f32, u8>([-1.01, 4.0, 341.44], [4, 5, 7]); });
     test("different sized float to float maps", () => { testMap<f32, f64>([1.44, -0.00000425, 3334445], [9.8, 756, 0.00000000000000004478]); });
-    test("object to int maps", () => { testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]); });
+    test("object to int maps", () => {
+      testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u16>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u32>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u64>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+    });
     test("float to string maps, with emoji", () => { testMap<f32, string>([2.1, 3.1415926, 2.71828], ["TwoAndABit", "Pi", "🇪"]); });
     test("negative float to string maps", () => { testMap<f32, string>([-11.4, -1.0, 8.000001],["Negative", "Floats", "Work"]); });
     test("int to empty string maps", () => { testMap<u8, string>([1,2,3],["","",""]); });
@@ -60,6 +82,7 @@ describe("ASON test suite", () => {
       let a1 = new A();
       a1.a = 0.989;
       let a2 = new A();
+      testMap<u8, A>([11, 1], [a1, a2]);
       testMap<i8, A>([-1, 1], [a1, a2]);
     });
     test("int to complex object maps, with multiple and circular references", () => {
@@ -67,12 +90,18 @@ describe("ASON test suite", () => {
       a1.a = 0.989;
       let a2 = new A();
       a2.b.a = a1;
-      testMap<i8, A>([-1, 1, 2], [a1, a2, a1]);
+      testMap<u16, A>([11, 1, 2], [a1, a2, a1]);
+      testMap<i16, A>([-1, 1, 2], [a1, a2, a1]);
     });
     test("int to nullable object maps", () => {
       let a1 = new A();
+      testMap<u32, A | null>([4, 11], [null, a1]);
       testMap<i32, A | null>([4, -1], [null, a1]);
     });
+    test("int to simple object maps", () => { 
+      testMap<u64, Vec3>([3, 6, 9], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); 
+      testMap<i64, Vec3>([3, 6, 9], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); 
+    })
     test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
   });
   test("Major objects that should engage all parts of ASON", testHugeObject);
