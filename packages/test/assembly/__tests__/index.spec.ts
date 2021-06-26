@@ -85,6 +85,10 @@ describe("ASON test suite", () => {
       testMap<u8, A>([11, 1], [a1, a2]);
       testMap<i8, A>([-1, 1], [a1, a2]);
     });
+    test("object to object maps", () => { 
+      testMap<Vec3, Vec3>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], 
+                          [new Vec3(11, 12, 13), new Vec3(14, 15, 16), new Vec3(17, 18, 19)]);
+    });
     test("int to complex object maps, with multiple and circular references", () => {
       let a1 = new A();
       a1.a = 0.989;
@@ -452,7 +456,7 @@ class übermenschObject {
   e: i16[] = [];
   f: A[] = [];
   g: Array<String> = new Array<String>();
-  //h: funcref | null;
+  //h: ((G:string) => void) | null;
 }
 
 function testHugeObject(): void {
@@ -475,6 +479,10 @@ function testHugeObject(): void {
     "I know a song that gets on everybody's nerves,",
     "And this is how it goes:"
   ];
+  // TODO: We are aware that this will error.
+  //bigobj.h = (G: string): void => {
+  //  trace(G);
+  //};
 
   let buff = ASON.serialize(bigobj);
   let b = ASON.deserialize<übermenschObject>(buff);
