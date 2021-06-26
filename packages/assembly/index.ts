@@ -975,7 +975,6 @@ export namespace ASON {
                   );
                   changetype<Map<Dummy, u64>>(parent).set(key, value);
                   break;
-                // @as-covers: ignore
                 }
                 default: assert(false);
               }
@@ -1032,7 +1031,6 @@ export namespace ASON {
                   );
                   changetype<Map<string, u64>>(parent).set(key, value);
                   break;
-                // @as-covers: ignore
                 }
                 default: assert(false);
               }
@@ -1099,12 +1097,10 @@ export namespace ASON {
                   );
                 }
                 break;
-              // @as-covers: ignore
               }
               default: assert(false);
             }
             break;
-          // @as-covers: ignore
           }
           default: assert(false);
         }
