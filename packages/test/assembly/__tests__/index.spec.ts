@@ -30,10 +30,15 @@ describe("ASON test suite", () => {
   test("serialize null", checkSerializeNull);
   test("static array of references", staticArrayOfReferences);
   test("static array data", staticArrayData);
+  test("nullable array data segments", testArrayDataSegments);
+  test("nullable array references", testArrayNullableReferences);
+  test("reference with nullable references", testReferenceWithNullableReferences);
   test("complex array circular", arrayOfSameReferenceWithCircular);
+  test("complex array with circular reference", arrayOfSameReferenceWithActualCircular);
   test("serialize numeric values", serializeNumericValues);
   test("set of strings", setOfStrings);
   test("set of integers", setOfIntegers);
+  test("set of references", setOfReferences);
   test("custom", testCustom);
   test("customVector", testCustomVectorSerialization);
   test("really long static strings", testStaticStrings);
@@ -42,12 +47,34 @@ describe("ASON test suite", () => {
   test("funtions", testCallbacks);
 
   describe("map", () => {
-    test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
-    test("string to int maps", () => { testMap<string, u8>(["one", "two", "three"], [3, 6, 9]); });
+    test("int to int maps", () => { 
+      testMap<u8, u8>([1, 2, 3], [3, 6, 9]);
+      testMap<u16, u16>([1, 2, 3], [3, 6, 9]);
+      testMap<u32, u32>([1, 2, 3], [3, 6, 9]);
+      testMap<u64, u64>([1, 2, 3], [3, 6, 9]);
+    });
+    test("signed int to int maps", () => { 
+      testMap<i8, i8>([1, 2, 3], [3, 6, 9]);
+      testMap<i16, i16>([1, 2, 3], [3, 6, 9]);
+      testMap<i32, i32>([1, 2, 3], [3, 6, 9]);
+      testMap<i64, i64>([1, 2, 3], [3, 6, 9]);
+    });
+    test("string to int maps", () => {
+      testMap<string, u8>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u16>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u32>(["one", "two", "three"], [3, 6, 9]);
+      testMap<string, u64>(["one", "two", "three"], [3, 6, 9]);
+    });
+    test("string to object maps", () => { testMap<string, Vec3>(["one", "two", "three"], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); })
     test("different sized int to int maps", () => { testMap<i64, u8>([-1384328, 2, -3], [3, 6, 9]); });
     test("float to int maps", () => { testMap<f32, u8>([-1.01, 4.0, 341.44], [4, 5, 7]); });
     test("different sized float to float maps", () => { testMap<f32, f64>([1.44, -0.00000425, 3334445], [9.8, 756, 0.00000000000000004478]); });
-    test("object to int maps", () => { testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]); });
+    test("object to int maps", () => {
+      testMap<Vec3, u8>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u16>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u32>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+      testMap<Vec3, u64>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], [3, 6, 9]);
+    });
     test("float to string maps, with emoji", () => { testMap<f32, string>([2.1, 3.1415926, 2.71828], ["TwoAndABit", "Pi", "🇪"]); });
     test("negative float to string maps", () => { testMap<f32, string>([-11.4, -1.0, 8.000001],["Negative", "Floats", "Work"]); });
     test("int to empty string maps", () => { testMap<u8, string>([1,2,3],["","",""]); });
@@ -55,22 +82,37 @@ describe("ASON test suite", () => {
       let a1 = new A();
       a1.a = 0.989;
       let a2 = new A();
+      testMap<u8, A>([11, 1], [a1, a2]);
       testMap<i8, A>([-1, 1], [a1, a2]);
+    });
+    test("object to object maps", () => { 
+      testMap<Vec3, Vec3>([new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)], 
+                          [new Vec3(11, 12, 13), new Vec3(14, 15, 16), new Vec3(17, 18, 19)]);
     });
     test("int to complex object maps, with multiple and circular references", () => {
       let a1 = new A();
       a1.a = 0.989;
       let a2 = new A();
       a2.b.a = a1;
-      testMap<i8, A>([-1, 1, 2], [a1, a2, a1]);
+      testMap<u16, A>([11, 1, 2], [a1, a2, a1]);
+      testMap<i16, A>([-1, 1, 2], [a1, a2, a1]);
     });
     test("int to nullable object maps", () => {
       let a1 = new A();
+      testMap<u32, A | null>([4, 11], [null, a1]);
       testMap<i32, A | null>([4, -1], [null, a1]);
     });
+    test("int to simple object maps", () => { 
+      testMap<u64, Vec3>([3, 6, 9], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); 
+      testMap<i64, Vec3>([3, 6, 9], [new Vec3(1, 2, 3), new Vec3(4, 5, 6), new Vec3(7, 8, 9)]); 
+    })
     test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
   });
   test("Major objects that should engage all parts of ASON", testHugeObject);
+  itThrows("when you attempt to deserialize an empty buffer into a non-nullable type", () => {
+    let buff = new StaticArray<u8>(0);
+    ASON.deserialize<Vec3>(buff);
+  });
 });
 
 function testBasicVectors(): void {
@@ -201,6 +243,40 @@ function staticArrayData(): void {
   __collect();
 }
 
+function testArrayDataSegments(): void {
+  let a: Array<i32> | null = [1,2,3];
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<Array<i32> | null>(buffer);
+  expect(a).toStrictEqual(b);
+}
+
+function testArrayNullableReferences(): void {
+  let a: Array<Vec3> | null = new Array();
+  a!.push(new Vec3(3,1,4));
+  a!.push(new Vec3(1,6,8));
+
+  let buffer = ASON.serialize(a);
+  let b = ASON.deserialize<Array<Vec3> | null>(buffer);
+  expect(a).toStrictEqual(b);
+}
+
+class C {
+  onlything: D | null;
+}
+class D {
+  int: i32;
+}
+
+function testReferenceWithNullableReferences(): void {
+  let c: C = new C();
+  let d: D = new D();
+  c.onlything = d;
+
+  let buffer = ASON.serialize(c);
+  let c2 = ASON.deserialize<C>(buffer);
+  expect(c).toStrictEqual(c2);
+}
+
 class ArrayChild {
   circular: Array<ArrayChild> | null;
 }
@@ -218,6 +294,22 @@ function arrayOfSameReferenceWithCircular(): void {
   }
   __collect();
 }
+
+function arrayOfSameReferenceWithActualCircular(): void {
+  let child = new ArrayChild();
+  let a = [child, child, child, child, child, child];
+  child.circular = a;
+  let buff = ASON.serialize(a);
+  let b = ASON.deserialize<Array<ArrayChild>>(buff);
+
+  assert(a.length == b.length);
+  let first = b[0];
+  for (let i = 0; i < a.length; i++) {
+    assert(b[i] == first);
+  }
+  __collect();
+}
+
 
 function serializeNumericValues(): void {
   assert(ASON.deserialize<f64>(ASON.serialize(<f64>3.14)) == 3.14);
@@ -255,6 +347,15 @@ function setOfIntegers(): void {
   assert(value.has(3));
   assert(value.has(42));
   __collect();
+}
+
+function setOfReferences(): void {
+  let a = new Set<A>();
+  a.add(new A());
+  a.add(new A());
+
+  let value = ASON.deserialize<Set<A>>(ASON.serialize(a));
+  expect(a).toStrictEqual(value);
 }
 
 function testMap<TKey, TValue>(keys: StaticArray<TKey>, values: StaticArray<TValue>): void {
@@ -355,7 +456,7 @@ class übermenschObject {
   e: i16[] = [];
   f: A[] = [];
   g: Array<String> = new Array<String>();
-  //h: funcref | null;
+  //h: ((G:string) => void) | null;
 }
 
 function testHugeObject(): void {
@@ -378,6 +479,10 @@ function testHugeObject(): void {
     "I know a song that gets on everybody's nerves,",
     "And this is how it goes:"
   ];
+  // TODO: We are aware that this will error.
+  //bigobj.h = (G: string): void => {
+  //  trace(G);
+  //};
 
   let buff = ASON.serialize(bigobj);
   let b = ASON.deserialize<übermenschObject>(buff);

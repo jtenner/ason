@@ -58,7 +58,8 @@ function getObjectSize<T>(value: T): usize {
 function getObjectType(value: usize): u32 {
   return changetype<OBJECT>(value - TOTAL_OVERHEAD).rtId;
 }
-
+// This function is just for type sanity. It should never be called.
+// @as-covers: ignore
 function __unusedVoidCallDeserialize<T>(value: T): bool {
   let buffer: StaticArray<u8>;
   // @ts-ignore
@@ -147,13 +148,16 @@ export namespace ASON {
           // custom serialization
           let temp: StaticArray<u8>;
           // @ts-ignore: safe compile time check
+          // @as-covers: ignore
           if (!isDefined(temp = value.__asonSerialize())) {
             ERROR("__asonSerialize method must return a StaticArray<u8>");
           }
           // @ts-ignore: safe compile time check
+          // @as-covers: ignore
           if (!isDefined(__unusedVoidCallDeserialize(value))) {
             ERROR("__asonDeserialize method must accept a StaticArray<u8>");
           }
+          // @as-covers: ignore
           if (!isReference(value)) {
             ERROR("Custom ASON serializtion can only be performed on a reference.");
           }
@@ -481,11 +485,7 @@ export namespace ASON {
     public putField<U>(entryId: u32, value: U, offset: usize): void {
       if (isReference(value)) {
         if (changetype<usize>(value) != 0) {
-          if (isNullable(value)) {
-            this.putLink(this.put(value!), entryId, offset);
-          } else {
-            this.putLink(this.put(value), entryId, offset);
-          }
+          this.putLink(this.put(value), entryId, offset);
         }
         return;
       }
@@ -975,6 +975,7 @@ export namespace ASON {
                   );
                   changetype<Map<Dummy, u64>>(parent).set(key, value);
                   break;
+                // @as-covers: ignore
                 }
                 default: assert(false);
               }
@@ -1031,6 +1032,7 @@ export namespace ASON {
                   );
                   changetype<Map<string, u64>>(parent).set(key, value);
                   break;
+                // @as-covers: ignore
                 }
                 default: assert(false);
               }
@@ -1097,10 +1099,12 @@ export namespace ASON {
                   );
                 }
                 break;
+              // @as-covers: ignore
               }
               default: assert(false);
             }
             break;
+          // @as-covers: ignore
           }
           default: assert(false);
         }
