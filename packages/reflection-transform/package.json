@@ -1,0 +1,17 @@
+{
+  "name": "@ason/reflection-transform",
+  "version": "0.1.1",
+  "description": "The transform for enabling AssemblyScript object reflection.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joshua Tenner <tenner.joshua@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.5.3"
+  },
+  "dependencies": {
+    "visitor-as": "^0.6.0"
+  }
+}
