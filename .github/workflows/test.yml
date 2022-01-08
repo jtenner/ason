@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest]
-        nodeversion: ['12.x', '13.x', '14.x', '15.x', '16.x']
+        nodeversion: ['12.x', '13.x', '14.x', '15.x', '16.x', '17.x']
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js v"${{ matrix.nodeversion }}""
@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: ${{ matrix.nodeversion }}
       - name: Install dependencies
-        run: npm install
+        run: npm install --force
       - name: test
         run: npm run test

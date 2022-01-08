@@ -21,6 +21,11 @@ class B {
   c: i32 = 42;
 }
 
+class Base {}
+class Child extends Base {
+  a: i32 = 0;
+}
+
 describe("ASON test suite", () => {
   test("basic vectors", testBasicVectors);
   test("complex objects", testComplexObjects);
@@ -69,6 +74,7 @@ describe("ASON test suite", () => {
       testMap<i32, A | null>([4, -1], [null, a1]);
     });
     test("infinite floats to float maps", () => { testMap<f32, f64>([Infinity],[44.44]); });
+    test("virtual deserialization", testVirtual);
   });
   test("Major objects that should engage all parts of ASON", testHugeObject);
 });
@@ -410,4 +416,14 @@ function testCallbacks(): void {
   let buffer = ASON.serialize(a);
   let b = ASON.deserialize<() => void>(buffer);
   b();
+}
+
+function testVirtual(): void {
+  let child = new Child();
+  child.a = 42;
+  let buffer = ASON.serialize(child);
+  let result = ASON.deserialize<Base>(buffer);
+  assert(result instanceof Child);
+  let cast = <Child>result;
+  assert(cast.a == 42);
 }
