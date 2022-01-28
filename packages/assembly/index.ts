@@ -158,7 +158,11 @@ export namespace ASON {
             ERROR("Custom ASON serializtion can only be performed on a reference.");
           }
 
-          return this.putCustom(value);
+          if (isNullable(value)) {
+            return this.putCustom(value!);
+          } else {
+            return this.putCustom(value);
+          }
         }
       }
 
