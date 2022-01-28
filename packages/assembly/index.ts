@@ -228,7 +228,7 @@ export namespace ASON {
       let entry = customTable.allocate();
       let entryId = this.entryId++;
       entry.entryId = entryId;
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
       entry.offset = offsetof<U>();
       entry.byteLength = length;
       // @ts-ignore: method index access, safe
@@ -258,7 +258,7 @@ export namespace ASON {
 
       let mapEntry = this.mapReferenceTable.allocate();
       mapEntry.entryId = mapEntryId;
-      mapEntry.rtId = idof<U>();
+      mapEntry.rtId = getObjectType(changetype<usize>(value));
 
       // @ts-ignore: type U is guaranteed to be a Map
       let maxkv = max<i32>(sizeof<indexof<U>>(), sizeof<valueof<U>>());
@@ -349,7 +349,7 @@ export namespace ASON {
       let entryId = this.entryId++;
       let entry = this.setReferenceTable.allocate();
       entry.entryId = entryId;
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
       entry.entrySize = entrySize;
       entry.capacity = capacity;
 
@@ -391,7 +391,7 @@ export namespace ASON {
 
       entry.byteLength = size;
       entry.entryId = entryId;
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
 
       // write the data to the table after the header
       let segment = this.dataSegmentTable.allocateSegment(<i32>size);
@@ -420,7 +420,7 @@ export namespace ASON {
       // @ts-ignore: valueof<U> is defined
       entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
 
       // @ts-ignore: valueof<U> is defined
       let size = <usize>arrayLength << (alignof<valueof<U>>());
@@ -451,7 +451,7 @@ export namespace ASON {
       entry.entryId = entryId;
       let offset = getObjectSize(value);
       entry.offset = offset;
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
       let segment = this.referenceTable.allocateSegment(<i32>offset);
       this.segments.set(entryId, segment);
       return entryId;
@@ -467,7 +467,7 @@ export namespace ASON {
       } else {
         entry.length = value.length;
       }
-      entry.rtId = idof<U>();
+      entry.rtId = getObjectType(changetype<usize>(value));
       return entryId;
     }
 
