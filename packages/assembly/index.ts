@@ -31,7 +31,7 @@ import {
   SetReferenceEntry,
   StaticReferenceEntry,
   Table,
- } from "./util";
+} from "./util";
 
 class Dummy {}
 
@@ -850,8 +850,12 @@ export namespace ASON {
       // all the references have been allocated, let's get entry 0 and validate type info
       let entry0 = changetype<usize>(entryMap.get(0));
       if (isReference<T>()) {
-        assert(getObjectType(entry0) == idof<T>() || __instanceof(entry0, idof<T>()));
+        // in the case of functions, idof<T>() returns 0, and breaks everything
+        if (!isFunction<T>()) {
+          assert(getObjectType(entry0) == idof<T>() || __instanceof(entry0, idof<T>()));
+        }
       } else {
+        // the type is a number, and we can validate the rtid of a Box<T>
         assert(getObjectType(entry0) == idof<Box<T>>());
       }
 
