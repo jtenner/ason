@@ -1,6 +1,6 @@
 {
   "name": "@ason/transform",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The transform for enabling AssemblyScript object encoding.",
   "main": "lib/index.js",
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
