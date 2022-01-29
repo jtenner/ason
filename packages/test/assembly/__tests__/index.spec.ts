@@ -77,6 +77,8 @@ describe("ASON test suite", () => {
     test("virtual deserialization", testVirtual);
   });
   test("Major objects that should engage all parts of ASON", testHugeObject);
+
+  test("nullable custom", testNullableCustom);
 });
 
 function testBasicVectors(): void {
@@ -426,4 +428,16 @@ function testVirtual(): void {
   assert(result instanceof Child);
   let cast = <Child>result;
   assert(cast.a == 42);
+}
+
+class NullableCustom {
+  b: CustomSerialize | null = new CustomSerialize();
+}
+
+function testNullableCustom(): void {
+  let actual = new NullableCustom();
+  let expected = ASON.deserialize<NullableCustom>(ASON.serialize(actual));
+  expect(actual).toStrictEqual(expected);
+  expect(actual).not.toBe(expected);
+  assert(expected instanceof NullableCustom);
 }
