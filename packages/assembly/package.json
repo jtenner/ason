@@ -1,6 +1,6 @@
 {
   "name": "@ason/assembly",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "AssemblyScript glue code for assemblyscript encoding and decoding",
   "types": "index.ts",
   "keywords": [
@@ -19,7 +19,7 @@
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@ason/transform": "^0.3.0"
+    "@ason/transform": "^0.4.0"
   },
   "devDependencies": {
     "assemblyscript": "^0.21.3"
