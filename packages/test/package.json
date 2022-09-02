@@ -3,7 +3,7 @@
   "version": "0.3.1",
   "private": true,
   "description": "AssemblyScript glue code for assemblyscript encoding and decoding",
-  "ascMain": "index.ts",
+  "type": "module",
   "keywords": [
     "assemblyscript",
     "glue",
@@ -24,8 +24,9 @@
     "@ason/transform": "^0.3.0"
   },
   "devDependencies": {
-    "@as-pect/cli": "^6.2.4",
-    "assemblyscript": "^0.19.22"
+    "@as-pect/cli": "^7.0.7",
+    "@assemblyscript/loader": "^0.21.3",
+    "assemblyscript": "^0.21.3"
   },
   "scripts": {
     "test": "asp --verbose"

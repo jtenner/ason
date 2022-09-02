@@ -1,16 +1,19 @@
 import {
-  Transform,
   ClassDeclaration,
   NamespaceDeclaration,
   NodeKind,
   Parser,
   Statement,
   Source,
-} from "visitor-as/as";
+} from "assemblyscript/dist/assemblyscript.js";
+import {
+  Transform,
+} from "assemblyscript/dist/transform.js";
 
-import { createAsonPutMethod } from "./createAsonPutMethod";
 
-export = class ASONTransform extends Transform {
+import { createAsonPutMethod } from "./createAsonPutMethod.js";
+
+export default class ASONTransform extends Transform {
   /**
    * This method results in a pure AST transform that inserts a strictEquals member
    * into each ClassDeclaration.

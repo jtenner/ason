@@ -2,7 +2,6 @@
   "name": "@ason/assembly",
   "version": "0.3.1",
   "description": "AssemblyScript glue code for assemblyscript encoding and decoding",
-  "ascMain": "index.ts",
   "types": "index.ts",
   "keywords": [
     "assemblyscript",
@@ -23,7 +22,7 @@
     "@ason/transform": "^0.3.0"
   },
   "devDependencies": {
-    "assemblyscript": "^0.19.22"
+    "assemblyscript": "^0.21.3"
   },
   "scripts": {
     "asbuild:untouched": "asc assembly/index.ts --target debug",

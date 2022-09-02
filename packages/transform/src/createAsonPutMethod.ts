@@ -6,7 +6,7 @@ import {
   FieldDeclaration,
   TypeNode,
   ParameterKind,
-} from "visitor-as/as";
+} from "assemblyscript/dist/assemblyscript.js";
 
 export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
   const statements = [] as Statement[];

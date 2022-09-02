@@ -183,7 +183,8 @@ export namespace ASON {
         // strings
         return this.putDataSegment(value);
       } else if (value instanceof StaticArray) {
-        if (isReference(unchecked(value[0]))) {
+        let __dummyValue = unchecked(value[0])
+        if (isReference(__dummyValue)) {
           // reference array
           let parent = this.putReference(value);
 
@@ -204,7 +205,8 @@ export namespace ASON {
         // static arrays with data
         return this.putDataSegment(value);
       } else if (value instanceof Array) {
-        if (isReference(unchecked(value[0]))) {
+        let __dummyValue = unchecked(value[0]);
+        if (isReference(__dummyValue)) {
           let parent = this.putArray(value);
           // link the children
           let length = value.length;

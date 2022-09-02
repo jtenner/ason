@@ -2,6 +2,7 @@
   "name": "@ason/transform",
   "version": "0.3.0",
   "description": "The transform for enabling AssemblyScript object encoding.",
+  "type": "module",
   "main": "lib/index.js",
   "author": "Joshua Tenner <tenner.joshua@gmail.com>",
   "license": "MIT",
@@ -12,9 +13,10 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "typescript": "^4.5.5"
+    "typescript": "^4.8.2",
+    "assemblyscript": "^0.21.3"
   },
   "dependencies": {
-    "visitor-as": "^0.8.0"
+    "visitor-as": "^0.10.2"
   }
 }
