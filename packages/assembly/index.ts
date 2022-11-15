@@ -858,7 +858,13 @@ export namespace ASON {
       if (isReference<T>()) {
         // in the case of functions, idof<T>() returns 0, and breaks everything
         if (!isFunction<T>()) {
-          assert(getObjectType(entry0) == idof<T>() || __instanceof(entry0, idof<T>()));
+          
+          if (isDefined(__instanceof)) {
+            assert(getObjectType(entry0) == idof<T>() || __instanceof(entry0, idof<T>()));
+          } else {
+            // @ts-ignore
+            assert(changetype<Object>(entry0) instanceof T)
+          }
         }
       } else {
         // the type is a number, and we can validate the rtid of a Box<T>

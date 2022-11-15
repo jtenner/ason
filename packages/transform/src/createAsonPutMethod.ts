@@ -13,8 +13,8 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
 
   for (const member of classDeclaration.members) {
     if (
-      member.is(CommonFlags.INSTANCE) &&
-      member.kind === NodeKind.FIELDDECLARATION
+      member.is(CommonFlags.Instance) &&
+      member.kind === NodeKind.FieldDeclaration
     ) {
       statements.push(
         createFieldPutStatement(classDeclaration, member as FieldDeclaration)
@@ -28,10 +28,10 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
   let method = TypeNode.createMethodDeclaration(
     TypeNode.createIdentifierExpression("__asonPut", classDeclaration.range),
     null,
-    CommonFlags.PUBLIC |
-      CommonFlags.INSTANCE |
-      CommonFlags.GENERIC |
-      (classDeclaration.isGeneric ? CommonFlags.GENERIC_CONTEXT : 0),
+    CommonFlags.Public |
+      CommonFlags.Instance |
+      CommonFlags.Generic |
+      (classDeclaration.isGeneric ? CommonFlags.GenericContext : 0),
     [
       TypeNode.createTypeParameter(
         TypeNode.createIdentifierExpression("U", classDeclaration.range),
@@ -44,7 +44,7 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
       [
         // ser: Serializer<U>,
         TypeNode.createParameter(
-          ParameterKind.DEFAULT,
+          ParameterKind.Default,
           TypeNode.createIdentifierExpression("ser", classDeclaration.range),
           TypeNode.createNamedType(
             TypeNode.createSimpleTypeName("U", classDeclaration.range),
@@ -57,7 +57,7 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
         ),
         // entryId: u32,
         TypeNode.createParameter(
-          ParameterKind.DEFAULT,
+          ParameterKind.Default,
           TypeNode.createIdentifierExpression(
             "entryId",
             classDeclaration.range
