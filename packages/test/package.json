@@ -24,9 +24,9 @@
     "@ason/transform": "^0.4.0"
   },
   "devDependencies": {
-    "@as-pect/cli": "^7.0.7",
-    "@assemblyscript/loader": "^0.21.3",
-    "assemblyscript": "^0.21.3"
+    "@as-pect/cli": "^8.0.0",
+    "@assemblyscript/loader": "^0.24.0",
+    "assemblyscript": "0.24.0"
   },
   "scripts": {
     "test": "asp --verbose"
