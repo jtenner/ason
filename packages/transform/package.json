@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "typescript": "^4.8.4",
-    "assemblyscript": "0.24.0"
+    "assemblyscript": "^0.24.0"
   },
   "dependencies": {
     "visitor-as": "^0.11.3"
