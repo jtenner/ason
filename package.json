@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap --hoist",
     "pretest": "npm run build",
-    "test": "lerna run test --scope '*/test'",
+    "test": "cd packages/test && npm run test",
     "build": "lerna exec tsc --scope '*/transform'"
   },
   "repository": {
