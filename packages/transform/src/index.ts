@@ -5,12 +5,11 @@ import {
   Parser,
   Statement,
   Source,
+  InterfaceDeclaration,
 } from "assemblyscript/dist/assemblyscript.js";
-import {
-  Transform,
-} from "assemblyscript/dist/transform.js";
+import { Transform } from "assemblyscript/dist/transform.js";
 import { createAsonInstanceOfMethod } from "./createAsonInstanceOfMethod.js";
-
+import { createAsonInterfaceMethods } from "./createAsonInterfaceMethods.js";
 
 import { createAsonPutMethod } from "./createAsonPutMethod.js";
 
@@ -31,7 +30,7 @@ export default class ASONTransform extends Transform {
       traverseStatements(source.statements);
     }
   }
-};
+}
 
 function traverseStatements(statements: Statement[]): void {
   // for each statement in the source
@@ -45,6 +44,9 @@ function traverseStatements(statements: Statement[]): void {
     } else if (statement.kind === NodeKind.NamespaceDeclaration) {
       const namespaceDeclaration = <NamespaceDeclaration>statement;
       traverseStatements(namespaceDeclaration.members);
+    } else if (statement.kind === NodeKind.InterfaceDeclaration) {
+      const interfaceDeclaration = <InterfaceDeclaration>statement;
+      createAsonInterfaceMethods(interfaceDeclaration);
     }
   }
 }

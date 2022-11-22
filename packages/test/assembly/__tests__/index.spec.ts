@@ -45,6 +45,7 @@ describe("ASON test suite", () => {
   test("typed array", testTypedArray);
   test("extension", objectExtension);
   test("funtions", testCallbacks);
+  test("interfaces", testInterfaces);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -440,4 +441,25 @@ function testNullableCustom(): void {
   expect(actual).toStrictEqual(expected);
   expect(actual).not.toBe(expected);
   assert(expected instanceof NullableCustom);
+}
+
+
+interface SomeInterface<T> {
+  method(): T;
+}
+
+class SomeClass implements SomeInterface<i32> {
+  a: i32 = 41;
+  method(): i32 {
+    return 42;
+  }
+}
+
+function testInterfaces(): void {
+  let b = new Box<SomeInterface<i32>>(new SomeClass());
+  let buffer = ASON.serialize(b);
+  let c = ASON.deserialize<Box<SomeInterface<i32>>>(buffer);
+  expect(b).toStrictEqual(c);
+  expect(b).not.toBe(c);
+  expect(c.value.method()).toBe(42);
 }

@@ -97,18 +97,12 @@ function createFieldPutStatement(
     TypeNode.createCallExpression(
       TypeNode.createPropertyAccessExpression(
         TypeNode.createIdentifierExpression("ser", fieldDeclaration.range),
-        TypeNode.createIdentifierExpression(
-          "putField",
-          fieldDeclaration.range
-        ),
+        TypeNode.createIdentifierExpression("putField", fieldDeclaration.range),
         fieldDeclaration.range
       ),
       null,
       [
-        TypeNode.createIdentifierExpression(
-          "entryId",
-          fieldDeclaration.range
-        ),
+        TypeNode.createIdentifierExpression("entryId", fieldDeclaration.range),
         TypeNode.createPropertyAccessExpression(
           TypeNode.createThisExpression(fieldDeclaration.range),
           TypeNode.createIdentifierExpression(
@@ -160,9 +154,7 @@ function createFieldPutStatement(
   );
 }
 
-function createSuperAsonPutCall(
-  classDeclaration: ClassDeclaration
-): Statement {
+function createSuperAsonPutCall(classDeclaration: ClassDeclaration): Statement {
   // if (isDefined(super.__asonPut))
   return TypeNode.createIfStatement(
     TypeNode.createCallExpression(
@@ -193,7 +185,10 @@ function createSuperAsonPutCall(
         null,
         [
           TypeNode.createIdentifierExpression("ser", classDeclaration.range),
-          TypeNode.createIdentifierExpression("entryId", classDeclaration.range),
+          TypeNode.createIdentifierExpression(
+            "entryId",
+            classDeclaration.range
+          ),
         ],
         classDeclaration.range
       )
