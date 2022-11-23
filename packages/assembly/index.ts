@@ -858,11 +858,16 @@ export namespace ASON {
       if (isReference<T>()) {
         // in the case of functions, idof<T>() returns 0, and breaks everything
         if (!isFunction<T>()) {
-          let dummy = changetype<T>(__new(offsetof<T>(), idof<T>()));
           if (isNullable<T>()) {
-            dummy!.__asonInstanceOf(getObjectType(entry0));
+            assert(
+              changetype<Object>(entry0) instanceof T
+              || changetype<T>(entry0)!.__asonInstanceOf(idof<T>())
+            );
           } else {
-            dummy.__asonInstanceOf(getObjectType(entry0));
+            assert(
+              changetype<Object>(entry0) instanceof T
+              || changetype<T>(entry0).__asonInstanceOf(idof<T>())
+            );
           }
         }
       } else {
