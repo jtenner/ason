@@ -1159,4 +1159,8 @@ export namespace ASON {
     let a = new Deserializer<T>();
     return a.deserialize(buffer);
   }
+
+  interface InternalNameofInterface {
+    __asonNameof(): string
+  }
 }
