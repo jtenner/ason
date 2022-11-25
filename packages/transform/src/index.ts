@@ -72,6 +72,10 @@ export default class ASONTransform extends Transform {
         clazz.instanceMembers!.get("__asonNameof")! as FunctionPrototype
       );
     });
+
+    const resolvedInternalInterface = program.resolver.resolveClass(internalInterface, null)!;
+    const resolvedClasses = [program.stringInstance, program.arrayBufferInstance, program.arrayBufferViewInstance];
+    resolvedClasses.forEach(clazz => clazz.addInterface(resolvedInternalInterface));
   }
 };
 

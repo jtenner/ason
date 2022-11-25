@@ -98,6 +98,13 @@ export namespace ASON {
     public serialize(value: T): StaticArray<u8> {
       if (isReference(value)) {
         if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
+        if (isManaged(value) && !isFunction(value)) {
+          // @ts-ignore inside isDefined()
+          if (isDefined(ASON_TRACE)) {
+            // @ts-ignore interface added at runtime
+            trace(`serializing ${(value as InternalNameofInterface).__asonNameof()}`);
+          }
+        }
       }
 
       // reset entry id indicies
@@ -138,6 +145,12 @@ export namespace ASON {
     @unsafe public put<U>(value: U): u32 {
       if (isReference(value)) {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
+        if (isManaged(value) && !isFunction(value)) {
+          if (isDefined(ASON_TRACE)) {
+            // @ts-ignore interface added at runtime
+            trace(`putting ${(value as InternalNameofInterface).__asonNameof()}`);
+          }
+        }
       }
 
       // @ts-ignore: safe compile time check
@@ -858,16 +871,26 @@ export namespace ASON {
       if (isReference<T>()) {
         // in the case of functions, idof<T>() returns 0, and breaks everything
         if (!isFunction<T>()) {
-          if (isNullable<T>()) {
-            assert(
-              changetype<Object>(entry0) instanceof T
-              || changetype<T>(entry0)!.__asonInstanceOf(idof<T>())
-            );
-          } else {
-            assert(
-              changetype<Object>(entry0) instanceof T
-              || changetype<T>(entry0).__asonInstanceOf(idof<T>())
-            );
+
+          let success: bool = changetype<Object>(entry0) instanceof T;
+
+          if (!success) {
+            if (isNullable<T>()) {
+              // @ts-ignore interface added at runtime
+              success = changetype<T>(entry0)!.__asonInstanceOf(idof<T>());
+            } else {
+              // @ts-ignore interface added at runtime
+              success = changetype<T>(entry0).__asonInstanceOf(idof<T>());
+            }
+          }
+
+          if (!success) {
+            // @ts-ignore inside isDefined()
+            if (isDefined(ASON_TRACE)) {
+              assert(false, `Deserialize: expected ${nameof<T>()}, received ${changetype<InternalNameofInterface>(entry0).__asonNameof()}`);
+            } else {
+              assert(false, `Deserialize: received invalid type`);
+            }
           }
         }
       } else {
