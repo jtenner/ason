@@ -21,6 +21,8 @@ import { createAsonInstanceOfMethod } from "./createAsonInstanceOfMethod.js";
 import { createAsonPutMethod } from "./createAsonPutMethod.js";
 import { createAsonNameofMethod } from "./createAsonNameofMethod.js";
 
+const INTERNAL_TRANSFORM_NAME = "InternalTransformInterface"
+
 export default class ASONTransform extends Transform {
   /**
    * This method results in a pure AST transform that inserts a strictEquals member
@@ -46,7 +48,7 @@ export default class ASONTransform extends Transform {
       }) as ClassPrototype[];
 
     const [internalInterface] = classes.splice(
-      classes.findIndex(clazz => clazz.internalName.endsWith("ASON.InternalTransformInterface")),
+      classes.findIndex(clazz => clazz.internalName.endsWith("ASON." + INTERNAL_TRANSFORM_NAME)),
       1
     );
     const baseMethod = internalInterface.instanceMembers!.get("__asonNameof")! as FunctionPrototype;
@@ -60,7 +62,7 @@ export default class ASONTransform extends Transform {
       declaration.implementsTypes ??= [];
       declaration.implementsTypes.push(
         Node.createNamedType(
-          Node.createSimpleTypeName("InternalTransformInterface", range),
+          Node.createSimpleTypeName(INTERNAL_TRANSFORM_NAME, range),
           null,
           false,
           range
@@ -96,6 +98,10 @@ function traverseStatements(statements: Statement[]): void {
       createAsonNameofMethod(classDeclaration);
     } else if (statement.kind === NodeKind.InterfaceDeclaration) {
       const interfaceDeclaration = <InterfaceDeclaration>statement;
+
+      // Don't declare methods on the internal interface
+      if (interfaceDeclaration.name.text === INTERNAL_TRANSFORM_NAME) continue;
+
       createAsonNameofMethod(interfaceDeclaration);
     } else if (statement.kind === NodeKind.NamespaceDeclaration) {
       const namespaceDeclaration = <NamespaceDeclaration>statement;
