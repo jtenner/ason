@@ -79,6 +79,7 @@ describe("ASON test suite", () => {
   test("Major objects that should engage all parts of ASON", testHugeObject);
 
   test("nullable custom", testNullableCustom);
+  test("object deserialization", testPlainObjectDeserialization);
 });
 
 function testBasicVectors(): void {
@@ -440,4 +441,14 @@ function testNullableCustom(): void {
   expect(actual).toStrictEqual(expected);
   expect(actual).not.toBe(expected);
   assert(expected instanceof NullableCustom);
+}
+
+function testPlainObjectDeserialization(): void {
+  const actual = new Vec3(12, 34, 56);
+  const processed = ASON.deserialize<Object>(ASON.serialize(actual));
+  assert(processed instanceof Vec3);
+
+  const casted = processed as Vec3;
+  expect(actual).toStrictEqual(casted);
+  expect(actual).not.toBe(casted);
 }
