@@ -46,7 +46,7 @@ export default class ASONTransform extends Transform {
       }) as ClassPrototype[];
 
     const [internalInterface] = classes.splice(
-      classes.findIndex(clazz => clazz.internalName.endsWith("ASON.InternalNameofInterface")),
+      classes.findIndex(clazz => clazz.internalName.endsWith("ASON.InternalTransformInterface")),
       1
     );
     const baseMethod = internalInterface.instanceMembers!.get("__asonNameof")! as FunctionPrototype;
@@ -60,7 +60,7 @@ export default class ASONTransform extends Transform {
       declaration.implementsTypes ??= [];
       declaration.implementsTypes.push(
         Node.createNamedType(
-          Node.createSimpleTypeName("InternalNameofInterface", range),
+          Node.createSimpleTypeName("InternalTransformInterface", range),
           null,
           false,
           range

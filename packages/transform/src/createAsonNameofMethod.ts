@@ -1,7 +1,7 @@
 import {CommonFlags, ClassDeclaration, Node} from "assemblyscript/dist/assemblyscript.js";
 
 export function createAsonNameofMethod({name, range, isGeneric, members}: ClassDeclaration): void {
-    if (name.text === "InternalNameofInterface") return;
+    if (name.text === "InternalTransformInterface") return;
     members.push(
         Node.createMethodDeclaration(
             Node.createIdentifierExpression("__asonNameof", range),

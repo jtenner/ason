@@ -102,7 +102,7 @@ export namespace ASON {
           // @ts-ignore inside isDefined()
           if (isDefined(ASON_TRACE)) {
             // @ts-ignore interface added at runtime
-            trace(`serializing ${(value as InternalNameofInterface).__asonNameof()}`);
+            trace(`serializing ${(value as InternalTransformInterface).__asonNameof()}`);
           }
         }
       }
@@ -148,7 +148,7 @@ export namespace ASON {
         if (isManaged(value) && !isFunction(value)) {
           if (isDefined(ASON_TRACE)) {
             // @ts-ignore interface added at runtime
-            trace(`putting ${(value as InternalNameofInterface).__asonNameof()}`);
+            trace(`putting ${(value as InternalTransformInterface).__asonNameof()}`);
           }
         }
       }
@@ -887,7 +887,7 @@ export namespace ASON {
           if (!success) {
             // @ts-ignore inside isDefined()
             if (isDefined(ASON_TRACE)) {
-              assert(false, `Deserialize: expected ${nameof<T>()}, received ${changetype<InternalNameofInterface>(entry0).__asonNameof()}`);
+              assert(false, `Deserialize: expected ${nameof<T>()}, received ${changetype<InternalTransformInterface>(entry0).__asonNameof()}`);
             } else {
               assert(false, `Deserialize: received invalid type`);
             }
@@ -1183,7 +1183,7 @@ export namespace ASON {
     return a.deserialize(buffer);
   }
 
-  interface InternalNameofInterface {
+  interface InternalTransformInterface {
     __asonNameof(): string
   }
 }
