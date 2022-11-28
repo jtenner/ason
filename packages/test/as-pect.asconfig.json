@@ -15,7 +15,7 @@
     "bindings": "raw",
     "exportStart": "_start",
     "exportRuntime": true,
-    "use": ["RTRACE=1"],
+    "use": ["RTRACE=1", "ASON_TRACE=1"],
     "debug": true,
     "exportTable": true
   },

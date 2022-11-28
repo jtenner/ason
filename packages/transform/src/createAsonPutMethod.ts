@@ -26,7 +26,7 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
   statements.push(createSuperAsonPutCall(classDeclaration));
 
   let method = TypeNode.createMethodDeclaration(
-    TypeNode.createIdentifierExpression("__asonPut", classDeclaration.range),
+    TypeNode.createIdentifierExpression("__asonPut", classDeclaration.name.range),
     null,
     CommonFlags.Public |
       CommonFlags.Instance |
@@ -34,10 +34,10 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
       (classDeclaration.isGeneric ? CommonFlags.GenericContext : 0),
     [
       TypeNode.createTypeParameter(
-        TypeNode.createIdentifierExpression("U", classDeclaration.range),
+        TypeNode.createIdentifierExpression("U", classDeclaration.name.range),
         null,
         null,
-        classDeclaration.range
+        classDeclaration.name.range
       ),
     ],
     TypeNode.createFunctionType(
@@ -45,45 +45,45 @@ export function createAsonPutMethod(classDeclaration: ClassDeclaration): void {
         // ser: Serializer<U>,
         TypeNode.createParameter(
           ParameterKind.Default,
-          TypeNode.createIdentifierExpression("ser", classDeclaration.range),
+          TypeNode.createIdentifierExpression("ser", classDeclaration.name.range),
           TypeNode.createNamedType(
-            TypeNode.createSimpleTypeName("U", classDeclaration.range),
+            TypeNode.createSimpleTypeName("U", classDeclaration.name.range),
             null,
             false,
-            classDeclaration.range
+            classDeclaration.name.range
           ),
           null,
-          classDeclaration.range
+          classDeclaration.name.range
         ),
         // entryId: u32,
         TypeNode.createParameter(
           ParameterKind.Default,
           TypeNode.createIdentifierExpression(
             "entryId",
-            classDeclaration.range
+            classDeclaration.name.range
           ),
           TypeNode.createNamedType(
-            TypeNode.createSimpleTypeName("u32", classDeclaration.range),
+            TypeNode.createSimpleTypeName("u32", classDeclaration.name.range),
             null,
             false,
-            classDeclaration.range
+            classDeclaration.name.range
           ),
           null,
-          classDeclaration.range
+          classDeclaration.name.range
         ),
       ],
       TypeNode.createNamedType(
-        TypeNode.createSimpleTypeName("void", classDeclaration.range),
+        TypeNode.createSimpleTypeName("void", classDeclaration.name.range),
         null,
         false,
-        classDeclaration.range
+        classDeclaration.name.range
       ),
       null,
       false,
-      classDeclaration.range
+      classDeclaration.name.range
     ),
-    TypeNode.createBlockStatement(statements, classDeclaration.range),
-    classDeclaration.range
+    TypeNode.createBlockStatement(statements, classDeclaration.name.range),
+    classDeclaration.name.range
   );
   classDeclaration.members.push(method);
 }
@@ -166,39 +166,39 @@ function createSuperAsonPutCall(
   // if (isDefined(super.__asonPut))
   return TypeNode.createIfStatement(
     TypeNode.createCallExpression(
-      TypeNode.createIdentifierExpression("isDefined", classDeclaration.range),
+      TypeNode.createIdentifierExpression("isDefined", classDeclaration.name.range),
       null,
       [
         TypeNode.createPropertyAccessExpression(
-          TypeNode.createSuperExpression(classDeclaration.range),
+          TypeNode.createSuperExpression(classDeclaration.name.range),
           TypeNode.createIdentifierExpression(
             "__asonPut",
-            classDeclaration.range
+            classDeclaration.name.range
           ),
-          classDeclaration.range
+          classDeclaration.name.range
         ),
       ],
-      classDeclaration.range
+      classDeclaration.name.range
     ),
     TypeNode.createExpressionStatement(
       TypeNode.createCallExpression(
         TypeNode.createPropertyAccessExpression(
-          TypeNode.createSuperExpression(classDeclaration.range),
+          TypeNode.createSuperExpression(classDeclaration.name.range),
           TypeNode.createIdentifierExpression(
             "__asonPut",
-            classDeclaration.range
+            classDeclaration.name.range
           ),
-          classDeclaration.range
+          classDeclaration.name.range
         ),
         null,
         [
-          TypeNode.createIdentifierExpression("ser", classDeclaration.range),
-          TypeNode.createIdentifierExpression("entryId", classDeclaration.range),
+          TypeNode.createIdentifierExpression("ser", classDeclaration.name.range),
+          TypeNode.createIdentifierExpression("entryId", classDeclaration.name.range),
         ],
-        classDeclaration.range
+        classDeclaration.name.range
       )
     ),
     null,
-    classDeclaration.range
+    classDeclaration.name.range
   );
 }

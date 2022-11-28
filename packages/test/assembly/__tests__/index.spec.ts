@@ -44,7 +44,7 @@ describe("ASON test suite", () => {
   test("really long static strings", testStaticStrings);
   test("typed array", testTypedArray);
   test("extension", objectExtension);
-  test("funtions", testCallbacks);
+  test("functions", testCallbacks);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
@@ -79,6 +79,7 @@ describe("ASON test suite", () => {
   test("Major objects that should engage all parts of ASON", testHugeObject);
 
   test("nullable custom", testNullableCustom);
+  test("object (de)serialization", testPlainObject);
 });
 
 function testBasicVectors(): void {
@@ -440,4 +441,14 @@ function testNullableCustom(): void {
   expect(actual).toStrictEqual(expected);
   expect(actual).not.toBe(expected);
   assert(expected instanceof NullableCustom);
+}
+
+function testPlainObject(): void {
+  const actual = new Vec3(12, 34, 56);
+  const processed = ASON.deserialize<Object>(ASON.serialize<Object>(actual));
+  assert(processed instanceof Vec3);
+
+  const casted = processed as Vec3;
+  expect(actual).toStrictEqual(casted);
+  expect(actual).not.toBe(casted);
 }
