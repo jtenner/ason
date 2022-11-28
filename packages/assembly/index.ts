@@ -1185,5 +1185,8 @@ export namespace ASON {
 
   interface InternalTransformInterface {
     __asonNameof(): string
+    __asonPut<U>(ser: U, entryId: u32): void
+    __asonAlignofValueofParameter(): usize
+    __asonLength(): i32
   }
 }

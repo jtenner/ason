@@ -20,6 +20,8 @@ import { createAsonInstanceOfMethod } from "./createAsonInstanceOfMethod.js";
 
 import { createAsonPutMethod } from "./createAsonPutMethod.js";
 import { createAsonNameofMethod } from "./createAsonNameofMethod.js";
+import { createAsonAlignofValueofMethod } from "./createAsonAlignofValueofMethod.js";
+import { createAsonLengthMethod } from "./createAsonLengthMethod.js";
 
 const INTERNAL_TRANSFORM_NAME = "InternalTransformInterface"
 
@@ -51,7 +53,12 @@ export default class ASONTransform extends Transform {
       classes.findIndex(clazz => clazz.internalName.endsWith("ASON." + INTERNAL_TRANSFORM_NAME)),
       1
     );
-    const baseMethod = internalInterface.instanceMembers!.get("__asonNameof")! as FunctionPrototype;
+
+    const methodNames = ["__asonNameof", "__asonPut", "__asonAlignofValueofParameter", "__asonLength"];
+    const baseMethods = new Map();
+    for (const name of methodNames) {
+      baseMethods.set(name, internalInterface.instanceMembers!.get(name)! as FunctionPrototype);
+    }
 
     const {range} = internalInterface.declaration.name;
     classes.forEach(clazz => {
@@ -69,10 +76,12 @@ export default class ASONTransform extends Transform {
         )
       );
 
-      baseMethod.unboundOverrides ??= new Set();
-      baseMethod.unboundOverrides.add(
-        clazz.instanceMembers!.get("__asonNameof")! as FunctionPrototype
-      );
+      for (const [name, method] of baseMethods) {
+        method.unboundOverrides ??= new Set();
+        method.unboundOverrides.add(
+          clazz.instanceMembers!.get(name)! as FunctionPrototype
+        );
+      }
     });
 
     const resolvedInternalInterface = program.resolver.resolveClass(internalInterface, null)!;
@@ -96,6 +105,8 @@ function traverseStatements(statements: Statement[]): void {
       createAsonPutMethod(classDeclaration);
       createAsonInstanceOfMethod(classDeclaration);
       createAsonNameofMethod(classDeclaration);
+      createAsonAlignofValueofMethod(classDeclaration);
+      createAsonLengthMethod(classDeclaration);
     } else if (statement.kind === NodeKind.InterfaceDeclaration) {
       const interfaceDeclaration = <InterfaceDeclaration>statement;
 
@@ -103,6 +114,8 @@ function traverseStatements(statements: Statement[]): void {
       if (interfaceDeclaration.name.text === INTERNAL_TRANSFORM_NAME) continue;
 
       createAsonNameofMethod(interfaceDeclaration);
+      createAsonAlignofValueofMethod(interfaceDeclaration);
+      createAsonLengthMethod(interfaceDeclaration);
     } else if (statement.kind === NodeKind.NamespaceDeclaration) {
       const namespaceDeclaration = <NamespaceDeclaration>statement;
       traverseStatements(namespaceDeclaration.members);
