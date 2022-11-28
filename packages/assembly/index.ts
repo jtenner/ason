@@ -393,10 +393,10 @@ export namespace ASON {
       let entryId = this.putReference(value);
       if (isNullable(value)) {
         // @ts-ignore: defined in each class
-        value!.__asonPut(this, entryId);
+        (value! as InternalTransformInterface).__asonPut(this, entryId);
       } else {
         // @ts-ignore: defined in each class
-        value.__asonPut(this, entryId);
+        (value as InternalTransformInterface).__asonPut(this, entryId);
       }
       return entryId;
     }
@@ -424,28 +424,19 @@ export namespace ASON {
       let entryId = this.entryId++;
       this.entries.set(changetype<usize>(value), entryId);
 
-      let arrayLength: i32;
-
-      if (isNullable<U>()) {
-        // @ts-ignore: array / typedarray length is defined
-        arrayLength = value!.length;
-      } else {
-        // @ts-ignore: array / typedarray length is defined
-        arrayLength = value.length;
-      }
+      let arrayLength = (value as InternalTransformInterface).__asonLength();
 
       let entry = this.arrayDataSegmentTable.allocate();
+      const align = (value as InternalTransformInterface).__asonAlignofValueofParameter();
       entry.length = arrayLength;
-      // @ts-ignore: valueof<U> is defined
-      entry.align = alignof<valueof<U>>();
+      entry.align = align;
       entry.entryId = entryId;
       entry.rtId = getObjectType(changetype<usize>(value));
 
-      // @ts-ignore: valueof<U> is defined
-      let size = <usize>arrayLength << (alignof<valueof<U>>());
+      let size = <usize>arrayLength << align;
 
       // copy the data
-      let dataStart = load<usize>(changetype<usize>(value), offsetof<U>("dataStart"));
+      let dataStart = load<usize>(changetype<usize>(value), offsetof<ArrayBufferView>("dataStart"));
 
       let segment = this.arrayDataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, dataStart, size);
