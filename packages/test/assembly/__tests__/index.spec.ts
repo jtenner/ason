@@ -44,7 +44,7 @@ describe("ASON test suite", () => {
   test("really long static strings", testStaticStrings);
   test("typed array", testTypedArray);
   test("extension", objectExtension);
-  test("funtions", testCallbacks);
+  test("functions", testCallbacks);
 
   describe("map", () => {
     test("int to int maps", () => { testMap<u8, u8>([1, 2, 3], [3, 6, 9]); });
