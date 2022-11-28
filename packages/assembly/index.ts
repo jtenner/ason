@@ -1180,4 +1180,8 @@ export namespace ASON {
     __asonAlignofValueofParameter(): usize
     __asonLength(): i32
   }
+
+  function __asonNameofID(id: u32): string {
+    return unreachable();
+  }
 }
