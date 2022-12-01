@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "@as-pect/cli": "^8.0.0",
-    "@assemblyscript/loader": "^0.24.0",
-    "assemblyscript": "^0.24.0"
+    "@assemblyscript/loader": "^0.24.1",
+    "assemblyscript": "^0.24.1"
   },
   "scripts": {
     "test": "asp --verbose"

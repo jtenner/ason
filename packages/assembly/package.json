@@ -22,7 +22,7 @@
     "@ason/transform": "^0.8.1"
   },
   "devDependencies": {
-    "assemblyscript": "^0.24.0"
+    "assemblyscript": "^0.24.1"
   },
   "scripts": {
     "asbuild:untouched": "asc assembly/index.ts --target debug",
