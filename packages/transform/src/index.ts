@@ -15,10 +15,13 @@ import {
 import {
   Transform,
 } from "assemblyscript/dist/transform.js";
+import binaryen from "assemblyscript/lib/binaryen.js";
+
 import { createAsonInstanceOfMethod } from "./createAsonInstanceOfMethod.js";
 
 
 import { createAsonPutMethod } from "./createAsonPutMethod.js";
+import { createAsonNameofIDFunction, createAsonNameofMethod } from "./createAsonNameofMethod.js";
 import { createAsonAlignofValueofMethod } from "./createAsonAlignofValueofMethod.js";
 import { createAsonLengthMethod } from "./createAsonLengthMethod.js";
 
@@ -53,7 +56,7 @@ export default class ASONTransform extends Transform {
       1
     );
 
-    const methodNames = ["__asonPut", "__asonAlignofValueofParameter", "__asonLength"];
+    const methodNames = ["__asonNameof", "__asonPut", "__asonAlignofValueofParameter", "__asonLength"];
     const baseMethods = new Map();
     for (const name of methodNames) {
       baseMethods.set(name, internalInterface.instanceMembers!.get(name)! as FunctionPrototype);
@@ -94,6 +97,10 @@ export default class ASONTransform extends Transform {
     ];
     resolvedClasses.forEach(clazz => clazz.addInterface(resolvedInternalInterface));
   }
+
+  afterCompile(module: unknown): void {
+    createAsonNameofIDFunction(module as binaryen.Module);
+  }
 };
 
 function traverseStatements(statements: Statement[]): void {
@@ -105,6 +112,7 @@ function traverseStatements(statements: Statement[]): void {
       const classDeclaration = <ClassDeclaration>statement;
       createAsonPutMethod(classDeclaration);
       createAsonInstanceOfMethod(classDeclaration);
+      createAsonNameofMethod(classDeclaration);
       createAsonAlignofValueofMethod(classDeclaration);
       createAsonLengthMethod(classDeclaration);
     } else if (statement.kind === NodeKind.InterfaceDeclaration) {
@@ -113,6 +121,7 @@ function traverseStatements(statements: Statement[]): void {
       // Don't declare methods on the internal interface
       if (interfaceDeclaration.name.text === INTERNAL_TRANSFORM_NAME) continue;
 
+      createAsonNameofMethod(interfaceDeclaration);
       createAsonAlignofValueofMethod(interfaceDeclaration);
       createAsonLengthMethod(interfaceDeclaration);
     } else if (statement.kind === NodeKind.NamespaceDeclaration) {
