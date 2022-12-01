@@ -76,8 +76,6 @@ export default class ASONTransform extends Transform {
         )
       );
 
-      if (clazz.kind === ElementKind.InterfacePrototype) return;
-
       for (const [name, method] of baseMethods) {
         method.unboundOverrides ??= new Set();
         method.unboundOverrides.add(
