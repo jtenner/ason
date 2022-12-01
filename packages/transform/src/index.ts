@@ -15,13 +15,11 @@ import {
 import {
   Transform,
 } from "assemblyscript/dist/transform.js";
-import binaryen from "assemblyscript/lib/binaryen.js";
-
 import { createAsonInstanceOfMethod } from "./createAsonInstanceOfMethod.js";
 
 
 import { createAsonPutMethod } from "./createAsonPutMethod.js";
-import { createAsonNameofIDFunction, createAsonNameofMethod } from "./createAsonNameofMethod.js";
+import { createAsonNameofMethod } from "./createAsonNameofMethod.js";
 import { createAsonAlignofValueofMethod } from "./createAsonAlignofValueofMethod.js";
 import { createAsonLengthMethod } from "./createAsonLengthMethod.js";
 
@@ -96,10 +94,6 @@ export default class ASONTransform extends Transform {
       program.arrayBufferViewInstance
     ];
     resolvedClasses.forEach(clazz => clazz.addInterface(resolvedInternalInterface));
-  }
-
-  afterCompile(module: unknown): void {
-    createAsonNameofIDFunction(module as binaryen.Module);
   }
 };
 
