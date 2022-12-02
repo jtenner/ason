@@ -863,16 +863,14 @@ export namespace ASON {
         // in the case of functions, idof<T>() returns 0, and breaks everything
         if (!isFunction<T>()) {
 
-          let success: bool = changetype<Object>(entry0) instanceof T;
+          let success: bool = false;
 
-          if (!success) {
-            if (isNullable<T>()) {
-              // @ts-ignore interface added at runtime
-              success = changetype<T>(entry0)!.__asonInstanceOf(idof<T>());
-            } else {
-              // @ts-ignore interface added at runtime
-              success = changetype<T>(entry0).__asonInstanceOf(idof<T>());
-            }
+          if (isNullable<T>()) {
+            // @ts-ignore interface added at runtime
+            success = changetype<T>(entry0)!.__asonInstanceOf(getObjectType(entry0));
+          } else {
+            // @ts-ignore interface added at runtime
+            success = changetype<T>(entry0).__asonInstanceOf(getObjectType(entry0));
           }
 
           if (!success) {
