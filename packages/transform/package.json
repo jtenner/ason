@@ -1,6 +1,6 @@
 {
   "name": "@ason/transform",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "The transform for enabling AssemblyScript object encoding.",
   "type": "module",
   "main": "lib/index.js",
