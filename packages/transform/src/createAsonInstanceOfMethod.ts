@@ -4,8 +4,6 @@ import {
     Statement,
     TypeNode,
     ParameterKind,
-    InterfaceDeclaration,
-    FunctionDeclaration,
     Token,
   } from "assemblyscript/dist/assemblyscript.js";
 
@@ -16,25 +14,25 @@ export function createAsonInstanceOfMethod(classDeclaration: ClassDeclaration): 
         TypeNode.createIfStatement(
             TypeNode.createBinaryExpression(
                 Token.Equals_Equals,
-                TypeNode.createIdentifierExpression("id", classDeclaration.range),
+                TypeNode.createIdentifierExpression("id", classDeclaration.name.range),
                 TypeNode.createCallExpression(
-                    TypeNode.createIdentifierExpression("idof", classDeclaration.range),
+                    TypeNode.createIdentifierExpression("idof", classDeclaration.name.range),
                     [
                         TypeNode.createNamedType(
-                            TypeNode.createSimpleTypeName("this", classDeclaration.range),
+                            TypeNode.createSimpleTypeName("this", classDeclaration.name.range),
                             null,
                             false,
-                            classDeclaration.range,
+                            classDeclaration.name.range,
                         ),
                     ],
                     [],
-                    classDeclaration.range
+                    classDeclaration.name.range
                 ),
-                classDeclaration.range,
+                classDeclaration.name.range,
             ),
-            TypeNode.createReturnStatement(TypeNode.createTrueExpression(classDeclaration.range), classDeclaration.range),
+            TypeNode.createReturnStatement(TypeNode.createTrueExpression(classDeclaration.name.range), classDeclaration.name.range),
             null,
-            classDeclaration.range,
+            classDeclaration.name.range,
         ),
     ];
 
@@ -42,47 +40,47 @@ export function createAsonInstanceOfMethod(classDeclaration: ClassDeclaration): 
     statements.push(
         TypeNode.createIfStatement(
             TypeNode.createCallExpression(
-                TypeNode.createIdentifierExpression("isDefined", classDeclaration.range),
+                TypeNode.createIdentifierExpression("isDefined", classDeclaration.name.range),
                 null,
                 [
                     TypeNode.createPropertyAccessExpression(
-                        TypeNode.createSuperExpression(classDeclaration.range),
-                        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.range),
-                        classDeclaration.range,
+                        TypeNode.createSuperExpression(classDeclaration.name.range),
+                        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.name.range),
+                        classDeclaration.name.range,
                     )
                 ],
-                classDeclaration.range,
+                classDeclaration.name.range,
             ),
             TypeNode.createReturnStatement(
                 TypeNode.createCallExpression(
                     TypeNode.createPropertyAccessExpression(
-                        TypeNode.createSuperExpression(classDeclaration.range),
-                        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.range),
-                        classDeclaration.range,
+                        TypeNode.createSuperExpression(classDeclaration.name.range),
+                        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.name.range),
+                        classDeclaration.name.range,
                     ),
                     null,
                     [
-                        TypeNode.createIdentifierExpression("id", classDeclaration.range),
+                        TypeNode.createIdentifierExpression("id", classDeclaration.name.range),
                     ],
-                    classDeclaration.range,
+                    classDeclaration.name.range,
                 ),
-                classDeclaration.range,
+                classDeclaration.name.range,
             ),
             null,
-            classDeclaration.range,
+            classDeclaration.name.range,
         ),
     );
 
     // return false;
     statements.push(
         TypeNode.createReturnStatement(
-            TypeNode.createFalseExpression(classDeclaration.range),
-            classDeclaration.range,
+            TypeNode.createFalseExpression(classDeclaration.name.range),
+            classDeclaration.name.range,
         ),
     );
 
     let method = TypeNode.createMethodDeclaration(
-        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.range),
+        TypeNode.createIdentifierExpression("__asonInstanceOf", classDeclaration.name.range),
         null,
         CommonFlags.Public |
             CommonFlags.Instance |
@@ -93,29 +91,29 @@ export function createAsonInstanceOfMethod(classDeclaration: ClassDeclaration): 
             // ser: Serializer<U>,
             TypeNode.createParameter(
             ParameterKind.Default,
-            TypeNode.createIdentifierExpression("id", classDeclaration.range),
+            TypeNode.createIdentifierExpression("id", classDeclaration.name.range),
             TypeNode.createNamedType(
-                TypeNode.createSimpleTypeName("usize", classDeclaration.range),
+                TypeNode.createSimpleTypeName("usize", classDeclaration.name.range),
                 null,
                 false,
-                classDeclaration.range
+                classDeclaration.name.range
             ),
             null,
-            classDeclaration.range
+            classDeclaration.name.range
             ),
         ],
         TypeNode.createNamedType(
-            TypeNode.createSimpleTypeName("bool", classDeclaration.range),
+            TypeNode.createSimpleTypeName("bool", classDeclaration.name.range),
             null,
             false,
-            classDeclaration.range
+            classDeclaration.name.range
         ),
         null,
         false,
-        classDeclaration.range
+        classDeclaration.name.range
         ),
-        TypeNode.createBlockStatement(statements, classDeclaration.range),
-        classDeclaration.range
+        TypeNode.createBlockStatement(statements, classDeclaration.name.range),
+        classDeclaration.name.range
     );
 
     classDeclaration.members.push(method);
