@@ -1182,6 +1182,7 @@ export namespace ASON {
   }
 
   function __asonNameofID(id: u32): string {
-    return unreachable();
+    // Ensure __asonNameof() is compiled if __asonNameofID is used.
+    return changetype<InternalTransformInterface(0).__asonNameof();
   }
 }
