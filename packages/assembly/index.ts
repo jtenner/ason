@@ -867,10 +867,10 @@ export namespace ASON {
 
           if (isNullable<T>()) {
             // @ts-ignore interface added at runtime
-            success = changetype<T>(entry0)!.__asonInstanceOf(getObjectType(entry0));
+            success = changetype<T>(entry0) instanceof T || changetype<T>(entry0)!.__asonInstanceOf(getObjectType(entry0));
           } else {
             // @ts-ignore interface added at runtime
-            success = changetype<T>(entry0).__asonInstanceOf(getObjectType(entry0));
+            success = changetype<T>(entry0) instanceof T || changetype<T>(entry0).__asonInstanceOf(getObjectType(entry0));
           }
 
           if (!success) {
