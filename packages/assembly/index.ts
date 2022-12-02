@@ -98,13 +98,6 @@ export namespace ASON {
     public serialize(value: T): StaticArray<u8> {
       if (isReference(value)) {
         if (changetype<usize>(value) == 0) return new StaticArray<u8>(0);
-        if (isManaged(value) && !isFunction(value)) {
-          // @ts-ignore inside isDefined()
-          if (isDefined(ASON_TRACE)) {
-            // @ts-ignore interface added at runtime
-            // trace(`serializing ${(value as InternalTransformInterface).__asonNameof()}`);
-          }
-        }
       }
 
       // reset entry id indicies
@@ -145,12 +138,6 @@ export namespace ASON {
     @unsafe public put<U>(value: U): u32 {
       if (isReference(value)) {
         if (this.entries.has(changetype<usize>(value))) return this.entries.get(changetype<usize>(value));
-        if (isManaged(value) && !isFunction(value)) {
-          if (isDefined(ASON_TRACE)) {
-            // @ts-ignore interface added at runtime
-            // trace(`putting ${(value as InternalTransformInterface).__asonNameof()}`);
-          }
-        }
       }
 
       // @ts-ignore: safe compile time check
@@ -393,10 +380,10 @@ export namespace ASON {
       let entryId = this.putReference(value);
       if (isNullable(value)) {
         // @ts-ignore: defined in each class
-        (value! as InternalTransformInterface).__asonPut(this, entryId);
+        value!.__asonPut(this, entryId);
       } else {
         // @ts-ignore: defined in each class
-        (value as InternalTransformInterface).__asonPut(this, entryId);
+        value.__asonPut(this, entryId);
       }
       return entryId;
     }
@@ -424,19 +411,28 @@ export namespace ASON {
       let entryId = this.entryId++;
       this.entries.set(changetype<usize>(value), entryId);
 
-      let arrayLength = (value as InternalTransformInterface).__asonLength();
+      let arrayLength: i32;
+
+      if (isNullable<U>()) {
+        // @ts-ignore: array / typedarray length is defined
+        arrayLength = value!.length;
+      } else {
+        // @ts-ignore: array / typedarray length is defined
+        arrayLength = value.length;
+      }
 
       let entry = this.arrayDataSegmentTable.allocate();
-      const align = (value as InternalTransformInterface).__asonAlignofValueofParameter();
       entry.length = arrayLength;
-      entry.align = align;
+      // @ts-ignore: valueof<U> is defined
+      entry.align = alignof<valueof<U>>();
       entry.entryId = entryId;
       entry.rtId = getObjectType(changetype<usize>(value));
 
-      let size = <usize>arrayLength << align;
+      // @ts-ignore: valueof<U> is defined
+      let size = <usize>arrayLength << (alignof<valueof<U>>());
 
       // copy the data
-      let dataStart = load<usize>(changetype<usize>(value), offsetof<ArrayBufferView>("dataStart"));
+      let dataStart = load<usize>(changetype<usize>(value), offsetof<U>("dataStart"));
 
       let segment = this.arrayDataSegmentTable.allocateSegment(<i32>size);
       memory.copy(segment, dataStart, size);
@@ -862,26 +858,16 @@ export namespace ASON {
       if (isReference<T>()) {
         // in the case of functions, idof<T>() returns 0, and breaks everything
         if (!isFunction<T>()) {
-
-          let success: bool = changetype<Object>(entry0) instanceof T;
-
-          if (!success) {
-            if (isNullable<T>()) {
-              // @ts-ignore interface added at runtime
-              success = changetype<T>(entry0)!.__asonInstanceOf(idof<T>());
-            } else {
-              // @ts-ignore interface added at runtime
-              success = changetype<T>(entry0).__asonInstanceOf(idof<T>());
-            }
-          }
-
-          if (!success) {
-            // @ts-ignore inside isDefined()
-            if (isDefined(ASON_TRACE)) {
-              assert(false, `Deserialize: expected ${nameof<T>()} (${idof<T>()}), received ${getObjectType(entry0)}`);
-            } else {
-              assert(false, `Deserialize: received invalid type`);
-            }
+          if (isNullable<T>()) {
+            assert(
+              changetype<Object>(entry0) instanceof T
+              || changetype<T>(entry0)!.__asonInstanceOf(idof<T>())
+            );
+          } else {
+            assert(
+              changetype<Object>(entry0) instanceof T
+              || changetype<T>(entry0).__asonInstanceOf(idof<T>())
+            );
           }
         }
       } else {
@@ -1172,11 +1158,5 @@ export namespace ASON {
   export function deserialize<T>(buffer: StaticArray<u8>): T {
     let a = new Deserializer<T>();
     return a.deserialize(buffer);
-  }
-
-  interface InternalTransformInterface {
-    __asonPut<U>(ser: U, entryId: u32): void
-    __asonAlignofValueofParameter(): usize
-    __asonLength(): i32
   }
 }
