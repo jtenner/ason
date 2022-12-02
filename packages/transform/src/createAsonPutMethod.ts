@@ -92,7 +92,7 @@ function createFieldPutStatement(
   classDeclaration: ClassDeclaration,
   fieldDeclaration: FieldDeclaration
 ): Statement {
-  // ser.putField(entryId, ser.field, offsetof<Class>("field"));
+  // ser.putField(entryId, this.field, offsetof<Class>("field"));
   return TypeNode.createExpressionStatement(
     TypeNode.createCallExpression(
       TypeNode.createPropertyAccessExpression(
@@ -126,22 +126,10 @@ function createFieldPutStatement(
           [
             TypeNode.createNamedType(
               TypeNode.createSimpleTypeName(
-                classDeclaration.name.text,
+                "this",
                 fieldDeclaration.range
               ),
-              classDeclaration.typeParameters
-                ? classDeclaration.typeParameters.map((e) =>
-                    TypeNode.createNamedType(
-                      TypeNode.createSimpleTypeName(
-                        e.name.text,
-                        fieldDeclaration.range
-                      ),
-                      null,
-                      false,
-                      fieldDeclaration.range
-                    )
-                  )
-                : null,
+              null,
               false,
               fieldDeclaration.range
             ),
