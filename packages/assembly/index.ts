@@ -861,12 +861,12 @@ export namespace ASON {
           if (isNullable<T>()) {
             assert(
               changetype<Object>(entry0) instanceof T
-              || changetype<T>(entry0)!.__asonInstanceOf(idof<T>())
+              || changetype<T>(entry0)!.__asonInstanceOf(getObjectType(entry0))
             );
           } else {
             assert(
               changetype<Object>(entry0) instanceof T
-              || changetype<T>(entry0).__asonInstanceOf(idof<T>())
+              || changetype<T>(entry0).__asonInstanceOf(getObjectType(entry0))
             );
           }
         }
