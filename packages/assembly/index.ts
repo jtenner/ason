@@ -102,7 +102,7 @@ export namespace ASON {
           // @ts-ignore inside isDefined()
           if (isDefined(ASON_TRACE)) {
             // @ts-ignore interface added at runtime
-            // trace(`serializing ${(value as InternalTransformInterface).__asonNameof()}`);
+            trace(`serializing ${(value as InternalTransformInterface).__asonNameof()}`);
           }
         }
       }
@@ -148,7 +148,7 @@ export namespace ASON {
         if (isManaged(value) && !isFunction(value)) {
           if (isDefined(ASON_TRACE)) {
             // @ts-ignore interface added at runtime
-            // trace(`putting ${(value as InternalTransformInterface).__asonNameof()}`);
+            trace(`putting ${(value as InternalTransformInterface).__asonNameof()}`);
           }
         }
       }
@@ -876,7 +876,7 @@ export namespace ASON {
           if (!success) {
             // @ts-ignore inside isDefined()
             if (isDefined(ASON_TRACE)) {
-              assert(false, `Deserialize: expected ${nameof<T>()} (${idof<T>()}), received ${getObjectType(entry0)}`);
+              assert(false, `Deserialize: expected ${nameof<T>()}, received ${changetype<InternalTransformInterface>(entry0).__asonNameof()}`);
             } else {
               assert(false, `Deserialize: received invalid type`);
             }
@@ -1173,8 +1173,14 @@ export namespace ASON {
   }
 
   interface InternalTransformInterface {
+    __asonNameof(): string
     __asonPut<U>(ser: U, entryId: u32): void
     __asonAlignofValueofParameter(): usize
     __asonLength(): i32
+  }
+
+  function __asonNameofID(id: u32): string {
+    // Ensure __asonNameof() is compiled if __asonNameofID is used.
+    return changetype<InternalTransformInterface(0).__asonNameof();
   }
 }
