@@ -39,10 +39,10 @@ You can use the built-in functions `Ason.serialize()` and `Ason.deserialize()`:
 import { ASON } from "@ason/assembly";
 
 // serialize can determine type information
-let buffer: StaticArray<u8> = ASON.serialize([3.14, 99, 25.624] as Array<f64>);
+const buffer: StaticArray<u8> = ASON.serialize([3.14, 99, 25.624] as Array<f64>);
 
 // deserialize must have the type passed (to perform type assertions)
-let result: Array<f64> = ASON.deserialize<Array<f64>>(buffer);
+const result: Array<f64> = ASON.deserialize<Array<f64>>(buffer);
 
 assert(result.length == 3);
 assert(result[0] == <f64>3.14);
@@ -53,26 +53,26 @@ assert(result[2] == <f64>25.624);
 It's also possible to save heap allocations, by declaring a new `Serializer` and `Deserializer` object. This is optimal when serializing multiple objects of the same type:
 
 ```ts
-import { Serializer, Deserializer } from "@ason/assembly";
+import { ASON } from "@ason/assembly";
 class Vec3 {
   constructor(public x: f32, public y: f32, public z: f32) {}
 }
 
-let result = new Array<StaticArray<u8>>(); // an array of buffers
-let serializer = new ASON.Serializer<Vec3>();
+const result = new Array<StaticArray<u8>>(); // an array of buffers
+const serializer = new ASON.Serializer<Vec3>();
 
 for (let i = 0; i < 10; i++) {
   result.push(serializer.serialize(new Vec3(1, 2, 3)));
 }
 
-let deserializer = new ASON.Deserializer<Vec3>();
+const deserializer = new ASON.Deserializer<Vec3>();
 
 for (let i = 0; i < 10; i++) {
-  let vec = deserializer.deserialize(result[i]);
+  const vec = deserializer.deserialize(result[i]);
   assert(vec); // make sure the reference isn't null
   assert(vec.x == 1); // check the properties
   assert(vec.y == 2);
-  assert(vec.x == 3);
+  assert(vec.z == 3);
 }
 ```
 
@@ -90,7 +90,7 @@ class CustomVector {
   z: f32 = 3;
 
   __asonSerialize(): StaticArray<u8> {
-    let result = new StaticArray<u8>(offsetof<CustomVector>());
+    const result = new StaticArray<u8>(offsetof<CustomVector>());
     memory.copy(changetype<usize>(result), changetype<usize>(this), offsetof<CustomVector>());
     return result;
   }
