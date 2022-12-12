@@ -53,7 +53,7 @@ assert(result[2] == <f64>25.624);
 It's also possible to save heap allocations, by declaring a new `Serializer` and `Deserializer` object. This is optimal when serializing multiple objects of the same type:
 
 ```ts
-import { Serializer, Deserializer } from "@ason/assembly";
+import { ASON } from "@ason/assembly";
 class Vec3 {
   constructor(public x: f32, public y: f32, public z: f32) {}
 }
@@ -72,7 +72,7 @@ for (let i = 0; i < 10; i++) {
   assert(vec); // make sure the reference isn't null
   assert(vec.x == 1); // check the properties
   assert(vec.y == 2);
-  assert(vec.x == 3);
+  assert(vec.z == 3);
 }
 ```
 
